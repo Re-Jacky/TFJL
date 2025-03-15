@@ -1,0 +1,28 @@
+.logMonitor {
+  height: 280px;
+  background-color: #1a1a1a;
+  color: white;
+}
+
+.logItem {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.timestamp {
+  color: white;
+  min-width: 60px;
+}
+
+.logLevel {
+  &--info {
+    color: #64f670;
+  }
+  &--warn {
+    color: #ffb74d;
+  }
+  &--error {
+    color: #ff0000;
+  }
+}
