@@ -1,0 +1,51 @@
+@use 'src/styles/variables' as v;
+
+.chariotContainer {
+  position: relative;
+  border: 2px solid var(--color-border);
+  border-radius: 8px;
+  padding: 16px;
+  max-width: 278px;
+  background-color: var(--color-background);
+  &::before {
+    content: '战场识别';
+    position: absolute;
+    top: -10px;
+    left: 16px;
+    background: var(--color-background);
+    padding: 0 8px;
+    font-size: 14px;
+    color: #666;
+  }
+}
+
+.gridContainer {
+  display: grid;
+  gap: 1px;
+
+  &.xs {
+    grid-template-columns: repeat(2, 80px);
+  }
+
+  &.lg {
+    grid-template-columns: repeat(2, 120px);
+  }
+}
+
+.cell {
+  border: 1px solid var(--color-border);
+  padding: 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &.xs {
+    min-height: 40px;
+  }
+
+  &.lg {
+    min-height: 60px;
+  }
+}
