@@ -16,7 +16,7 @@ const CollaborationContent: React.FC = () => {
   const [selectedOption, setSelectedOption] = useState<string>('option1');
 
   const options = [
-    { value: 'option1', label: 'Option 1' },
+    { value: '3号寒冰攻略.txt', label: '3号寒冰攻略' },
     { value: 'option2', label: 'Option 2' },
     { value: 'option3', label: 'Option 3' },
   ];
@@ -40,6 +40,14 @@ const CollaborationContent: React.FC = () => {
     },
   ];
 
+  const onStart = () => {
+    fetch('http://localhost:8000/get-file-list').then(resp => resp.json()).then(data => {
+      console.log(data);
+    }).catch((error) => {
+      console.log(error);
+    });
+  };
+
   return (
     <div className={styles.collaboration}>
       <div className={styles.header}>
@@ -50,7 +58,7 @@ const CollaborationContent: React.FC = () => {
           style={{ width: 200 }}
         />
         <div className={styles.btnGroup}>
-          <Button type='primary' icon={<PlayCircleOutlined />}>
+          <Button type='primary' icon={<PlayCircleOutlined />} onClick={onStart}>
             开始
           </Button>
           <Button icon={<PauseCircleOutlined />}>暂停</Button>
