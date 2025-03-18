@@ -21,7 +21,7 @@
 
 .gridContainer {
   display: grid;
-  gap: 1px;
+  gap: 8px;
 
   &.xs {
     grid-template-columns: repeat(2, 60px);
@@ -40,11 +40,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  &.xs {
-    min-height: 20px;
-  }
+  height: 30px;
+}
 
-  &.lg {
-    min-height: 40px;
-  }
+.cellInput {
+  height: 26px;
 }

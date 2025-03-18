@@ -1,7 +1,18 @@
 .logMonitor {
-  height: 200px;
+  height: 180px;
+  min-width: 280px;
   background-color: #1a1a1a;
   color: white;
+  :global {
+    .ant-card-body {
+      padding: 5px;
+      .ant-list-items {
+        li {
+          padding: 0;
+        }
+      }
+    }
+  }
 }
 
 .listItem {

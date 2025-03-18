@@ -31,10 +31,11 @@ const ChariotPreview: React.FC = () => {
           <div
             key={index}
             onDoubleClick={() => handleDoubleClick(index)}
-            className={`${styles.cell} ${screens.xs ? styles.xs : styles.lg}`}
+            className={styles.cell}
           >
             {activeCell === index ? (
               <Input
+                className={styles.cellInput}
                 autoFocus
                 defaultValue={value}
                 onBlur={(e) => handleBlur(index, e.target.value)}
