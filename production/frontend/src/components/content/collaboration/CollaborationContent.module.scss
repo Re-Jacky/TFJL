@@ -1,0 +1,13 @@
+.collaboration {
+  display: flex;
+  flex-direction: column;
+  .header {
+    margin: 10px 0;
+    display: flex;
+    justify-content: space-between;
+    .btnGroup {
+      display: flex;
+      gap: 5px;
+    }
+  }
+}

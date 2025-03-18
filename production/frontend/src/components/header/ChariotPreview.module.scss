@@ -5,7 +5,7 @@
   border: 2px solid var(--color-border);
   border-radius: 8px;
   padding: 16px;
-  max-width: 278px;
+  max-width: 200px;
   background-color: var(--color-background);
   &::before {
     content: '战场识别';
@@ -21,14 +21,14 @@
 
 .gridContainer {
   display: grid;
-  gap: 1px;
+  gap: 8px;
 
   &.xs {
-    grid-template-columns: repeat(2, 80px);
+    grid-template-columns: repeat(2, 60px);
   }
 
   &.lg {
-    grid-template-columns: repeat(2, 120px);
+    grid-template-columns: repeat(2, 80px);
   }
 }
 
@@ -40,12 +40,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  height: 30px;
+}
 
-  &.xs {
-    min-height: 40px;
-  }
-
-  &.lg {
-    min-height: 60px;
-  }
+.cellInput {
+  height: 26px;
 }
