@@ -1,16 +1,13 @@
 import React from 'react';
-import { Layout, Menu } from 'antd';
+import { Layout } from 'antd';
 import Header from './components/header/Header';
-
+import TaskTabs from './components/tabs/TaskTabs';
 
 const App: React.FC = () => {
   return (
-    <Layout style={{width: '800px', height: '600px'}}>
-      <Layout>
-        <Header />
-        <div>tabs</div>
-        <div>content</div>
-      </Layout>
+    <Layout style={{ width: '800px', height: '600px', fontSize: '12px' }}>
+      <Header />
+      <TaskTabs />
     </Layout>
   );
 };

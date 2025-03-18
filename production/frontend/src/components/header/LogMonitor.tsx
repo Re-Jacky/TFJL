@@ -28,7 +28,7 @@ const LogMonitor: React.FC = () => {
       <List
         dataSource={logs}
         renderItem={(log) => (
-          <List.Item>
+          <List.Item className={styles.listItem}>
             <div className={styles.logItem}>
               <span className={styles.timestamp}>
                 {log.timestamp}
