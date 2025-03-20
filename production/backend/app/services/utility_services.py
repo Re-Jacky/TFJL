@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import List, Dict, Union, Optional
 from fastapi import UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
+from ..utils.action_parser import ActionParser
 
 class UtilityService:
     @staticmethod
@@ -30,16 +31,8 @@ class UtilityService:
         return {"similarity_score": float(score.max())}
 
     @staticmethod
-    async def parse_actions(file: UploadFile):
-        content = await file.read()
-        actions = []
-        
-        # Parse the text file content and convert to actions
-        for line in content.decode().splitlines():
-            if line.strip():
-                actions.append({"action": line.strip()})
-        
-        return {"actions": actions}
+    def parse_actions(file_content: str):
+        return ActionParser.parse_action_chain(file_content)
 
     @staticmethod
     def control_window(window_title: str, action: str):
@@ -64,19 +57,19 @@ class UtilityService:
             return {"error": str(e)}
 
     @staticmethod
-    def parse_file_by_name(file_name: str, base_dir: str = "data"):
+    def read_file(file_name: str):
         try:
             # Ensure base directory is absolute and exists
-            base_path = Path(base_dir).resolve()
-            if not base_path.exists() or not base_path.is_dir():
-                raise HTTPException(status_code=404, detail=f"Base directory '{base_dir}' not found")
+            public_path = Path("public").resolve()
+            if not public_path.exists() or not public_path.is_dir():
+                raise HTTPException(status_code=404, detail="Public directory not found")
 
             # Sanitize file name and create full path
             safe_name = Path(file_name).name  # Get just the filename part
-            file_path = base_path / safe_name
+            file_path = public_path / safe_name
 
             # Ensure the resolved path is still within base directory
-            if not str(file_path.resolve()).startswith(str(base_path)):
+            if not str(file_path.resolve()).startswith(str(public_path)):
                 raise HTTPException(status_code=400, detail="Invalid file path")
 
             # Check if file exists and is a file
@@ -85,7 +78,7 @@ class UtilityService:
 
             # Read and return file content
             content = file_path.read_text(encoding='utf-8')
-            return {"content": content}
+            return content
 
         except HTTPException as he:
             raise he

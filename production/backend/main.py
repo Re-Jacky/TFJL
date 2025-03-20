@@ -12,6 +12,7 @@ from app.models.schemas import (
     BattleRequest,
     BaseResponse
 )
+from urllib.parse import unquote
 from app.utils.logger import logger
 
 app = FastAPI()
@@ -32,7 +33,7 @@ async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Error processing request: {request.url.path}", exc_info=exc)
     return JSONResponse(
         status_code=500,
-        content={"detail": "Internal server error"}
+        content={"detail": f"Internal server error: {str(exc)}"}
     )
 game_service = GameService()
 utility_service = UtilityService()
@@ -74,17 +75,17 @@ async def handle_battle(request: BattleRequest):
 async def compare_images(image1: UploadFile = File(...), image2: UploadFile = File(...)):
     return await utility_service.compare_images(image1, image2)
 
-@app.post("/parse-actions")
-async def parse_actions(file: UploadFile = File(...)):
-    return await utility_service.parse_actions(file)
 
 @app.post("/window-control")
 async def control_window(window_title: str, action: str):
     return utility_service.control_window(window_title, action)
 
-@app.get("/parse-file/{file_name}")
-async def parse_file(file_name: str, base_dir: str = "data"):
-    return utility_service.parse_file_by_name(file_name, base_dir)
+@app.post("/read-file")
+async def read_file(file_data: dict):
+    decoded_file_name = unquote(file_data['file'])
+    logger.info(f"Loading file: {decoded_file_name}")
+    file_content = utility_service.read_file(decoded_file_name)
+    return utility_service.parse_actions(file_content)
 
 @app.get("/get-file-list")
 async def get_file_list():
