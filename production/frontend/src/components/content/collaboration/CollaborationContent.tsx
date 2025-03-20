@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Select, Button, Table } from 'antd';
 import styles from './CollaborationContent.module.scss';
 import {
@@ -6,20 +6,23 @@ import {
   PauseCircleOutlined,
   StopOutlined,
 } from '@ant-design/icons';
+import { api } from '../../../services/api';
 
 interface DataType {
   key: string; // row number
   text: string;
 }
 
-const CollaborationContent: React.FC = () => {
-  const [selectedOption, setSelectedOption] = useState<string>('option1');
+interface FileOption {
+  value: string;
+  label: string;
+  index: number;
+}
 
-  const options = [
-    { value: '3号寒冰攻略.txt', label: '3号寒冰攻略' },
-    { value: 'option2', label: 'Option 2' },
-    { value: 'option3', label: 'Option 3' },
-  ];
+const CollaborationContent: React.FC = () => {
+  const [selected, setSelected] = useState<string>();
+  const [loading, setIsLoading] = useState<boolean>(true);
+  const [options, setOptions] = useState<Array<FileOption>>();
 
   const data: DataType[] = [
     { key: '1', text: 'Sample text 1' },
@@ -40,29 +43,62 @@ const CollaborationContent: React.FC = () => {
     },
   ];
 
-  const onStart = () => {
-    fetch('http://localhost:8000/get-file-list').then(resp => resp.json()).then(data => {
-      console.log(data);
-    }).catch((error) => {
-      console.log(error);
-    });
-  };
+  // load file list
+  useEffect(() => {
+    api.getFileList()
+      .then((data) => {
+        const options = data.files.map((item: any, index: number) => ({
+          value: item,
+          label: item,
+          index,
+        }));
+        setOptions(options);
+        setSelected(options[0].value);
+      })
+      .catch((error) => {
+        console.log(error);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, []);
+
+  // get file content
+  useEffect(() => {
+    if (selected) {
+      api.readFile(selected)
+        .then((data) => {
+          console.log(data);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    }
+  }, [selected])
 
   return (
     <div className={styles.collaboration}>
       <div className={styles.header}>
         <Select
-          value={selectedOption}
-          onChange={setSelectedOption}
+          showSearch={true}
+          loading={loading}
+          value={selected}
+          onChange={setSelected}
           options={options}
           style={{ width: 200 }}
         />
         <div className={styles.btnGroup}>
-          <Button type='primary' icon={<PlayCircleOutlined />} onClick={onStart}>
+          <Button
+            type='primary'
+            icon={<PlayCircleOutlined />}
+            disabled={!selected}
+          >
             开始
           </Button>
           <Button icon={<PauseCircleOutlined />}>暂停</Button>
-          <Button danger icon={<StopOutlined />}>结束</Button>
+          <Button danger icon={<StopOutlined />}>
+            结束
+          </Button>
         </div>
       </div>
       <Table
