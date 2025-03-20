@@ -3,7 +3,17 @@
 # Exit on error
 set -e
 
-echo "Starting cleanup process..."
+# Confirm cleanup
+read -p "WARNING: This will remove all installed packages. Are you sure you want to continue? [y/N] " -n 1 -r
+if [[ ! $REPLY =~ ^[Yy]$ ]]
+then
+    echo "
+Cleanup aborted."
+    exit 1
+fi
+
+echo "
+Starting cleanup process..."
 
 # Clean frontend
 cd frontend

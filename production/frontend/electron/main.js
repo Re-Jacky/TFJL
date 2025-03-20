@@ -9,14 +9,17 @@ let pythonServer = null;
 
 function startPythonServer() {
   try {
-    const serverPath = path.join(process.resourcesPath, 'backend/tfjl_server');
+    const serverPath = path.join(process.resourcesPath, 'backend/tfjl_server.exe');
 
     if (!fs.existsSync(serverPath)) {
       throw new Error(`Python server executable not found at: ${serverPath}`);
     }
 
     logger.info('Starting Python server...');
-    pythonServer = spawn(serverPath);
+    pythonServer = spawn(serverPath, [], {
+      shell: true,
+      windowsHide: true
+    });
 
     pythonServer.stdout.on('data', (data) => {
       logger.info(`Python Server: ${data}`);

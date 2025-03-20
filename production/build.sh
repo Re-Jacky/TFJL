@@ -10,12 +10,12 @@ log_message() {
 
 # Function to detect Python command
 detect_python() {
-    if command -v python3 &> /dev/null; then
-        PYTHON_CMD="python3"
-        log_message "Using python3..."
-    elif command -v python &> /dev/null; then
+    if command -v python &> /dev/null; then
         PYTHON_CMD="python"
         log_message "Using python..."
+    elif command -v python3 &> /dev/null; then
+        PYTHON_CMD="python3"
+        log_message "Using python3..."
     else
         log_message "Error: Neither 'python3' nor 'python' command found"
         exit 1
@@ -54,7 +54,11 @@ setup_python_env() {
         log_message "Python virtual environment already exists, skipping setup..."
     fi
 
-    source venv/bin/activate
+    if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
+        source venv/Scripts/activate
+    else
+        source venv/bin/activate
+    fi
 
     if ! pip freeze | grep -q -f requirements.txt; then
         log_message "Installing Python dependencies..."
