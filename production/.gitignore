@@ -11,6 +11,9 @@ env.bak/
 venv.bak/
 .env
 *.log
+backend/build/
+backend/dist/
+backend/tfjl_server.spec
 
 # Node.js frontend
 node_modules/

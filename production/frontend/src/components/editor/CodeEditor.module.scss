@@ -1,0 +1,11 @@
+.codeEditorContainer {
+    height: 100%;
+    width: 100%;
+    :global {
+        .monaco-editor {
+            .scrollbar .slider {
+                border-radius: 4px;
+           }
+        }
+    }
+}

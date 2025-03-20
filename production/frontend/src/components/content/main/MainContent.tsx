@@ -1,11 +1,13 @@
 import React from "react";
+import CodeEditor from "../../editor/CodeEditor";
 
 const MainContent: React.FC = () => {
   return (
-    <div>
-      <h1>Main Content</h1>
-      <p>This is the main content area.</p>
-    </div>
+    <CodeEditor
+      value=""
+      onChange={(value) => console.log(value)}
+      height={300}
+    />
   );
 };
 
