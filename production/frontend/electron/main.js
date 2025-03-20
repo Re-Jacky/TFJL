@@ -5,12 +5,6 @@ const fs = require('fs');
 const logger = require('./logger');
 const isDev = process.env.NODE_ENV === 'development' || !fs.existsSync(path.join(__dirname, '../dist/index.html'));
 
-// Ensure logs directory exists
-const logsDir = path.join(process.cwd(), 'logs');
-if (!fs.existsSync(logsDir)) {
-  fs.mkdirSync(logsDir);
-}
-
 let pythonServer = null;
 
 function startPythonServer() {

@@ -26,7 +26,7 @@ detect_python() {
 clean_artifacts() {
     local dir=$1
     cd $dir
-    for artifact in "build" "dist"; do
+    for artifact in "build" "dist" "dist_electron"; do
         if [ -d "$artifact" ]; then
             log_message "Removing ${dir} ${artifact} directory..."
             rm -rf "$artifact"

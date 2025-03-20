@@ -2,7 +2,7 @@ const winston = require('winston');
 const path = require('path');
 
 const { app } = require('electron');
-const logDir = path.join(app.getPath('userData'), 'logs');
+const logDir = path.join(app.getPath('downloads'), 'logs');
 const fs = require('fs');
 if (!fs.existsSync(logDir)) {
   fs.mkdirSync(logDir, { recursive: true });

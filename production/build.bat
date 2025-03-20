@@ -13,7 +13,7 @@ REM Function to clean build artifacts
 :clean_artifacts
 set dir=%~1
 cd %dir%
-for %%A in (build dist) do (
+for %%A in (build dist dist_electron) do (
     if exist %%A (
         call :log_message "Removing %dir% %%A directory..."
         rmdir /s /q %%A
