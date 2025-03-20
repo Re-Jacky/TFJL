@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import * as monaco from 'monaco-editor';
 import styles from './CodeEditor.module.scss';
+import { getEditorSuggestions } from './utils';
 
 interface CodeEditorProps {
   value: string;
@@ -17,22 +18,21 @@ const defaultOptions: monaco.editor.IStandaloneEditorConstructionOptions = {
   copyWithSyntaxHighlighting: false,
   fixedOverflowWidgets: true,
   folding: false,
-  fontFamily: "Fira Code, monospace, helvetica, Arial, sans-serif",
+  fontFamily: 'Fira Code, monospace, helvetica, Arial, sans-serif',
   fontLigatures: true,
   lineNumbersMinChars: 3,
   lineNumbers: 'off',
   links: false,
   quickSuggestions: true,
   renderFinalNewline: 'off',
-  renderLineHighlight: "none",
+  renderLineHighlight: 'none',
   roundedSelection: false,
   scrollBeyondLastLine: false,
-  snippetSuggestions: "none",
+  snippetSuggestions: 'none',
   suggestFontSize: 12,
   suggestLineHeight: 26,
   wordBasedSuggestions: 'currentDocument',
-  wordSeparators: ',',
-  wordWrap: "on",
+  wordWrap: 'on',
   suggest: {
     shareSuggestSelections: false,
     snippetsPreventQuickSuggestions: false,
@@ -82,6 +82,28 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     };
   }, [value, readOnly]);
 
+  useEffect(() => {
+    // register keywords
+    monaco.languages.registerCompletionItemProvider('plaintext', {
+      provideCompletionItems: (model, position) => {
+        const word = model.getWordUntilPosition(position);
+        const range = new monaco.Range(
+          position.lineNumber,
+          word.startColumn,
+          position.lineNumber,
+          word.endColumn
+        );
+
+        return {
+          suggestions: getEditorSuggestions(
+            monaco.languages.CompletionItemKind.Keyword,
+            range,
+          ),
+        };
+      },
+    });
+  }, []);
+
   const handleChange = (newValue: string) => {
     if (onChange) {
       onChange(newValue);
@@ -89,8 +111,11 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   };
 
   return (
-    <div className={styles.codeEditorContainer} ref={ref} style={{height: '300px'}}>
-    </div>
+    <div
+      className={styles.codeEditorContainer}
+      ref={ref}
+      style={{ height: '300px' }}
+    ></div>
   );
 };
 
