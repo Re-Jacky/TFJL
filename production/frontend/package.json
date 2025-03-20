@@ -7,6 +7,7 @@
     "@ant-design/icons": "^5.2.6",
     "antd": "^5.11.4",
     "axios": "^1.6.2",
+    "winston": "^3.11.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.20.0",
@@ -42,17 +43,28 @@
     "prettier": "^3.5.3",
     "typescript": "^5.3.2",
     "typescript-eslint": "^8.26.1",
+    "@types/winston": "^2.4.4",
     "vite": "^5.0.2"
   },
   "build": {
     "appId": "com.taskautomation.app",
     "productName": "Task Automation Tool",
     "directories": {
-      "output": "dist_electron"
+      "output": "dist_electron",
+      "buildResources": "assets"
+    },
+    "mac": {
+      "category": "public.app-category.productivity"
     },
     "files": [
       "dist/**/*",
       "electron/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../backend/dist/tfjl_server",
+        "to": "backend/tfjl_server"
+      }
     ],
     "win": {
       "target": "nsis"
