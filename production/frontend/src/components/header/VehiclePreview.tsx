@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Input, Grid } from 'antd';
-import styles from './ChariotPreview.module.scss';
+import styles from './VehiclePreview.module.scss';
 
 const { useBreakpoint } = Grid;
 
-const ChariotPreview: React.FC = () => {
+const VehiclePreview: React.FC = () => {
   const screens = useBreakpoint();
   const [activeCell, setActiveCell] = useState<number | null>(null);
   const [cellValues, setCellValues] = useState<string[]>(
@@ -53,4 +53,4 @@ const ChariotPreview: React.FC = () => {
   );
 };
 
-export default ChariotPreview;
+export default VehiclePreview;

@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request, File, UploadFile
+import pyautogui
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import time
@@ -96,6 +97,14 @@ async def read_file(file_data: dict):
 @app.get("/get-file-list")
 async def get_file_list():
     return utility_service.get_public_files()
+
+@app.get("/windows")
+async def get_windows():
+    windows = []
+    for window in pyautogui.getAllWindows():
+        if window.title and window.title == '塔防精灵':
+            windows.append({"title": window.title, "pid": window._hWnd})
+    return {"windows": windows}
 
 if __name__ == "__main__":
     import uvicorn
