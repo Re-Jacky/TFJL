@@ -2,13 +2,7 @@ import React from "react";
 import CodeEditor from "../../editor/CodeEditor";
 
 const MainContent: React.FC = () => {
-  return (
-    <CodeEditor
-      value=""
-      onChange={(value) => console.log(value)}
-      height={300}
-    />
-  );
+  return <div>TBD</div>
 };
 
 export default MainContent;

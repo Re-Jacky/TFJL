@@ -47,9 +47,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/")
-async def read_root():
-    return {"status": "Server is running"}
+@app.get("/health")
+async def health_check():
+    return {
+        "status": "healthy",
+        "timestamp": time.time(),
+        "uptime": time.time() - app.state.start_time
+    }
+
+# Store server start time
+app.state.start_time = time.time()
 
 @app.post("/collab", response_model=BaseResponse)
 async def handle_collab(request: CollabRequest):
@@ -71,21 +78,20 @@ async def handle_timing_event(request: TimingEventRequest):
 async def handle_battle(request: BattleRequest):
     return game_service.handle_battle(request)
 
-@app.post("/compare-images")
-async def compare_images(image1: UploadFile = File(...), image2: UploadFile = File(...)):
-    return await utility_service.compare_images(image1, image2)
+## testing purpose
+@app.post("/parse-file")
+async def parse_file(file_data: dict):
+    decoded_file_name = unquote(file_data['file'])
+    logger.info(f"Loading file: {decoded_file_name}")
+    content = utility_service.read_file(decoded_file_name)
+    return utility_service.parse_actions(content)
 
-
-@app.post("/window-control")
-async def control_window(window_title: str, action: str):
-    return utility_service.control_window(window_title, action)
 
 @app.post("/read-file")
 async def read_file(file_data: dict):
     decoded_file_name = unquote(file_data['file'])
     logger.info(f"Loading file: {decoded_file_name}")
-    file_content = utility_service.read_file(decoded_file_name)
-    return utility_service.parse_actions(file_content)
+    return utility_service.read_file(decoded_file_name)
 
 @app.get("/get-file-list")
 async def get_file_list():

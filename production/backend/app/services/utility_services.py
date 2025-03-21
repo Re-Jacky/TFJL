@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import List, Dict, Union, Optional
 from fastapi import UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
-from ..utils.action_parser import ActionParser
 
 class UtilityService:
     @staticmethod
@@ -29,10 +28,6 @@ class UtilityService:
         score = cv2.matchTemplate(gray1, gray2, cv2.TM_CCOEFF_NORMED)
         
         return {"similarity_score": float(score.max())}
-
-    @staticmethod
-    def parse_actions(file_content: str):
-        return ActionParser.parse_action_chain(file_content)
 
     @staticmethod
     def control_window(window_title: str, action: str):
@@ -100,3 +95,12 @@ class UtilityService:
             raise he
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+            
+    @staticmethod
+    def parse_actions(content: str) -> Dict[str, Union[List[Dict], List[str]]]:
+        """Parse the content of a script file into structured actions."""
+        try:
+            from app.utils.command_parser import CommandParser
+            return CommandParser.parse_script(content)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error parsing actions: {str(e)}")

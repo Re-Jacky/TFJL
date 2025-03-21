@@ -2,7 +2,8 @@ import proxy from "./proxy";
 
 export interface API {
     getFileList: () => Promise<{ files: string[] }>;
-    readFile: (file: string) => Promise<{ data: any }>;
+    readFile: (file: string) => Promise<string>;
+    healthCheck: () => Promise<{ status: string }>;
 }
 
 export const api: API = {
@@ -13,5 +14,8 @@ export const api: API = {
         // encode file name
         file = encodeURIComponent(file);
         return await proxy.post('read-file', { file });
-    }
+    },
+    healthCheck: async () => {
+        return await proxy.get('health');
+    },
 }

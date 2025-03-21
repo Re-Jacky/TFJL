@@ -1,11 +1,24 @@
 import logging
 from logging.handlers import RotatingFileHandler
 import os
+import sys
 from datetime import datetime
 
-# Create logs directory if it doesn't exist
-logs_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'logs')
-os.makedirs(logs_dir, exist_ok=True)
+# Determine if we're running from PyInstaller bundle
+def get_logs_dir():
+    if getattr(sys, 'frozen', False):
+        # Running in PyInstaller bundle inside Electron app
+        base_path = os.path.dirname(os.path.dirname(os.path.dirname(sys.executable)))
+    else:
+        # Running in development
+        base_path = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    
+    logs_dir = os.path.join(base_path, 'logs')
+    os.makedirs(logs_dir, exist_ok=True)
+    return logs_dir
+
+# Get logs directory
+logs_dir = get_logs_dir()
 
 # Configure logging
 def setup_logger():
