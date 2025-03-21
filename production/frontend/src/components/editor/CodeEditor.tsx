@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useImperativeHandle, useRef } from 'react';
 import * as monaco from 'monaco-editor';
 import styles from './CodeEditor.module.scss';
 import { getEditorSuggestions } from './utils';
@@ -56,22 +56,29 @@ const defaultOptions: monaco.editor.IStandaloneEditorConstructionOptions = {
   automaticLayout: true,
 };
 
-const CodeEditor: React.FC<CodeEditorProps> = ({
-  value,
-  onChange,
-  readOnly = false,
-  height = '100%',
-  width = '100%',
-}) => {
-  const ref = useRef<HTMLDivElement>(null);
+export interface EditorHandler {
+  getContent: () => string;
+}
+
+const CodeEditor: React.ForwardRefRenderFunction<EditorHandler, CodeEditorProps> = (props, ref) => {
+  const { value, onChange, readOnly } = props;
+  const internalRef = useRef<HTMLDivElement>(null);
+  const [editor, setEditor] = React.useState<monaco.editor.IStandaloneCodeEditor | null>(null);
+
+  useImperativeHandle(ref, () => ({
+    getContent: () => {
+      return editor?.getValue() || '';
+    },
+  }))
 
   useEffect(() => {
-    if (!ref.current) return;
+    if (!internalRef.current) return;
 
-    const editor = monaco.editor.create(ref.current, {
+    const editor = monaco.editor.create(internalRef.current, {
       value,
       ...defaultOptions,
     });
+    setEditor(editor);
 
     editor.onDidChangeModelContent(() => {
       handleChange(editor.getValue());
@@ -113,10 +120,13 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   return (
     <div
       className={styles.codeEditorContainer}
-      ref={ref}
-      style={{ height: '300px' }}
+      ref={internalRef}
+      style={{
+        height: props.height,
+        width: props.width,
+      }}
     ></div>
   );
 };
 
-export default CodeEditor;
+export default React.forwardRef(CodeEditor);

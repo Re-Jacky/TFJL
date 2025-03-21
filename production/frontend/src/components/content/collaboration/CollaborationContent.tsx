@@ -1,17 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import { Select, Button, Table } from 'antd';
+import React, { useEffect, useRef, useState } from 'react';
+import { Select, Button } from 'antd';
 import styles from './CollaborationContent.module.scss';
 import {
   PlayCircleOutlined,
   PauseCircleOutlined,
   StopOutlined,
+  SaveOutlined,
 } from '@ant-design/icons';
-import { api } from '../../../services/api';
-
-interface DataType {
-  key: string; // row number
-  text: string;
-}
+import { api } from '@src/services/api';
+import CodeEditor, {
+  type EditorHandler,
+} from '@src/components/editor/CodeEditor';
 
 interface FileOption {
   value: string;
@@ -23,29 +22,18 @@ const CollaborationContent: React.FC = () => {
   const [selected, setSelected] = useState<string>();
   const [loading, setIsLoading] = useState<boolean>(true);
   const [options, setOptions] = useState<Array<FileOption>>();
+  const [initContent, setInitContent] = useState('');
+  const ref = useRef<EditorHandler | null>(null);
 
-  const data: DataType[] = [
-    { key: '1', text: 'Sample text 1' },
-    { key: '2', text: 'Sample text 2' },
-    { key: '3', text: 'Sample text 3' },
-  ];
-
-  const columns = [
-    {
-      title: 'Text',
-      dataIndex: 'key',
-      key: 0,
-    },
-    {
-      title: 'Timestamp',
-      dataIndex: 'text',
-      key: 1,
-    },
-  ];
+  const onStart = () => {
+    if (!selected) return;
+    api.startAction({pid:330160, action: '合作助战'})
+  };
 
   // load file list
   useEffect(() => {
-    api.getFileList()
+    api
+      .getFileList()
       .then((data) => {
         const options = data.files.map((item: any, index: number) => ({
           value: item,
@@ -66,15 +54,16 @@ const CollaborationContent: React.FC = () => {
   // get file content
   useEffect(() => {
     if (selected) {
-      api.readFile(selected)
+      api
+        .readFile(selected)
         .then((data) => {
-          console.log(data);
+          setInitContent(data);
         })
         .catch((error) => {
           console.log(error);
         });
     }
-  }, [selected])
+  }, [selected]);
 
   return (
     <div className={styles.collaboration}>
@@ -92,6 +81,7 @@ const CollaborationContent: React.FC = () => {
             type='primary'
             icon={<PlayCircleOutlined />}
             disabled={!selected}
+            onClick={onStart}
           >
             开始
           </Button>
@@ -101,11 +91,12 @@ const CollaborationContent: React.FC = () => {
           </Button>
         </div>
       </div>
-      <Table
-        columns={columns}
-        dataSource={data}
-        pagination={{ pageSize: 10 }}
-      />
+      <div className={styles.scriptSection}>
+        <CodeEditor ref={ref} value={initContent} height={290}/>
+        <Button type='primary' icon={<SaveOutlined />}>
+          保存
+        </Button>
+      </div>
     </div>
   );
 };
