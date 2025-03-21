@@ -3,16 +3,8 @@ import pyautogui
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import time
-from app.services.game_services import GameService
 from app.services.utility_services import UtilityService
-from app.models.schemas import (
-    CollabRequest,
-    IceFortressRequest,
-    DarkMoonRequest,
-    TimingEventRequest,
-    BattleRequest,
-    BaseResponse
-)
+from app.services.image_services import ImageService
 from urllib.parse import unquote
 from app.utils.logger import logger
 
@@ -36,8 +28,9 @@ async def global_exception_handler(request: Request, exc: Exception):
         status_code=500,
         content={"detail": f"Internal server error: {str(exc)}"}
     )
-game_service = GameService()
+
 utility_service = UtilityService()
+image_service = ImageService()
 
 # Configure CORS
 app.add_middleware(
@@ -59,26 +52,6 @@ async def health_check():
 # Store server start time
 app.state.start_time = time.time()
 
-@app.post("/collab", response_model=BaseResponse)
-async def handle_collab(request: CollabRequest):
-    return game_service.handle_collab(request)
-
-@app.post("/ice-fortress", response_model=BaseResponse)
-async def handle_ice_fortress(request: IceFortressRequest):
-    return game_service.handle_ice_fortress(request)
-
-@app.post("/dark-moon", response_model=BaseResponse)
-async def handle_dark_moon(request: DarkMoonRequest):
-    return game_service.handle_dark_moon(request)
-
-@app.post("/timing-event", response_model=BaseResponse)
-async def handle_timing_event(request: TimingEventRequest):
-    return game_service.handle_timing_event(request)
-
-@app.post("/battle", response_model=BaseResponse)
-async def handle_battle(request: BattleRequest):
-    return game_service.handle_battle(request)
-
 ## testing purpose
 @app.post("/parse-file")
 async def parse_file(file_data: dict):
@@ -86,6 +59,13 @@ async def parse_file(file_data: dict):
     logger.info(f"Loading file: {decoded_file_name}")
     content = utility_service.read_file(decoded_file_name)
     return utility_service.parse_actions(content)
+## testing purpose
+@app.post("/start-action")
+async def start_action(config: dict):
+    action = config['action']
+    logger.info(f"Starting action: {action}")
+    return image_service.click_on_image(config['pid'], action)
+   
 
 
 @app.post("/read-file")

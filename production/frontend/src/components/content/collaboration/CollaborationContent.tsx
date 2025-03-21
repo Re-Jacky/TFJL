@@ -25,6 +25,11 @@ const CollaborationContent: React.FC = () => {
   const [initContent, setInitContent] = useState('');
   const ref = useRef<EditorHandler | null>(null);
 
+  const onStart = () => {
+    if (!selected) return;
+    api.startAction({pid:330160, action: '合作助战'})
+  };
+
   // load file list
   useEffect(() => {
     api
@@ -76,6 +81,7 @@ const CollaborationContent: React.FC = () => {
             type='primary'
             icon={<PlayCircleOutlined />}
             disabled={!selected}
+            onClick={onStart}
           >
             开始
           </Button>

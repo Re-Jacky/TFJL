@@ -11,47 +11,6 @@ from fastapi.responses import JSONResponse
 
 class UtilityService:
     @staticmethod
-    async def compare_images(image1: UploadFile, image2: UploadFile):
-        # Read images
-        img1 = Image.open(image1.file)
-        img2 = Image.open(image2.file)
-        
-        # Convert to numpy arrays
-        np_img1 = np.array(img1)
-        np_img2 = np.array(img2)
-        
-        # Convert to grayscale
-        gray1 = cv2.cvtColor(np_img1, cv2.COLOR_RGB2GRAY)
-        gray2 = cv2.cvtColor(np_img2, cv2.COLOR_RGB2GRAY)
-        
-        # Calculate similarity using structural similarity index
-        score = cv2.matchTemplate(gray1, gray2, cv2.TM_CCOEFF_NORMED)
-        
-        return {"similarity_score": float(score.max())}
-
-    @staticmethod
-    def control_window(window_title: str, action: str):
-        try:
-            # Find the window
-            windows = pyautogui.getWindowsWithTitle(window_title)
-            if not windows:
-                return {"error": f"Window with title containing '{window_title}' not found"}
-            
-            window = windows[0]
-            
-            # Perform the requested action
-            if action == "minimize":
-                window.minimize()
-            elif action == "maximize":
-                window.maximize()
-            elif action == "restore":
-                window.restore()
-            
-            return {"success": True, "action": action}
-        except Exception as e:
-            return {"error": str(e)}
-
-    @staticmethod
     def read_file(file_name: str):
         try:
             # Ensure base directory is absolute and exists

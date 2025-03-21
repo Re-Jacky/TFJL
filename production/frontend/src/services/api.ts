@@ -1,3 +1,4 @@
+import { pid } from "process";
 import proxy from "./proxy";
 
 export type Wnd = {
@@ -9,6 +10,7 @@ export interface API {
     readFile: (file: string) => Promise<string>;
     healthCheck: () => Promise<{ status: string }>;
     getWindows: () => Promise<{ windows: Array<Wnd>}>;
+    startAction: (config: {pid: number; action: string;}) => Promise<{ status: string }>;
 }
 
 export const api: API = {
@@ -25,5 +27,8 @@ export const api: API = {
     },
     getWindows: async () => {
         return await proxy.get('windows');
-    }
+    },
+    startAction: async (config) => {
+        return await proxy.post('start-action', config);
+    },
 }
