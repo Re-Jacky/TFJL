@@ -27,7 +27,7 @@ const CollaborationContent: React.FC = () => {
 
   const onStart = () => {
     if (!selected) return;
-    api.startAction({pid:330160, action: '合作助战'})
+    api.startAction({pid:198586, action: '合作助战'})
   };
 
   // load file list

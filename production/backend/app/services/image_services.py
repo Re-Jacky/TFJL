@@ -21,11 +21,16 @@ class ImageService:
         """
         # Focus the window by PID
         print(f"Attempting to focus window with PID: {window_pid}")
+        window = None
         for win in pyautogui.getAllWindows():
             if win._hWnd == window_pid:
                 window = win
                 print(f"Found window: {window.title}")
                 break
+
+        if window is None:
+            print(f"Error: Could not find window with PID {window_pid}")
+            return {"error": f"Window with PID {window_pid} not found"}
 
         # Load template image from images folder
         print(f"Loading template image: {image_file_name}")
@@ -52,19 +57,17 @@ class ImageService:
             print(f"Match confidence {max_val:.2f} below threshold {confidence}")
             return {"error": "Template match confidence below threshold"}
 
-        # Calculate click position
-        click_x = window.left + max_loc[0] + template.shape[1]//2
-        click_y = window.top + max_loc[1] + template.shape[0]//2
+        # Calculate click position relative to window
+        click_x = max_loc[0] + template.shape[1]//2
+        click_y = max_loc[1] + template.shape[0]//2
 
         # Perform click
-        print(f"Clicking at position: ({click_x}, {click_y})")
-        pyautogui._pause = False
-        pyautogui.mouseDown(click_x, click_y, _pause=False)
-        pyautogui.mouseUp(click_x, click_y, _pause=False)
-        print("Click successfully executed without mouse movement")
+        WindowControlService.click_at(window_pid, click_x, click_y)
 
         return {
             "success": True,
             "click_position": {"x": click_x, "y": click_y},
             "confidence": float(max_val)
         }
+
+from app.services.window_control_services import WindowControlService
