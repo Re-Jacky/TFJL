@@ -83,10 +83,10 @@ async def save_file(script_data: dict):
     file_name = unquote(script_data.get('file'))
     content = script_data.get('content')
     
-    if not file_name or not content:
+    if not file_name:
         return JSONResponse(
             status_code=400,
-            content={"detail": "Both file name and content are required"}
+            content={"detail": "File name is are required"}
         )
     
     logger.info(f"Saving script to file: {file_name}")

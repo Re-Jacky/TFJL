@@ -4,6 +4,7 @@ import pyautogui
 from PIL import Image
 from fastapi import UploadFile, HTTPException
 from pathlib import Path
+from app.services.window_control_services import WindowControlService
 
 class ImageService:
     @staticmethod
@@ -69,5 +70,3 @@ class ImageService:
             "click_position": {"x": click_x, "y": click_y},
             "confidence": float(max_val)
         }
-
-from app.services.window_control_services import WindowControlService

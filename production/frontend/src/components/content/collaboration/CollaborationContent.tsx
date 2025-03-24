@@ -1,16 +1,20 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { Select, Button } from 'antd';
+import React, { useEffect, useRef, useState } from 'react';
+import { Select, Button, Popconfirm, Popover } from 'antd';
 import styles from './CollaborationContent.module.scss';
 import {
   PlayCircleOutlined,
   PauseCircleOutlined,
   StopOutlined,
   SaveOutlined,
+
+  MinusOutlined,
 } from '@ant-design/icons';
 import { api } from '@src/services/api';
 import CodeEditor, {
   type EditorHandler,
 } from '@src/components/editor/CodeEditor';
+import CreateFileButton from '../components/CreateFileButton';
+import DeleteFileButton from '../components/DeleteFileButton';
 
 interface FileOption {
   value: string;
@@ -26,7 +30,6 @@ const CollaborationContent: React.FC = () => {
   const [disableSaveBtn, setDisableSaveBtn] = useState<boolean>(true);
   const editorRef = useRef<EditorHandler | null>(null);
 
-
   const onStart = () => {
     if (!selected) return;
     api.startAction({ pid: 198586, action: '合作助战' });
@@ -41,9 +44,17 @@ const CollaborationContent: React.FC = () => {
       });
     }
   };
-  // load file list
-  useEffect(() => {
-    api
+
+  const onDelete = () => {
+    if (selected) {
+      // api.deleteFile(selected).then(() => {
+      //   setSelected(options?.[0].value);
+      // });
+    }
+  };
+
+  const loadFiles = async () => {
+    return api
       .getFileList()
       .then((data) => {
         const options = data.files.map((item: any, index: number) => ({
@@ -51,8 +62,7 @@ const CollaborationContent: React.FC = () => {
           label: item,
           index,
         }));
-        setOptions(options);
-        setSelected(options[0].value);
+        return options;
       })
       .catch((error) => {
         console.log(error);
@@ -60,6 +70,33 @@ const CollaborationContent: React.FC = () => {
       .finally(() => {
         setIsLoading(false);
       });
+  };
+
+  const onCreateNewFile = async (fileName: string) => {
+    const file = `${fileName}.txt`;
+    await api.saveFile(file, '');
+    const options = await loadFiles();
+    setOptions(options || []);
+    setSelected(file);
+  };
+
+  const validateDuplicateFiles = (name: string) => {
+    const file = `${name}.txt`;
+    if (options) {
+      const index = options.findIndex((item) => item.value === file);
+      return index === -1;
+    }
+    return true;
+  };
+
+  // load file list
+  useEffect(() => {
+    loadFiles().then((options) => {
+      if (options) {
+        setOptions(options || []);
+        setSelected(options[0].value);
+      }
+    });
   }, []);
 
   // get file content
@@ -79,14 +116,18 @@ const CollaborationContent: React.FC = () => {
   return (
     <div className={styles.collaboration}>
       <div className={styles.header}>
-        <Select
-          showSearch={true}
-          loading={loading}
-          value={selected}
-          onChange={setSelected}
-          options={options}
-          style={{ width: 200 }}
-        />
+        <div className={styles.select}>
+          <Select
+            showSearch={true}
+            loading={loading}
+            value={selected}
+            onChange={setSelected}
+            options={options}
+            style={{ width: 200 }}
+          />
+          <CreateFileButton onSave={onCreateNewFile} validator={validateDuplicateFiles}/>
+          <DeleteFileButton />
+        </div>
         <div className={styles.btnGroup}>
           <Button
             type='primary'
@@ -103,8 +144,20 @@ const CollaborationContent: React.FC = () => {
         </div>
       </div>
       <div className={styles.scriptSection}>
-        <CodeEditor ref={editorRef} value={initContent} height={290} onChange={(value) => {setDisableSaveBtn(value === initContent)}}/>
-        <Button type='primary' icon={<SaveOutlined />} onClick={onSave} disabled={disableSaveBtn}>
+        <CodeEditor
+          ref={editorRef}
+          value={initContent}
+          height={290}
+          onChange={(value) => {
+            setDisableSaveBtn(value === initContent);
+          }}
+        />
+        <Button
+          type='primary'
+          icon={<SaveOutlined />}
+          onClick={onSave}
+          disabled={disableSaveBtn}
+        >
           保存
         </Button>
       </div>
