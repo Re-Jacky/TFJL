@@ -78,6 +78,20 @@ async def read_file(file_data: dict):
 async def get_file_list():
     return utility_service.get_public_files()
 
+@app.post("/save-file")
+async def save_file(script_data: dict):
+    file_name = unquote(script_data.get('file'))
+    content = script_data.get('content')
+    
+    if not file_name or not content:
+        return JSONResponse(
+            status_code=400,
+            content={"detail": "Both file name and content are required"}
+        )
+    
+    logger.info(f"Saving script to file: {file_name}")
+    return utility_service.save_file(file_name, content)
+
 @app.get("/windows")
 async def get_windows():
     windows = []

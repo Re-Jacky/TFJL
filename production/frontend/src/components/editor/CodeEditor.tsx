@@ -23,7 +23,11 @@ const defaultOptions: monaco.editor.IStandaloneEditorConstructionOptions = {
   lineNumbersMinChars: 3,
   lineNumbers: 'off',
   links: false,
-  quickSuggestions: true,
+  quickSuggestions: {
+    other: true,
+    comments: true,
+    strings: true
+  },
   renderFinalNewline: 'off',
   renderLineHighlight: 'none',
   roundedSelection: false,
@@ -33,11 +37,14 @@ const defaultOptions: monaco.editor.IStandaloneEditorConstructionOptions = {
   suggestLineHeight: 26,
   wordBasedSuggestions: 'currentDocument',
   wordWrap: 'on',
+  wordSeparators: '`~!@#$%^&*()-=+[{]}\\|;:\'\",.<>/?',
   suggest: {
     shareSuggestSelections: false,
     snippetsPreventQuickSuggestions: false,
     localityBonus: false,
     filterGraceful: false,
+    showWords: true,
+    insertMode: 'insert'
   },
   minimap: {
     enabled: false,
@@ -60,16 +67,20 @@ export interface EditorHandler {
   getContent: () => string;
 }
 
-const CodeEditor: React.ForwardRefRenderFunction<EditorHandler, CodeEditorProps> = (props, ref) => {
+const CodeEditor: React.ForwardRefRenderFunction<
+  EditorHandler,
+  CodeEditorProps
+> = (props, ref) => {
   const { value, onChange, readOnly } = props;
   const internalRef = useRef<HTMLDivElement>(null);
-  const [editor, setEditor] = React.useState<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const [editor, setEditor] =
+    React.useState<monaco.editor.IStandaloneCodeEditor | null>(null);
 
   useImperativeHandle(ref, () => ({
     getContent: () => {
       return editor?.getValue() || '';
     },
-  }))
+  }));
 
   useEffect(() => {
     if (!internalRef.current) return;
@@ -90,24 +101,53 @@ const CodeEditor: React.ForwardRefRenderFunction<EditorHandler, CodeEditorProps>
   }, [value, readOnly]);
 
   useEffect(() => {
-    // register keywords
+    // Configure tokenizer for Chinese text handling
+    // This defines how different parts of the text should be highlighted
+    monaco.languages.setMonarchTokensProvider('plaintext', {
+      tokenizer: {
+        root: [
+          // Match Chinese punctuation marks
+          [/[。,，]/, 'delimiter.chinese'],
+          // Match Chinese characters (Unicode range: 4E00-9FFF)
+          [/[\u4E00-\u9FFF]+/, 'identifier.chinese'],
+          // Match whitespace
+          [/\s+/, 'white'],
+        ],
+      },
+      includeLF: true, // Include line feeds in tokenization
+      unicode: true    // Enable Unicode support
+    });
+
+    // Register auto-completion provider for Chinese text
+    // This enables suggestions when typing Chinese characters
     monaco.languages.registerCompletionItemProvider('plaintext', {
+      // Trigger completion on Chinese characters and opening brackets
+      triggerCharacters: ['[', '\u4e00-\u9fa5'],
       provideCompletionItems: (model, position) => {
-        const word = model.getWordUntilPosition(position);
+        const wordInfo = model.getWordUntilPosition(position);
+        
+        // Define the range for replacing the current word with suggestion
         const range = new monaco.Range(
           position.lineNumber,
-          word.startColumn,
+          wordInfo.startColumn,
           position.lineNumber,
-          word.endColumn
+          wordInfo.endColumn
         );
 
         return {
           suggestions: getEditorSuggestions(
             monaco.languages.CompletionItemKind.Keyword,
-            range,
+            range
           ),
         };
       },
+    });
+
+    // Configure word pattern to properly handle Chinese characters
+    // This affects word-based operations like double-click selection
+    monaco.languages.setLanguageConfiguration('plaintext', {
+      // Match either continuous Chinese characters or Latin letters
+      wordPattern: /[\u4e00-\u9fa5]+|[a-zA-Z]+/g
     });
   }, []);
 

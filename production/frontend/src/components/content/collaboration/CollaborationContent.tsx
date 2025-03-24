@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { Select, Button } from 'antd';
 import styles from './CollaborationContent.module.scss';
 import {
@@ -23,13 +23,24 @@ const CollaborationContent: React.FC = () => {
   const [loading, setIsLoading] = useState<boolean>(true);
   const [options, setOptions] = useState<Array<FileOption>>();
   const [initContent, setInitContent] = useState('');
-  const ref = useRef<EditorHandler | null>(null);
+  const [disableSaveBtn, setDisableSaveBtn] = useState<boolean>(true);
+  const editorRef = useRef<EditorHandler | null>(null);
+
 
   const onStart = () => {
     if (!selected) return;
-    api.startAction({pid:198586, action: '合作助战'})
+    api.startAction({ pid: 198586, action: '合作助战' });
   };
 
+  const onSave = () => {
+    const content = editorRef?.current?.getContent();
+    if (selected) {
+      api.saveFile(selected, content || '').then(() => {
+        setInitContent(content || '');
+        setDisableSaveBtn(true);
+      });
+    }
+  };
   // load file list
   useEffect(() => {
     api
@@ -92,8 +103,8 @@ const CollaborationContent: React.FC = () => {
         </div>
       </div>
       <div className={styles.scriptSection}>
-        <CodeEditor ref={ref} value={initContent} height={290}/>
-        <Button type='primary' icon={<SaveOutlined />}>
+        <CodeEditor ref={editorRef} value={initContent} height={290} onChange={(value) => {setDisableSaveBtn(value === initContent)}}/>
+        <Button type='primary' icon={<SaveOutlined />} onClick={onSave} disabled={disableSaveBtn}>
           保存
         </Button>
       </div>
