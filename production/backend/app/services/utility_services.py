@@ -63,3 +63,29 @@ class UtilityService:
             return CommandParser.parse_script(content)
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error parsing actions: {str(e)}")
+            
+    @staticmethod
+    def save_file(file_name: str, content: str) -> Dict[str, str]:
+        """Save content to a file in the public directory."""
+        try:
+            # Ensure base directory is absolute and exists
+            public_path = Path("public").resolve()
+            if not public_path.exists():
+                public_path.mkdir(parents=True)
+
+            # Sanitize file name and create full path
+            safe_name = Path(file_name).name  # Get just the filename part
+            file_path = public_path / safe_name
+
+            # Ensure the resolved path is still within public directory
+            if not str(file_path.resolve()).startswith(str(public_path)):
+                raise HTTPException(status_code=400, detail="Invalid file path")
+
+            # Write content to file
+            file_path.write_text(content, encoding='utf-8')
+            return {"status": "success", "message": f"File '{safe_name}' saved successfully"}
+
+        except HTTPException as he:
+            raise he
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))

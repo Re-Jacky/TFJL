@@ -11,6 +11,7 @@ export interface API {
     healthCheck: () => Promise<{ status: string }>;
     getWindows: () => Promise<{ windows: Array<Wnd>}>;
     startAction: (config: {pid: number; action: string;}) => Promise<{ status: string }>;
+    saveFile: (file: string, content: string) => Promise<{ status: string }>;
 }
 
 export const api: API = {
@@ -31,4 +32,7 @@ export const api: API = {
     startAction: async (config) => {
         return await proxy.post('start-action', config);
     },
+    saveFile: async (file: string, content: string) => {
+        return await proxy.post('save-file', { file, content });
+    }
 }

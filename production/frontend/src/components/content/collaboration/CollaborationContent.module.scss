@@ -5,6 +5,11 @@
     margin: 10px 0;
     display: flex;
     justify-content: space-between;
+    .select {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
     .btnGroup {
       display: flex;
       gap: 5px;
