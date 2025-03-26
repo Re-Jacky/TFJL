@@ -1,13 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Select, Button, Popconfirm, Popover } from 'antd';
+import { Select, Button } from 'antd';
 import styles from './CollaborationContent.module.scss';
 import {
   PlayCircleOutlined,
   PauseCircleOutlined,
   StopOutlined,
   SaveOutlined,
-
-  MinusOutlined,
 } from '@ant-design/icons';
 import { api } from '@src/services/api';
 import CodeEditor, {
@@ -15,6 +13,8 @@ import CodeEditor, {
 } from '@src/components/editor/CodeEditor';
 import CreateFileButton from '../components/CreateFileButton';
 import DeleteFileButton from '../components/DeleteFileButton';
+import { useSelector } from 'react-redux';
+import { selectActiveWindow } from '@src/store/selectors';
 
 interface FileOption {
   value: string;
@@ -29,10 +29,11 @@ const CollaborationContent: React.FC = () => {
   const [initContent, setInitContent] = useState('');
   const [disableSaveBtn, setDisableSaveBtn] = useState<boolean>(true);
   const editorRef = useRef<EditorHandler | null>(null);
+  const activeWindow = useSelector(selectActiveWindow);
 
   const onStart = () => {
-    if (!selected) return;
-    api.startAction({ pid: 198586, action: '合作助战' });
+    if (!selected || !activeWindow) return;
+    api.startAction({ pid: parseInt(activeWindow), action: '合作助战' });
   };
 
   const onSave = () => {
