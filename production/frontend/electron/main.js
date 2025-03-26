@@ -3,16 +3,41 @@ const path = require('path');
 const { spawn } = require('child_process');
 const fs = require('fs');
 const logger = require('./logger');
+const net = require('net');
 const isDev = process.env.NODE_ENV === 'development' || !fs.existsSync(path.join(__dirname, '../dist/index.html'));
+
+// Disable the single instance lock to allow multiple instances
+app.allowRendererProcessReuse = true;
+app.commandLine.appendSwitch('disable-site-isolation-trials');
+
 
 let pythonServer = null;
 
-function startPythonServer() {
+function checkPortInUse(port) {
+  return new Promise((resolve) => {
+    const server = net.createServer()
+      .once('error', () => resolve(true))
+      .once('listening', () => {
+        server.close();
+        resolve(false);
+      })
+      .listen(port);
+  });
+}
+
+async function startPythonServer() {
   try {
     const serverPath = path.join(process.resourcesPath, 'backend/tfjl_server.exe');
 
     if (!fs.existsSync(serverPath)) {
       throw new Error(`Python server executable not found at: ${serverPath}`);
+    }
+
+    // Check if server is already running on port 8000
+    const isPortInUse = await checkPortInUse(8000);
+    if (isPortInUse) {
+      logger.info('Python server is already running on port 8000');
+      return;
     }
 
     logger.info('Starting Python server...');
