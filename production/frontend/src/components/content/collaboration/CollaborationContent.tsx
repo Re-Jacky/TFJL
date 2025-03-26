@@ -80,6 +80,15 @@ const CollaborationContent: React.FC = () => {
     setSelected(file);
   };
 
+  const onDeleteFile = async () => {
+    if (selected) {
+      await api.deleteFile(selected);
+      const options = await loadFiles();
+      setOptions(options || []);
+      setSelected(options?.[0].value);
+    }
+  };
+
   const validateDuplicateFiles = (name: string) => {
     const file = `${name}.txt`;
     if (options) {
@@ -126,7 +135,7 @@ const CollaborationContent: React.FC = () => {
             style={{ width: 200 }}
           />
           <CreateFileButton onSave={onCreateNewFile} validator={validateDuplicateFiles}/>
-          <DeleteFileButton />
+          <DeleteFileButton onDelete={onDeleteFile}/>
         </div>
         <div className={styles.btnGroup}>
           <Button

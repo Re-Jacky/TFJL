@@ -12,6 +12,7 @@ export interface API {
     getWindows: () => Promise<{ windows: Array<Wnd>}>;
     startAction: (config: {pid: number; action: string;}) => Promise<{ status: string }>;
     saveFile: (file: string, content: string) => Promise<{ status: string }>;
+    deleteFile: (file: string) => Promise<{ status: string }>;
 }
 
 export const api: API = {
@@ -34,5 +35,8 @@ export const api: API = {
     },
     saveFile: async (file: string, content: string) => {
         return await proxy.post('save-file', { file, content });
+    },
+    deleteFile: async (file: string) => {
+        return await proxy.post('delete-file', { file });
     }
 }

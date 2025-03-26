@@ -92,6 +92,26 @@ async def save_file(script_data: dict):
     logger.info(f"Saving script to file: {file_name}")
     return utility_service.save_file(file_name, content)
 
+@app.post("/delete-file")
+async def delete_file(file_data: dict):
+    file_name = unquote(file_data.get('file'))
+    
+    if not file_name:
+        return JSONResponse(
+            status_code=400,
+            content={"detail": "File name is required"}
+        )
+    
+    try:
+        logger.info(f"Deleting file: {file_name}")
+        return utility_service.delete_file(file_name)
+    except Exception as e:
+        logger.error(f"Error deleting file: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"detail": f"Error deleting file: {str(e)}"}
+        )
+
 @app.get("/windows")
 async def get_windows():
     windows = []
