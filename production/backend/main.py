@@ -43,6 +43,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# pid is used to identify the window to be controlled
+# it is passed in the header of the request, 
+# and it is used to identify the client connection
 def get_req_pid(request: Request):
     return request.headers.get('x-pid')
 
@@ -95,14 +98,14 @@ async def save_file(request: Request, script_data: dict):
         )
     
     logger.info(f"Saving script to file: {file_name}")
-    resp =  utility_service.save_file(file_name, content)
-    await event_service.broadcast_log("info", "保存文件: " + file_name + " 成功!", [pid])
+    resp = utility_service.save_file(file_name, content)
+    await event_service.broadcast_log("info", "保存文件: " + file_name + " 成功!")
     return resp
 
 @app.post("/delete-file")
-async def delete_file(file_data: dict):
+async def delete_file(request: Request, file_data: dict):
     file_name = unquote(file_data.get('file'))
-    
+    pid = get_req_pid(request)
     if not file_name:
         return JSONResponse(
             status_code=400,
@@ -111,9 +114,12 @@ async def delete_file(file_data: dict):
     
     try:
         logger.info(f"Deleting file: {file_name}")
-        return utility_service.delete_file(file_name)
+        resp = utility_service.delete_file(file_name)
+        await event_service.broadcast_log("info", "删除文件: " + file_name + " 成功!")
+        return resp
     except Exception as e:
         logger.error(f"Error deleting file: {str(e)}")
+        await event_service.broadcast_log("error", "删除文件: " + file_name + " 失败!")
         return JSONResponse(
             status_code=500,
             content={"detail": f"Error deleting file: {str(e)}"}

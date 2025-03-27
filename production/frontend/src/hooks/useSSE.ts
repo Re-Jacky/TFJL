@@ -20,7 +20,6 @@ export const useSSE = () => {
 
     eventSource.onmessage = (event) => {
       try {
-        console.log('SSE event:', event.data);
         const action = JSON.parse(event.data.replace(/'/g, '"'));
         dispatch(setSSELastEvent(action));
         switch (action.type) {
@@ -50,6 +49,7 @@ export const useSSE = () => {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
       dispatch(setSSEConnected(false));
+      window.localStorage.clear();
     }
 };
 

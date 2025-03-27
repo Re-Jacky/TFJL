@@ -6,7 +6,7 @@ import LoadingMask from './components/loading/LoadingMask';
 import { api } from '@src/services/api';
 import { useSSE } from './hooks/useSSE';
 import { selectActiveWindow } from './store/selectors';
-import { useAppSelector } from './store/store';
+import { useAppSelector,useAppDispatch } from './store/store';
 
 const App: React.FC = () => {
   const [initializing, setInitializing] = useState(true);
@@ -34,8 +34,9 @@ const App: React.FC = () => {
    * @param {string} activeWindow - The active window from the men
    */
   useEffect(() => {
-    if (!initializing && activeWindow) {
-      connect(activeWindow);
+    if (!initializing) {
+      // if there's no active window, use the current timestamp as a default id, when the window is actived, the id will be updated
+      connect(activeWindow ?? Date.now().toString());
     }
     return () => {
       disconnect();
