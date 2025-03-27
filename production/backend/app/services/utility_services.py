@@ -11,12 +11,17 @@ from fastapi.responses import JSONResponse
 
 class UtilityService:
     @staticmethod
+    def get_public_path() -> Path:
+        public_path = Path("public").resolve()
+        if not public_path.exists() or not public_path.is_dir():
+                raise HTTPException(status_code=404, detail="Public directory not found")
+        return public_path
+
+    @staticmethod
     def read_file(file_name: str):
         try:
             # Ensure base directory is absolute and exists
-            public_path = Path("public").resolve()
-            if not public_path.exists() or not public_path.is_dir():
-                raise HTTPException(status_code=404, detail="Public directory not found")
+            public_path = UtilityService.get_public_path()
 
             # Sanitize file name and create full path
             safe_name = Path(file_name).name  # Get just the filename part
@@ -42,9 +47,7 @@ class UtilityService:
     @staticmethod
     def get_public_files() -> Dict[str, List[str]]:
         try:
-            public_path = Path("public").resolve()
-            if not public_path.exists() or not public_path.is_dir():
-                raise HTTPException(status_code=404, detail="Public directory not found")
+            public_path = UtilityService.get_public_path()
 
             # Get all files from public directory
             files = [f.name for f in public_path.iterdir() if f.is_file() and not f.name.startswith(".")]
@@ -69,9 +72,7 @@ class UtilityService:
         """Save content to a file in the public directory."""
         try:
             # Ensure base directory is absolute and exists
-            public_path = Path("public").resolve()
-            if not public_path.exists():
-                public_path.mkdir(parents=True)
+            public_path = UtilityService.get_public_path()
 
             # Sanitize file name and create full path
             safe_name = Path(file_name).name  # Get just the filename part
@@ -84,6 +85,34 @@ class UtilityService:
             # Write content to file
             file_path.write_text(content, encoding='utf-8')
             return {"status": "success", "message": f"File '{safe_name}' saved successfully"}
+
+        except HTTPException as he:
+            raise he
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @staticmethod
+    def delete_file(file_name: str) -> Dict[str, str]:
+        """Delete a file from the public directory."""
+        try:
+            # Ensure base directory is absolute and exists
+            public_path = UtilityService.get_public_path()
+
+            # Sanitize file name and create full path
+            safe_name = Path(file_name).name
+            file_path = public_path / safe_name
+
+            # Ensure the resolved path is still within public directory
+            if not str(file_path.resolve()).startswith(str(public_path)):
+                raise HTTPException(status_code=400, detail="Invalid file path")
+
+            # Check if file exists
+            if not file_path.is_file():
+                raise HTTPException(status_code=404, detail=f"File '{safe_name}' not found")
+
+            # Delete the file
+            file_path.unlink()
+            return {"status": "success", "message": f"File '{safe_name}' deleted successfully"}
 
         except HTTPException as he:
             raise he

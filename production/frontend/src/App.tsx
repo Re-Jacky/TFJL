@@ -4,17 +4,58 @@ import Header from './components/header/Header';
 import TaskTabs from './components/tabs/TaskTabs';
 import LoadingMask from './components/loading/LoadingMask';
 import { api } from '@src/services/api';
+import { useSSE } from './hooks/useSSE';
+import { selectActiveWindow } from './store/selectors';
+import { useAppSelector } from './store/store';
 
 const App: React.FC = () => {
   const [initializing, setInitializing] = useState(true);
+  const activeWindow = useAppSelector(selectActiveWindow)
+  const { connect, disconnect } = useSSE();
 
   useEffect(() => {
-    api.healthCheck().then(() => {
-      setInitializing(false);
-    }).catch(() => {
-      setInitializing(true);
-    });
+    // Check if the API is healthy every 1 second until it is healthy
+    const intervalId = setInterval(() => {
+      api.healthCheck().then(() => {
+        setInitializing(false);
+        clearInterval(intervalId);
+      }).catch(() => {
+        setInitializing(true);
+      });
+    }, 1000);
+    // Clean up the interval when the component unmounts
+    return () => clearInterval(intervalId);
   }, []);
+
+  /**
+   * Set up SSE connection when the active window changes
+   * and disconnect when the component unmounts.
+   *
+   * @param {string} activeWindow - The active window from the men
+   */
+  useEffect(() => {
+    if (!initializing && activeWindow) {
+      connect(activeWindow);
+    }
+    return () => {
+      disconnect();
+    };
+  }, [initializing, activeWindow]);
+
+
+  /**
+   * Set the active window to localStorage when the active window changes
+   */
+  useEffect(() => {
+    if (activeWindow) {
+      localStorage.setItem('pid', activeWindow);
+    }
+    return () => {
+      // Clean up the localStorage when the component unmounts
+      localStorage.removeItem('pid');
+    };
+  }, [activeWindow]);
+  
 
   return (
     <Layout
