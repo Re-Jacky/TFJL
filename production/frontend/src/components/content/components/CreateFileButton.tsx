@@ -1,7 +1,7 @@
 import React, { ChangeEvent, ChangeEventHandler, useState } from 'react';
 import { Popover, Button, Input } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
-import { b } from 'vite/dist/node/types.d-aGj9QkWt';
+import styles from  './CreateFileButton.module.scss';
 
 export interface CreateFileButtonProps {
   validator?: (value: string) => boolean;
@@ -27,14 +27,14 @@ const CreateFileButton: React.FC<CreateFileButtonProps> = (props) => {
 
   const getContent = () => {
     return (
-      <>
+      <div className={styles.createFileButton}>
         <Input
           placeholder='输入文件名'
           suffix={'.txt'}
           onChange={onChange}
         ></Input>
-        <Button onClick={() => onSave?.(fileName)} disabled={disableSave}>确认</Button>
-      </>
+        <Button type={'primary'} className={styles.confirmBtn} onClick={() => onSave?.(fileName)} disabled={disableSave}>确认</Button>
+      </div>
     );
   };
 
