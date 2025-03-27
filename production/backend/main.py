@@ -1,9 +1,10 @@
 from fastapi import FastAPI, Request, File, UploadFile
 import pyautogui
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 import time
 from app.services.utility_services import UtilityService
+from app.services.event_services import EventService
 from app.services.image_services import ImageService
 from urllib.parse import unquote
 from app.utils.logger import logger
@@ -30,6 +31,7 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 utility_service = UtilityService()
+event_service = EventService()
 image_service = ImageService()
 
 # Configure CORS
@@ -40,6 +42,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+def get_req_pid(request: Request):
+    return request.headers.get('x-pid')
 
 @app.get("/health")
 async def health_check():
@@ -79,10 +84,10 @@ async def get_file_list():
     return utility_service.get_public_files()
 
 @app.post("/save-file")
-async def save_file(script_data: dict):
+async def save_file(request: Request, script_data: dict):
     file_name = unquote(script_data.get('file'))
     content = script_data.get('content')
-    
+    pid = get_req_pid(request)
     if not file_name:
         return JSONResponse(
             status_code=400,
@@ -90,7 +95,9 @@ async def save_file(script_data: dict):
         )
     
     logger.info(f"Saving script to file: {file_name}")
-    return utility_service.save_file(file_name, content)
+    resp =  utility_service.save_file(file_name, content)
+    await event_service.broadcast_log("info", "保存文件: " + file_name + " 成功!", [pid])
+    return resp
 
 @app.post("/delete-file")
 async def delete_file(file_data: dict):
@@ -119,6 +126,47 @@ async def get_windows():
         if window.title and window.title == '塔防精灵':
             windows.append({"title": window.title, "pid": window._hWnd})
     return {"windows": windows}
+
+
+@app.get("/sse")
+async def event_stream(request: Request):
+    pid = request.query_params.get('pid')
+    if not pid:
+        return JSONResponse(
+            status_code=422,
+            content={"detail": "pid is required"}
+        )
+
+    client_queue = await event_service.connect(pid)
+    await event_service.broadcast_log("info", f"初始化成功！", [pid])
+    try:
+        async def event_generator():
+            while True:
+                try:
+                    event = await client_queue.get()
+                    if event is None:  # Check for explicit disconnect signal
+                        break
+                    event_data = await event_service.format_sse(event)
+                    yield event_data
+                except Exception as e:
+                    logger.error(f"Error generating event: {str(e)}")
+                    # Don't break on transient errors, continue the loop
+                    continue
+
+        return StreamingResponse(
+            event_generator(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no",
+                "Access-Control-Allow-Origin": "*"
+            }
+        )
+    except Exception as e:
+        logger.error(f"Error in event stream: {str(e)}")
+        await event_service.disconnect(client_queue)
+        raise
 
 if __name__ == "__main__":
     import uvicorn

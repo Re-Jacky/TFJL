@@ -1,3 +1,5 @@
-import { RootState } from './index';
+import sseSlice from './slices/sseSlice';
+import uiSlice from './slices/uiSlice';
 
-export const selectActiveWindow = (state: RootState): string | null => state.root.activeWindow;
+export const { selectSSEConnected, selectSSELastEvent } = sseSlice.selectors;
+export const { selectActiveWindow, selectLogRecords, selectVehicle } = uiSlice.selectors;

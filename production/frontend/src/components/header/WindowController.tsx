@@ -5,8 +5,8 @@ import styles from './WindowController.module.scss';
 import { api } from '@src/services/api';
 import { useSelector } from 'react-redux';
 import { selectActiveWindow } from '@src/store/selectors';
-import { setActiveWindow } from '@src/store/slices/rootSlice';
-import { useAppDispatch } from '@src/store';
+import { setActiveWindow } from '@src/store/actions';
+import { useAppDispatch } from '@src/store/store';
 
 const WindowController: React.FC = () => {
   const activeWindow = useSelector(selectActiveWindow);

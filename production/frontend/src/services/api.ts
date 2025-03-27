@@ -28,7 +28,8 @@ export const api: API = {
         return await proxy.get('health');
     },
     getWindows: async () => {
-        return await proxy.get('windows');
+        // return await proxy.get('windows');
+        return {windows: [{title: 'test', pid: 1}, {title: 'test2', pid: 2}]}
     },
     startAction: async (config) => {
         return await proxy.post('start-action', config);
@@ -38,5 +39,5 @@ export const api: API = {
     },
     deleteFile: async (file: string) => {
         return await proxy.post('delete-file', { file });
-    }
+    },
 }
