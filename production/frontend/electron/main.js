@@ -115,6 +115,41 @@ app.on('will-quit', () => {
   // Kill Python server process
   if (pythonServer) {
     logger.info('Shutting down Python server...');
-    pythonServer.kill();
+    try {
+      pythonServer.kill('SIGKILL');
+    } catch (err) {
+      logger.error(`Failed to kill Python server process: ${err.message}`);
+    }
   }
+});
+
+// Handle unexpected exits
+process.on('uncaughtException', (err) => {
+  logger.error(`Uncaught Exception: ${err.message}`);
+  
+  // Cleanup before exiting
+  if (pythonServer) {
+    try {
+      pythonServer.kill('SIGKILL');
+    } catch (killErr) {
+      logger.error(`Failed to kill Python server during crash: ${killErr.message}`);
+    }
+  }
+  
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error(`Unhandled Rejection at: ${promise}, reason: ${reason}`);
+  
+  // Cleanup before exiting
+  if (pythonServer) {
+    try {
+      pythonServer.kill('SIGKILL');
+    } catch (killErr) {
+      logger.error(`Failed to kill Python server during crash: ${killErr.message}`);
+    }
+  }
+  
+  process.exit(1);
 });

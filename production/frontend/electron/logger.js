@@ -1,12 +1,31 @@
 const winston = require('winston');
 const path = require('path');
-
-const { app } = require('electron');
-const logDir = path.join(app.getAppPath(), 'logs');
 const fs = require('fs');
-if (!fs.existsSync(logDir)) {
-  fs.mkdirSync(logDir, { recursive: true });
+const isDev = process.env.NODE_ENV === 'development';
+
+// Get the directory where the executable lives
+const exeDir = path.dirname(process.execPath);
+// Define the log directory path
+const logDir = isDev ?  path.join(__dirname, '../logs') : path.join(exeDir, 'logs');
+
+// Create the directory (with safety checks)
+function ensureLogDir() {
+  if (fs.existsSync(logDir)) {
+    // If it exists but is a FILE (not a directory), delete it
+    const stats = fs.statSync(logDir);
+    if (!stats.isDirectory()) {
+      fs.rmSync(logDir, { force: true });
+    }
+  }
+
+  // Create the directory (including parents if needed)
+  if (!fs.existsSync(logDir)) {
+    fs.mkdirSync(logDir, { recursive: true });
+  }
 }
+
+// Initialize the directory
+ensureLogDir();
 
 const logger = winston.createLogger({
   level: 'info',
