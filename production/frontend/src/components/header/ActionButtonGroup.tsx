@@ -4,7 +4,6 @@ import styles from './ActionButtonGroup.module.scss';
 
 const ActionButtonGroup: React.FC = () => {
   const handleStart = () => {
-    console.log('开始操作');
 
   };
 

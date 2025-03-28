@@ -5,10 +5,11 @@ import styles from './VehiclePreview.module.scss';
 const { useBreakpoint } = Grid;
 
 const VehiclePreview: React.FC = () => {
+  
   const screens = useBreakpoint();
   const [activeCell, setActiveCell] = useState<number | null>(null);
   const [cellValues, setCellValues] = useState<string[]>(
-    Array(8).fill('Cell Content')
+    Array(7).fill('Cell Content')
   );
 
   const handleDoubleClick = (index: number) => {
@@ -27,20 +28,21 @@ const VehiclePreview: React.FC = () => {
       <div
         className={`${styles.gridContainer} ${screens.xs ? styles.xs : styles.lg}`}
       >
-        {cellValues.map((value, index) => (
+        {[...cellValues].reverse().map((value, index) => (
           <div
             key={index}
-            onDoubleClick={() => handleDoubleClick(index)}
+            onDoubleClick={() => handleDoubleClick(cellValues.length - 1 - index)}
             className={styles.cell}
+            style={{ gridArea: `cell${cellValues.length - 1 - index}` }}
           >
-            {activeCell === index ? (
+            {activeCell === cellValues.length - 1 - index ? (
               <Input
                 className={styles.cellInput}
                 autoFocus
                 defaultValue={value}
-                onBlur={(e) => handleBlur(index, e.target.value)}
+                onBlur={(e) => handleBlur(cellValues.length - 1 - index, e.target.value)}
                 onPressEnter={(e) =>
-                  handleBlur(index, (e.target as HTMLInputElement).value)
+                  handleBlur(cellValues.length - 1 - index, (e.target as HTMLInputElement).value)
                 }
               />
             ) : (
@@ -48,6 +50,10 @@ const VehiclePreview: React.FC = () => {
             )}
           </div>
         ))}
+      </div>
+      <div className={styles.footer}>
+        <span>装备: <b className={styles.footerText}>强袭</b></span>
+        <span>第<a className={styles.footerText}>123</a>关</span>
       </div>
     </div>
   );

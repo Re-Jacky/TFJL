@@ -49,11 +49,11 @@ const App: React.FC = () => {
    */
   useEffect(() => {
     if (activeWindow) {
-      localStorage.setItem('pid', activeWindow);
+      window.localStorage.setItem('pid', activeWindow);
     }
     return () => {
       // Clean up the localStorage when the component unmounts
-      localStorage.removeItem('pid');
+      window.localStorage.removeItem('pid');
     };
   }, [activeWindow]);
   

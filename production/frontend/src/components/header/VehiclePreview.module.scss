@@ -19,16 +19,48 @@
   }
 }
 
+.footer {
+  border-top: 1px solid var(--color-border);
+  padding-top: 3px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  .footerText {
+    color: yellowgreen
+  }
+}
+
 .gridContainer {
   display: grid;
   gap: 8px;
 
   &.xs {
     grid-template-columns: repeat(2, 60px);
+    grid-template-areas:
+      "cell6 cell6"
+      "cell5 cell4"
+      "cell3 cell2"
+      "cell1 cell0";
+
+    [style*="cell6"] {
+      margin: 0 auto;
+      width: 50%;
+    }
   }
 
   &.lg {
     grid-template-columns: repeat(2, 80px);
+    grid-template-areas:
+      "cell6 cell6"
+      "cell5 cell4"
+      "cell3 cell2"
+      "cell1 cell0";
+
+    [style*="cell6"] {
+      grid-column: span 2;
+      width: 100%;
+    }
   }
 }
 
