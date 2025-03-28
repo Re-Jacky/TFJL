@@ -24,8 +24,7 @@ export const api: API = {
         return await proxy.get('health');
     },
     getWindows: async () => {
-        // return await proxy.get('windows');
-        return { windows: [{title: 'test', pid: 1234}, {title: 'test2', pid: 1235}]}
+        return await proxy.get('windows');
     },
     startAction: async (config) => {
         return await proxy.post('start-action', config);
