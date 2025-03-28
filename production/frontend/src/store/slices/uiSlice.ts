@@ -9,6 +9,9 @@ export interface LogRecord {
 
 export interface Vehicle {
   side: 'left' | 'right' | undefined;
+  equipment: string | undefined;
+  level: number | undefined; // current level of a game
+  seat: number | undefined; // 1-6, opened seats for cards
   info: {
     [key: number] : {
       card: string | undefined;
@@ -26,7 +29,7 @@ export interface UIState {
 
 const generateVehicleInfo = () => {
   const info: Vehicle['info'] = {};
-  for (let i = 1; i <= 7; i++) {
+  for (let i = 0; i <= 6; i++) {
     info[i] = {
       card: undefined,
       level: undefined,
@@ -41,6 +44,9 @@ const initialState: UIState = {
   logRecords: [],
   vehicle: {
     side: undefined,
+    level: undefined,
+    seat: undefined,
+    equipment: undefined,
     info: generateVehicleInfo()
   }
 }
