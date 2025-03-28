@@ -4,6 +4,7 @@ import pyautogui
 from PIL import Image
 import os
 import re
+import sys
 from pathlib import Path
 from typing import List, Dict, Union, Optional
 from fastapi import UploadFile, File, HTTPException
@@ -12,17 +13,18 @@ from fastapi.responses import JSONResponse
 class UtilityService:
     @staticmethod
     def get_public_path() -> Path:
-        public_path = Path("public").resolve()
+        if getattr(sys, 'frozen', False):
+            public_path = Path(sys.executable).parent.parent / "public"
+        else:
+            public_path = Path().resolve().parent / 'public'
         if not public_path.exists() or not public_path.is_dir():
-                raise HTTPException(status_code=404, detail="Public directory not found")
+            raise HTTPException(status_code=404, detail="Public directory not found: " + str(public_path))
         return public_path
 
     @staticmethod
     def read_file(file_name: str):
         try:
-            # Ensure base directory is absolute and exists
             public_path = UtilityService.get_public_path()
-
             # Sanitize file name and create full path
             safe_name = Path(file_name).name  # Get just the filename part
             file_path = public_path / safe_name
@@ -48,7 +50,6 @@ class UtilityService:
     def get_public_files() -> Dict[str, List[str]]:
         try:
             public_path = UtilityService.get_public_path()
-
             # Get all files from public directory
             files = [f.name for f in public_path.iterdir() if f.is_file() and not f.name.startswith(".")]
             return {"files": files}
@@ -71,9 +72,7 @@ class UtilityService:
     def save_file(file_name: str, content: str) -> Dict[str, str]:
         """Save content to a file in the public directory."""
         try:
-            # Ensure base directory is absolute and exists
             public_path = UtilityService.get_public_path()
-
             # Sanitize file name and create full path
             safe_name = Path(file_name).name  # Get just the filename part
             file_path = public_path / safe_name

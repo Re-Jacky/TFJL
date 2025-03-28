@@ -69,6 +69,10 @@
       {
         "from": "../backend/dist/tfjl_server.exe",
         "to": "backend/tfjl_server.exe"
+      },
+      {
+        "from": "../public",
+        "to": "../public"
       }
     ],
     "win": {
