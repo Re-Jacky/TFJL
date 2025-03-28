@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import type { Wnd } from '@src/types';
 
 export interface LogRecord {
   timestamp: string;
@@ -18,6 +19,7 @@ export interface Vehicle {
 
 export interface UIState {
     activeWindow: string | null;
+    windows: Array<Wnd>
     logRecords: Array<LogRecord>;
     vehicle: Vehicle;
 }
@@ -35,6 +37,7 @@ const generateVehicleInfo = () => {
 
 const initialState: UIState = {
   activeWindow: null,
+  windows: [],
   logRecords: [],
   vehicle: {
     side: undefined,
@@ -49,6 +52,7 @@ const uiSlice = createSlice({
     selectActiveWindow: (state) => state.activeWindow,
     selectLogRecords: (state) => state.logRecords,
     selectVehicle: (state) => state.vehicle,
+    selectWindows: (state) => state.windows,
   },
   reducers: {
     setActiveWindow: (state, action: PayloadAction<string | null>) => {
@@ -65,6 +69,9 @@ const uiSlice = createSlice({
     },
     setVehicle: (state, action: PayloadAction<Vehicle>) => {
       state.vehicle = action.payload;
+    },
+    setWindows: (state, action: PayloadAction<Array<Wnd>>) => {
+      state.windows = action.payload;
     },
   },
 });

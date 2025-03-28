@@ -1,21 +1,27 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Select, Button, Checkbox } from 'antd';
-import { WindowsFilled, AimOutlined } from '@ant-design/icons';
+import { WindowsFilled, AimOutlined, ReloadOutlined } from '@ant-design/icons';
 import styles from './WindowController.module.scss';
-import { api } from '@src/services/api';
 import { useSelector } from 'react-redux';
-import { selectActiveWindow } from '@src/store/selectors';
+import { selectActiveWindow, selectWindows } from '@src/store/selectors';
 import { setActiveWindow } from '@src/store/actions';
 import { useAppDispatch } from '@src/store/store';
+import { getWindows } from '@src/store/thunks';
 
 const WindowController: React.FC = () => {
   const activeWindow = useSelector(selectActiveWindow);
   const dispatch = useAppDispatch();
   const [isWindowLocked, setIsWindowLocked] = useState<boolean>(false);
-  const [windows, setWindows] = useState<
-    Array<{ label: string; value: string }>
-  >([]);
-
+  const windows = useSelector(selectWindows);
+  const options = useMemo(
+    () =>
+      windows.map((item) => ({
+        label: item.title,
+        value: item.pid.toString(),
+      })),
+    [windows]
+  );
+  const [isHovered, setIsHovered] = useState<boolean>(false);
   const handleLocateWindow = () => {
     if (activeWindow) {
       // Add your window location logic here
@@ -29,18 +35,12 @@ const WindowController: React.FC = () => {
     }
   };
 
+  const onRefresh = useCallback(() => {
+    dispatch(getWindows());
+  }, [dispatch]);
+
   useEffect(() => {
-    api
-      .getWindows()
-      .then((res) => {
-        const wnds = res.windows.map((item) => ({
-          label: item.title,
-          value: item.pid.toString(),
-        }));
-        setWindows(wnds);
-        dispatch(setActiveWindow(wnds[0]?.value));
-      })
-      .catch((err) => console.log(err));
+    dispatch(getWindows());
   }, []);
 
   return (
@@ -49,10 +49,12 @@ const WindowController: React.FC = () => {
         disabled={isWindowLocked}
         className={styles.select}
         placeholder='Select a window'
-        options={windows}
+        options={options}
         value={activeWindow}
         onChange={(value) => dispatch(setActiveWindow(value))}
-        suffixIcon={<WindowsFilled />}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        suffixIcon={isHovered ? <ReloadOutlined onClick={onRefresh} style={{color: '#4096ff'}}/> : <WindowsFilled />}
       />
       <Button
         type='primary'
