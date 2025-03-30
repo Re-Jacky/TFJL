@@ -39,7 +39,7 @@ const CollaborationContent: React.FC = () => {
   const onSave = () => {
     const content = editorRef?.current?.getContent();
     if (selected) {
-      api.saveFile(selected, content || '').then(() => {
+      api.saveFile(selected, content || '', 'collab').then(() => {
         setInitContent(content || '');
         setDisableSaveBtn(true);
       });
@@ -56,7 +56,7 @@ const CollaborationContent: React.FC = () => {
 
   const loadFiles = async () => {
     return api
-      .getFileList()
+      .getFileList('collab')
       .then((data) => {
         const options = data.files.map((item: any, index: number) => ({
           value: item,
@@ -75,7 +75,7 @@ const CollaborationContent: React.FC = () => {
 
   const onCreateNewFile = async (fileName: string) => {
     const file = `${fileName}.txt`;
-    await api.saveFile(file, '');
+    await api.saveFile(file, '', 'collab');
     const options = await loadFiles();
     setOptions(options || []);
     setSelected(file);
@@ -83,7 +83,7 @@ const CollaborationContent: React.FC = () => {
 
   const onDeleteFile = async () => {
     if (selected) {
-      await api.deleteFile(selected);
+      await api.deleteFile(selected, 'collab');
       const options = await loadFiles();
       setOptions(options || []);
       setSelected(options?.[0].value);
@@ -113,7 +113,7 @@ const CollaborationContent: React.FC = () => {
   useEffect(() => {
     if (selected) {
       api
-        .readFile(selected)
+        .readFile(selected, 'collab')
         .then((data) => {
           setInitContent(data);
         })

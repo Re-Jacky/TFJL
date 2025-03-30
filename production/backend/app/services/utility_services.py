@@ -22,12 +22,15 @@ class UtilityService:
         return public_path
 
     @staticmethod
-    def read_file(file_name: str):
+    def read_file(file_name: str, file_type: str) -> Dict[str, str]:
         try:
             public_path = UtilityService.get_public_path()
             # Sanitize file name and create full path
             safe_name = Path(file_name).name  # Get just the filename part
-            file_path = public_path / safe_name
+            if file_type == 'collab':
+                file_path = public_path / "合作脚本" / safe_name
+            elif file_type == 'activity':
+                file_path = public_path / "活动脚本" / safe_name
 
             # Ensure the resolved path is still within base directory
             if not str(file_path.resolve()).startswith(str(public_path)):
@@ -47,11 +50,15 @@ class UtilityService:
             raise HTTPException(status_code=500, detail=str(e))
 
     @staticmethod
-    def get_public_files() -> Dict[str, List[str]]:
+    def get_files(file_type: str) -> Dict[str, List[str]]:
         try:
             public_path = UtilityService.get_public_path()
+            if file_type == 'collab':
+                file_path = public_path / "合作脚本"
+            elif file_type == 'activity':
+                file_path = public_path / "活动脚本"
             # Get all files from public directory
-            files = [f.name for f in public_path.iterdir() if f.is_file() and not f.name.startswith(".")]
+            files = [f.name for f in file_path.iterdir() if f.is_file() and not f.name.startswith(".")]
             return {"files": files}
 
         except HTTPException as he:
@@ -69,13 +76,16 @@ class UtilityService:
             raise HTTPException(status_code=500, detail=f"Error parsing actions: {str(e)}")
             
     @staticmethod
-    def save_file(file_name: str, content: str) -> Dict[str, str]:
+    def save_file(file_name: str, content: str, file_type: str) -> Dict[str, str]:
         """Save content to a file in the public directory."""
         try:
             public_path = UtilityService.get_public_path()
             # Sanitize file name and create full path
             safe_name = Path(file_name).name  # Get just the filename part
-            file_path = public_path / safe_name
+            if file_type == 'collab':
+                file_path = public_path / "合作脚本" / safe_name
+            elif file_type == 'activity':
+                file_path = public_path / "活动脚本" / safe_name
 
             # Ensure the resolved path is still within public directory
             if not str(file_path.resolve()).startswith(str(public_path)):
@@ -91,7 +101,7 @@ class UtilityService:
             raise HTTPException(status_code=500, detail=str(e))
 
     @staticmethod
-    def delete_file(file_name: str) -> Dict[str, str]:
+    def delete_file(file_name: str, file_type: str) -> Dict[str, str]:
         """Delete a file from the public directory."""
         try:
             # Ensure base directory is absolute and exists
