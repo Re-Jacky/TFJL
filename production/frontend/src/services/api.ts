@@ -12,6 +12,7 @@ export interface API {
     startAction: (config: {pid: number; action: string;}) => Promise<{ status: string }>;
     saveFile: (file: string, content: string, type: ScriptType) => Promise<{ status: string }>;
     deleteFile: (file: string, type: ScriptType) => Promise<{ status: string }>;
+    locateWindow: (pid: number) => Promise<{ status: string }>;
 }
 
 export const api: API = {
@@ -38,4 +39,7 @@ export const api: API = {
     deleteFile: async (file: string, type: ScriptType) => {
         return await proxy.post('delete-file', { file, type });
     },
+    locateWindow: async (pid: number) => {
+        return await proxy.post('locate-window', { pid }); 
+    }
 }

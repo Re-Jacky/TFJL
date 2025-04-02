@@ -6,10 +6,17 @@ import time
 from app.services.utility_services import UtilityService
 from app.services.event_services import EventService
 from app.services.image_services import ImageService
+from app.services.window_control_services import WindowControlService
 from urllib.parse import unquote
 from app.utils.logger import logger
 
 app = FastAPI()
+
+utility_service = UtilityService()
+event_service = EventService()
+image_service = ImageService()
+image_service.initialize_card_templates()
+
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
@@ -29,10 +36,6 @@ async def global_exception_handler(request: Request, exc: Exception):
         status_code=500,
         content={"detail": f"Internal server error: {str(exc)}"}
     )
-
-utility_service = UtilityService()
-event_service = EventService()
-image_service = ImageService()
 
 # Configure CORS
 app.add_middleware(
@@ -65,7 +68,7 @@ app.state.start_time = time.time()
 async def parse_file(file_data: dict):
     decoded_file_name = unquote(file_data['file'])
     logger.info(f"Loading file: {decoded_file_name}")
-    content = utility_service.read_file(decoded_file_name)
+    content = utility_service.read_file(decoded_file_name, 'collab')
     return utility_service.parse_actions(content)
 ## testing purpose
 @app.post("/start-action")
@@ -73,7 +76,6 @@ async def start_action(config: dict):
     action = config['action']
     logger.info(f"Starting action: {action}")
     return image_service.click_on_image(config['pid'], action)
-   
 
 
 @app.post("/read-file")
@@ -143,6 +145,30 @@ async def get_windows():
         if window.title and window.title == '塔防精灵':
             windows.append({"title": window.title, "pid": window._hWnd})
     return {"windows": windows}
+
+
+@app.post("/locate-window")
+async def locate_window(window_data: dict):
+    """
+    Move and resize the specified window to top-left corner of screen.
+    Args:
+        window_data: dict containing 'pid' of window to locate
+    """
+    try:
+        pid = int(window_data['pid'])
+        result = WindowControlService.locate_window(pid)
+        if result["status"] == "error":
+            return JSONResponse(
+                status_code=404 if "not found" in result["message"] else 500,
+                content={"detail": result["message"]}
+            )
+        return result
+    except Exception as e:
+        logger.error(f"Error locating window: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"detail": f"Error locating window: {str(e)}"}
+        )
 
 
 @app.get("/sse")

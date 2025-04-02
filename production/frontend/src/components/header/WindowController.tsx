@@ -7,6 +7,7 @@ import { selectActiveWindow, selectWindows } from '@src/store/selectors';
 import { setActiveWindow } from '@src/store/actions';
 import { useAppDispatch } from '@src/store/store';
 import { getWindows } from '@src/store/thunks';
+import { api } from '@src/services/api';
 
 const WindowController: React.FC = () => {
   const activeWindow = useSelector(selectActiveWindow);
@@ -24,8 +25,7 @@ const WindowController: React.FC = () => {
   const [isHovered, setIsHovered] = useState<boolean>(false);
   const handleLocateWindow = () => {
     if (activeWindow) {
-      // Add your window location logic here
-      console.log(`Locating window: ${activeWindow}`);
+      api.locateWindow(parseInt(activeWindow));
     }
   };
 
