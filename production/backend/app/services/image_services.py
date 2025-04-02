@@ -10,7 +10,7 @@ import os
 from typing import Dict, List, Tuple, Union
 from concurrent.futures import ProcessPoolExecutor
 from functools import partial
-# from app.services.window_control_services import WindowControlService
+from app.services.window_control_services import WindowControlService
 from app.services.utility_services import UtilityService
 
 # Check if CUDA is available
@@ -59,9 +59,15 @@ class ImageService:
                 # Create image pyramid for multi-scale matching
                 pyramid = [template]
                 current_image = template
-                for _ in range(2):  # Create 3 levels of pyramid
+                
+                # Calculate optimal pyramid levels based on template size
+                min_dimension = min(template.shape[0], template.shape[1])
+                max_levels = max(1, int(np.log2(min_dimension / 32)))  # Stop when smallest dimension is ~32px
+                
+                for _ in range(max_levels - 1):
                     current_image = cv2.pyrDown(current_image)
                     pyramid.append(current_image)
+                
                 self._card_templates[card_name].append(pyramid)
     
     @staticmethod

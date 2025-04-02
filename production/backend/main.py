@@ -6,6 +6,7 @@ import time
 from app.services.utility_services import UtilityService
 from app.services.event_services import EventService
 from app.services.image_services import ImageService
+from app.services.window_control_services import WindowControlService
 from urllib.parse import unquote
 from app.utils.logger import logger
 
@@ -144,6 +145,30 @@ async def get_windows():
         if window.title and window.title == '塔防精灵':
             windows.append({"title": window.title, "pid": window._hWnd})
     return {"windows": windows}
+
+
+@app.post("/locate-window")
+async def locate_window(window_data: dict):
+    """
+    Move and resize the specified window to top-left corner of screen.
+    Args:
+        window_data: dict containing 'pid' of window to locate
+    """
+    try:
+        pid = int(window_data['pid'])
+        result = WindowControlService.locate_window(pid)
+        if result["status"] == "error":
+            return JSONResponse(
+                status_code=404 if "not found" in result["message"] else 500,
+                content={"detail": result["message"]}
+            )
+        return result
+    except Exception as e:
+        logger.error(f"Error locating window: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"detail": f"Error locating window: {str(e)}"}
+        )
 
 
 @app.get("/sse")

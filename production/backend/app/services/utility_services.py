@@ -154,15 +154,16 @@ class UtilityService:
                     for file_path in card_folder.glob("*"):
                         if file_path.is_file() and file_path.suffix.lower() in [".png", ".jpg", ".jpeg", ".tif"]:
                             try:
-                                # Read the image and ensure proper format
-                                template = cv2.imread(str(file_path))
+                                # Read the image using proper path handling
+                                file_path_str = str(file_path.resolve())
+                                template = cv2.imdecode(np.fromfile(file_path_str, dtype=np.uint8), cv2.IMREAD_COLOR)
                                 if template is not None:
                                     # Convert to grayscale if image is in color
                                     if len(template.shape) == 3:
                                         template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
                                     templates[card_name].append(template)
                             except Exception as e:
-                                print(f"Error loading template {file_path}: {str(e)}")
+                                print(f"Error loading template {file_path_str}: {str(e)}")
                                 continue
                     
                     # Remove card entry if no valid templates were loaded

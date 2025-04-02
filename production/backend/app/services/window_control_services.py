@@ -1,6 +1,7 @@
 import win32api
 import win32con
 import win32gui
+import pyautogui
 
 class WindowControlService:
     @staticmethod
@@ -45,3 +46,42 @@ class WindowControlService:
         win32gui.PostMessage(hwnd, message, win32api.MAKELONG(0, delta), point)
 
         return {"success": True, "message": f"{direction.capitalize()} scroll sent to window {hwnd} at ({x}, {y}) with delta {delta}"}
+        
+    @staticmethod
+    def resize_window(window) -> None:
+        """
+        Resize the window to standard dimensions (1056x637) while maintaining its position.
+        
+        Args:
+            window: The window object to resize
+        """
+        # Get current window position
+        left, top, right, bottom = win32gui.GetWindowRect(window._hWnd)
+        
+        # Calculate new dimensions while keeping same top-left position
+        new_right = left + 1056
+        new_bottom = top + 637
+        
+        # Resize the window
+        win32gui.MoveWindow(window._hWnd, left, top, 1056, 637, True)
+        
+    @staticmethod
+    def locate_window(pid: int) -> dict:
+        """
+        Move and resize the specified window to top-left corner of screen.
+        Args:
+            pid: The PID of window to locate
+        Returns:
+            dict: Status message
+        """
+        try:
+            for window in pyautogui.getAllWindows():
+                if window._hWnd == pid:
+                    # Move to top-left corner (0,0) and resize to 800x600
+                    window.moveTo(0, 0)
+                    window.resizeTo(1056, 637)
+                    return {"status": "success", "message": f"Window {pid} moved and resized"}
+            
+            return {"status": "error", "message": f"Window with pid {pid} not found"}
+        except Exception as e:
+            return {"status": "error", "message": f"Error locating window: {str(e)}"}
