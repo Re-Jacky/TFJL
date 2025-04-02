@@ -127,3 +127,54 @@ class UtilityService:
             raise he
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+            
+    @staticmethod
+    def load_card_templates() -> Dict[str, List[np.ndarray]]:
+        """Load card templates from the public/卡牌 directory.
+        Each card has its own folder containing multiple image variations.
+        
+        Returns:
+            Dict[str, List[np.ndarray]]: A dictionary mapping card names to their template images
+        """
+        try:
+            public_path = UtilityService.get_public_path()
+            cards_path = public_path / "卡牌"
+            
+            if not cards_path.exists() or not cards_path.is_dir():
+                raise HTTPException(status_code=404, detail="Cards directory not found")
+                
+            templates = {}
+            # Iterate through card folders
+            for card_folder in cards_path.iterdir():
+                if card_folder.is_dir():
+                    card_name = card_folder.name
+                    templates[card_name] = []
+                    
+                    # Process all image files in the card folder
+                    for file_path in card_folder.glob("*"):
+                        if file_path.is_file() and file_path.suffix.lower() in [".png", ".jpg", ".jpeg", ".tif"]:
+                            try:
+                                # Read the image and ensure proper format
+                                template = cv2.imread(str(file_path))
+                                if template is not None:
+                                    # Convert to grayscale if image is in color
+                                    if len(template.shape) == 3:
+                                        template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
+                                    templates[card_name].append(template)
+                            except Exception as e:
+                                print(f"Error loading template {file_path}: {str(e)}")
+                                continue
+                    
+                    # Remove card entry if no valid templates were loaded
+                    if not templates[card_name]:
+                        del templates[card_name]
+                        
+            if not templates:
+                raise HTTPException(status_code=404, detail="No valid card templates found")
+                
+            return templates
+            
+        except HTTPException as he:
+            raise he
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))

@@ -5,8 +5,20 @@ from PIL import Image
 from fastapi import UploadFile, HTTPException
 from pathlib import Path
 from app.services.window_control_services import WindowControlService
+from app.services.utility_services import UtilityService
+
+utility_service = UtilityService()
 
 class ImageService:
+     # Class variable to store the card templates
+    _card_templates: Dict[str, List[np.ndarray]] = {}
+    
+    @classmethod
+    def initialize_card_templates(cls) -> None:
+        """Initialize the card templates from the public directory."""
+        cls._card_templates = utility_service.load_card_templates()
+    
+
     @staticmethod
     def click_on_image(window_pid: int, image_file_name: str, confidence: float = 0.8):
         """

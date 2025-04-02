@@ -11,6 +11,12 @@ from app.utils.logger import logger
 
 app = FastAPI()
 
+utility_service = UtilityService()
+event_service = EventService()
+image_service = ImageService()
+image_service.initialize_card_templates()
+
+
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     start_time = time.time()
@@ -29,10 +35,6 @@ async def global_exception_handler(request: Request, exc: Exception):
         status_code=500,
         content={"detail": f"Internal server error: {str(exc)}"}
     )
-
-utility_service = UtilityService()
-event_service = EventService()
-image_service = ImageService()
 
 # Configure CORS
 app.add_middleware(
@@ -73,7 +75,6 @@ async def start_action(config: dict):
     action = config['action']
     logger.info(f"Starting action: {action}")
     return image_service.click_on_image(config['pid'], action)
-   
 
 
 @app.post("/read-file")
