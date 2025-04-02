@@ -6,10 +6,11 @@ from fastapi import UploadFile, HTTPException
 from pathlib import Path
 import threading
 import time
-from typing import Dict, List, Tuple
+import os
+from typing import Dict, List, Tuple, Union
 from concurrent.futures import ProcessPoolExecutor
 from functools import partial
-from app.services.window_control_services import WindowControlService
+# from app.services.window_control_services import WindowControlService
 from app.services.utility_services import UtilityService
 
 # Check if CUDA is available

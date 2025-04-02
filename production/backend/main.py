@@ -67,7 +67,7 @@ app.state.start_time = time.time()
 async def parse_file(file_data: dict):
     decoded_file_name = unquote(file_data['file'])
     logger.info(f"Loading file: {decoded_file_name}")
-    content = utility_service.read_file(decoded_file_name)
+    content = utility_service.read_file(decoded_file_name, 'collab')
     return utility_service.parse_actions(content)
 ## testing purpose
 @app.post("/start-action")
