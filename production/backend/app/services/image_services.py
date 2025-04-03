@@ -12,6 +12,7 @@ from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 from app.services.window_control_services import WindowControlService
 from app.services.utility_services import UtilityService
+from app.utils.logger import logger
 
 # Check if CUDA is available
 USE_CUDA = cv2.cuda.getCudaEnabledDeviceCount() > 0
@@ -168,7 +169,7 @@ class ImageService:
                     
         return matches
 
-    def analyze_cards(self, window_pid: int, region: Tuple[int, int, int, int]= (380, 500, 300, 120), confidence: float = 0.9) -> List[Dict[str, Union[str, Dict[str, int]]]]:
+    def analyze_cards(self, window_pid: int, region: Tuple[int, int, int, int]= (380, 500, 300, 120), confidence: float = 0.5) -> List[Dict[str, Union[str, Dict[str, int]]]]:
         """Analyze a specific region of the game window to identify cards using parallel template matching.
 
         Args:
@@ -192,48 +193,72 @@ class ImageService:
             List of dictionaries containing card names and their center coordinates
             Each dictionary has format: {'card_name': str, 'center': {'x': int, 'y': int}}
         """
+        import time
+        start_time = time.time()
+        logger.info(f"[Card Analysis] Starting analysis for window PID: {window_pid}, region: {region}")
+        
         if not region:
             region = (380, 500, 300, 120)
-        window = WindowControlService.find_window(window_pid)
-        screenshot_gray = WindowControlService.capture_region(window, region)
-
-        # Prepare template data for parallel processing
-        template_data = []
-        for card_name, templates in self._card_templates.items():
-            for template in templates:
-                template_data.append((card_name, template))
-
-        # Use ProcessPoolExecutor for parallel template matching
-        matches = []
-        with ProcessPoolExecutor(max_workers=self._max_workers) as executor:
-            match_func = partial(ImageService._match_template, self, screenshot_gray=screenshot_gray, confidence=confidence)
-            results = executor.map(match_func, template_data)
+            logger.info(f"[Card Analysis] Using default region: {region}")
             
-            # Aggregate results from all processes
-            for result in results:
-                matches.extend(result)
+        try:
+            logger.info("[Card Analysis] Locating window...")
+            window = WindowControlService.find_window(window_pid)
+            logger.info("[Card Analysis] Capturing region...")
+            screenshot_gray = WindowControlService.capture_region(window, region)
 
-        # Sort matches by x-coordinate to maintain left-to-right order
-        matches.sort(key=lambda x: x['position'])
+            # Prepare template data for parallel processing
+            template_data = []
+            logger.info(f"[Card Analysis] Preparing {len(self._card_templates)} card templates...")
+            for card_name, templates in self._card_templates.items():
+                for template in templates:
+                    template_data.append((card_name, template))
+            logger.info(f"[Card Analysis] Prepared {len(template_data)} template variations for matching")
 
-        # Remove duplicates (keep highest confidence match for each position)
-        filtered_matches = []
-        used_positions = set()
-
-        for match in matches:
-            # Check if this match is too close to any existing match
-            is_duplicate = False
-            for pos in used_positions:
-                if abs(match['position'] - pos) < 20:  # Adjust threshold as needed
-                    is_duplicate = True
-                    break
+            # Use ProcessPoolExecutor for parallel template matching
+            matches = []
+            logger.info(f"[Card Analysis] Starting parallel matching with {self._max_workers} workers...")
+            with ProcessPoolExecutor(max_workers=self._max_workers) as executor:
+                match_func = partial(ImageService._match_template, self, screenshot_gray=screenshot_gray, confidence=confidence)
+                results = executor.map(match_func, template_data)
+                
+                # Aggregate results from all processes
+                for result in results:
+                    matches.extend(result)
             
-            if not is_duplicate:
-                filtered_matches.append(match)
-                used_positions.add(match['position'])
+            logger.info(f"[Card Analysis] Found {len(matches)} potential matches before filtering")
+            
+            # Sort matches by x-coordinate to maintain left-to-right order
+            matches.sort(key=lambda x: x['position'])
 
-        # Return card names and their center coordinates in order
-        return [{'card_name': match['card_name'], 'center': match['center']} for match in filtered_matches]
+            # Remove duplicates (keep highest confidence match for each position)
+            filtered_matches = []
+            used_positions = set()
+
+            for match in matches:
+                # Check if this match is too close to any existing match
+                is_duplicate = False
+                for pos in used_positions:
+                    if abs(match['position'] - pos) < 20:  # Adjust threshold as needed
+                        is_duplicate = True
+                        break
+                
+                if not is_duplicate:
+                    filtered_matches.append(match)
+                    used_positions.add(match['position'])
+            
+            elapsed_time = time.time() - start_time
+            logger.info(f"[Card Analysis] Found {len(filtered_matches)} unique matches after filtering")
+            logger.info(f"[Card Analysis] Analysis completed in {elapsed_time:.2f} seconds")
+            
+            # Return card names and their center coordinates in order
+            return [{'card_name': match['card_name'], 'center': match['center']} for match in filtered_matches]
+            
+        except Exception as e:
+            elapsed_time = time.time() - start_time
+            logger.error(f"[Card Analysis] Error during analysis: {str(e)}")
+            logger.error(f"[Card Analysis] Analysis failed after {elapsed_time:.2f} seconds")
+            raise
 
     @staticmethod
     def _load_template(image_file_name: str) -> np.ndarray:
@@ -261,13 +286,13 @@ class ImageService:
         screenshot_gray = WindowControlService.capture_region(window, None)
 
         # Match template
-        print("Performing template matching...")
+        logger.info("Performing template matching...")
         result = cv2.matchTemplate(screenshot_gray, template_gray, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, max_loc = cv2.minMaxLoc(result)
-        print(f"Template match confidence: {max_val:.2f}")
+        logger.info(f"Template match confidence: {max_val:.2f}")
 
         if max_val < confidence:
-            print(f"Match confidence {max_val:.2f} below threshold {confidence}")
+            logger.warning(f"Match confidence {max_val:.2f} below threshold {confidence}")
             return {"error": "Template match confidence below threshold"}
 
         # Calculate click position relative to window
@@ -326,7 +351,7 @@ class ImageService:
                 time.sleep(frequency)
                 
             except Exception as e:
-                print(f"Error during card monitoring: {str(e)}")
+                logger.error(f"Error during card monitoring: {str(e)}")
                 time.sleep(frequency)
                 continue
 
