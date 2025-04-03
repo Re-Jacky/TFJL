@@ -87,6 +87,22 @@ async def start_action(config: dict):
     return image_service.click_on_image(config['pid'], action)
 
 
+@app.post("/start-script")
+async def start_script(request: Request, script_data: FileModel):
+    pid = get_req_pid(request)
+    if not pid:
+        return JSONResponse(
+            status_code=422,
+            content={"detail": "pid is required"}
+        )
+    file_name = unquote(script_data.file)
+    await event_service.broadcast_log("info", "开始执行脚本: " + file_name)
+    content = utility_service.read_file(file_name, script_data.type)
+    logger.info(f"Starting script: {file_name}")
+    actions = utility_service.parse_actions(content)
+    return image_service.start_script(pid, file_name, content)
+
+
 @app.post("/read-file")
 async def read_file(file_data: FileModel):
     decoded_file_name = unquote(file_data.file)

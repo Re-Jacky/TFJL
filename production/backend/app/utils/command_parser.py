@@ -158,6 +158,11 @@ class CommandParser:
                 }
             except (ValueError, IndexError):
                 return None
+        elif TimingPattern.AFTER.value in timing_str:
+            return {
+                "type": CommandType.TIMING.value,
+                "pattern": TimingPattern.AFTER.value,
+            }
         return None
     
     def _parse_card_operation(self, operation_str: str) -> Optional[Dict]:
@@ -227,21 +232,21 @@ class CommandParser:
         # Parse following commands
         for part in parts[1:]:
             part = part.strip()
-            if not part or part == TimingPattern.AFTER.value:
-                continue
                 
             # Parse timing patterns
             if any(pattern.value in part for pattern in TimingPattern):
                 timing = self._parse_timing(part)
                 if timing:
                     commands.append(timing)
-                    continue
+                    # continue
             
             # Parse card operations
             if any(op.value in part for op in CardOperation):
                 operation = self._parse_card_operation(part)
                 if operation:
                     commands.append(operation)
+
+            # Parse special operations
                     
         return {
             "type": CommandType.SPECIAL_EVENT.value,
