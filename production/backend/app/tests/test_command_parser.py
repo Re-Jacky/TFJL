@@ -77,7 +77,7 @@ class TestCommandParser(unittest.TestCase):
             },
             {
                 'card': '萌萌',
-                'level': '满',
+                'level': '3级',
                 'operation': '上',
                 'type': 'card_op'
             },

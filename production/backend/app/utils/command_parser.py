@@ -163,12 +163,22 @@ class CommandParser:
                     card = parts[1]
                     level = None
                     
-                    # Check for card level
-                    for lvl in CardLevel:
-                        if lvl.value in card:
-                            level = lvl.value
-                            card = card.replace(lvl.value, '')
-                            break
+                    # Check for card level with priority for NOT_MAX
+                    if CardLevel.NOT_MAX.value in card:
+                        level = CardLevel.NOT_MAX.value
+                        card = card.replace(CardLevel.NOT_MAX.value, '')
+                    elif CardLevel.MAX.value in card:
+                        level = CardLevel.MAX.value
+                        card = card.replace(CardLevel.MAX.value, '')
+                    elif CardLevel.SPECIFIC.value in card:
+                        # Extract digit before SPECIFIC level
+                        parts = card.split(CardLevel.SPECIFIC.value)
+                        if parts[0] and parts[0][-1].isdigit():
+                            level = parts[0][-1] + CardLevel.SPECIFIC.value
+                            card = parts[0][:-1] + (parts[1] if len(parts) > 1 else '')
+                        else:
+                            level = CardLevel.SPECIFIC.value
+                            card = card.replace(CardLevel.SPECIFIC.value, '')
                     
                     return {
                         "type": CommandType.CARD_OPERATION.value,
