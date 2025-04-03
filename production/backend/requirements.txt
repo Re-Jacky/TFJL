@@ -7,3 +7,4 @@ opencv-python==4.11.0.86
 numpy==2.2.4
 pyinstaller==6.12.0
 pywin32==310
+pygetwindow==0.0.9

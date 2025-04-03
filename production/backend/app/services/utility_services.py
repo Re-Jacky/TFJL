@@ -1,15 +1,9 @@
 import cv2
 import numpy as np
-import pyautogui
-from PIL import Image
-import os
-import re
 import sys
 from pathlib import Path
 from typing import List, Dict, Union, Optional
-from fastapi import UploadFile, File, HTTPException
-from fastapi.responses import JSONResponse
-
+from fastapi import HTTPException
 class UtilityService:
     @staticmethod
     def get_public_path() -> Path:
@@ -22,7 +16,7 @@ class UtilityService:
         return public_path
 
     @staticmethod
-    def read_file(file_name: str, file_type: str) -> Dict[str, str]:
+    def read_file(file_name: str, file_type: str) -> str:
         try:
             public_path = UtilityService.get_public_path()
             # Sanitize file name and create full path

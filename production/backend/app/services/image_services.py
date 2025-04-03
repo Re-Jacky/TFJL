@@ -1,13 +1,13 @@
 import cv2
 import numpy as np
 import pyautogui
+import pygetwindow
 from PIL import Image
-from fastapi import UploadFile, HTTPException
+from fastapi import HTTPException
 from pathlib import Path
-import threading
 import time
 import os
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 from app.services.window_control_services import WindowControlService
@@ -31,7 +31,9 @@ class ImageService:
     def __init__(self):
         if not self._initialized:
             self._card_templates: Dict[str, List[np.ndarray]] = {}
-            self._max_workers = max(1, int(os.cpu_count() * 0.75))  # Default to 75% of CPU cores
+            self._gpu_templates: Dict[str, List[cv2.cuda_GpuMat]] = {} if USE_CUDA else None
+            cpu_count = os.cpu_count() or 1
+            self._max_workers = max(1, int(cpu_count * 0.75))  # Default to 75% of CPU cores
             self._initialized = True
     
     @classmethod
@@ -52,12 +54,17 @@ class ImageService:
         """Initialize the card templates from the public directory and pre-process them for optimization."""
         raw_templates = utility_service.load_card_templates()
         self._card_templates = {}
+        if USE_CUDA:
+            self._gpu_templates = {}
         
         for card_name, templates in raw_templates.items():
             self._card_templates[card_name] = []
+            if USE_CUDA:
+                self._gpu_templates[card_name] = []
+            
             for template in templates:
                 # Create image pyramid for multi-scale matching
-                pyramid = [template]
+                pyramid = np.array([template])
                 current_image = template
                 
                 # Calculate optimal pyramid levels based on template size
@@ -66,20 +73,29 @@ class ImageService:
                 
                 for _ in range(max_levels - 1):
                     current_image = cv2.pyrDown(current_image)
-                    pyramid.append(current_image)
+                    pyramid = np.append(pyramid, [current_image], axis=0)
                 
                 self._card_templates[card_name].append(pyramid)
+                
+                # Pre-upload templates to GPU if CUDA is available
+                if USE_CUDA:
+                    gpu_pyramid = []
+                    for img in pyramid:
+                        gpu_mat = cv2.cuda_GpuMat()
+                        gpu_mat.upload(img)
+                        gpu_pyramid.append(gpu_mat)
+                    self._gpu_templates[card_name].append(gpu_pyramid)
     
     @staticmethod
     def _find_window(window_pid: int):
         """Find window by PID."""
-        for win in pyautogui.getAllWindows():
+        for win in pygetwindow.getAllWindows():
             if win._hWnd == window_pid:
                 return win
         raise HTTPException(status_code=404, detail=f"Window with PID {window_pid} not found")
 
     @staticmethod
-    def _capture_region(window, region: Tuple[int, int, int, int] = None) -> np.ndarray:
+    def _capture_region(window, region: Optional[Tuple[int, int, int, int]]) -> np.ndarray:
         """
         Capture and process a region of the window.
         region: Tuple of (x, y, width, height) defining the region to analyze
@@ -97,8 +113,7 @@ class ImageService:
         screenshot_array = np.array(screenshot)
         return cv2.cvtColor(screenshot_array, cv2.COLOR_RGB2GRAY)
 
-    @staticmethod
-    def _match_template(template_data, screenshot_gray, confidence):
+    def _match_template(self, template_data, screenshot_gray, confidence):
         """Worker function for parallel template matching using image pyramids with GPU acceleration when available."""
         card_name, template_pyramid = template_data
         matches = []
@@ -116,15 +131,19 @@ class ImageService:
             level_confidence = confidence * 0.8 if level < len(template_pyramid) - 1 else confidence
             
             if USE_CUDA:
-                # Upload images to GPU
+                # Use pre-uploaded GPU template and upload screenshot once
                 gpu_screenshot = cv2.cuda_GpuMat()
-                gpu_template = cv2.cuda_GpuMat()
                 gpu_screenshot.upload(scaled_screenshot)
-                gpu_template.upload(template)
+                
+                # Get pre-uploaded GPU template
+                gpu_template = self._gpu_templates[card_name][0][level]
                 
                 # Perform template matching on GPU
                 gpu_result = cv2.cuda.matchTemplate(gpu_screenshot, gpu_template, cv2.TM_CCOEFF_NORMED)
                 result = gpu_result.download()
+                
+                # Clean up GPU memory
+                gpu_screenshot.release()
             else:
                 result = cv2.matchTemplate(scaled_screenshot, template, cv2.TM_CCOEFF_NORMED)
             
@@ -210,7 +229,7 @@ class ImageService:
         # Use ProcessPoolExecutor for parallel template matching
         matches = []
         with ProcessPoolExecutor(max_workers=self._max_workers) as executor:
-            match_func = partial(self._match_template, screenshot_gray=screenshot_gray, confidence=confidence)
+            match_func = partial(ImageService._match_template, self, screenshot_gray=screenshot_gray, confidence=confidence)
             results = executor.map(match_func, template_data)
             
             # Aggregate results from all processes
@@ -262,7 +281,7 @@ class ImageService:
         """
         window = self._find_window(window_pid)
         template_gray = self._load_template(image_file_name)
-        screenshot_gray = self._capture_region(window)
+        screenshot_gray = self._capture_region(window, None)
 
         # Match template
         print("Performing template matching...")
@@ -317,7 +336,9 @@ class ImageService:
                 
                 # If we found enough matches with good confidence, return immediately
                 if len(matches) >= min_matches:
-                    avg_confidence = sum(match.get('confidence', 0.0) for match in matches) / len(matches)
+                    # Calculate average confidence only from matches that have confidence values
+                    confidences = [float(match.get('confidence', 0.0)) for match in matches if match.get('confidence') is not None]
+                    avg_confidence = sum(confidences) / len(confidences) if confidences else 0.0
                     if avg_confidence > best_confidence:
                         best_matches = matches
                         best_confidence = avg_confidence

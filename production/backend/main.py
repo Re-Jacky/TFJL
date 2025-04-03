@@ -1,5 +1,4 @@
-from fastapi import FastAPI, Request, File, UploadFile
-import pyautogui
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 import time
@@ -9,6 +8,8 @@ from app.services.image_services import ImageService
 from app.services.window_control_services import WindowControlService
 from urllib.parse import unquote
 from app.utils.logger import logger
+from app.schema.schemas import FileModel, WithContentFileModel
+import pygetwindow
 
 app = FastAPI()
 
@@ -65,10 +66,10 @@ app.state.start_time = time.time()
 
 ## testing purpose
 @app.post("/parse-file")
-async def parse_file(file_data: dict):
-    decoded_file_name = unquote(file_data['file'])
+async def parse_file(file_data: FileModel):
+    decoded_file_name = unquote(file_data.file)
     logger.info(f"Loading file: {decoded_file_name}")
-    content = utility_service.read_file(decoded_file_name, 'collab')
+    content = utility_service.read_file(decoded_file_name, file_data.type)
     return utility_service.parse_actions(content)
 ## testing purpose
 @app.post("/start-action")
@@ -79,30 +80,29 @@ async def start_action(config: dict):
 
 
 @app.post("/read-file")
-async def read_file(file_data: dict):
-    decoded_file_name = unquote(file_data['file'])
-    file_type = file_data['type']
+async def read_file(file_data: FileModel):
+    decoded_file_name = unquote(file_data.file)
+    file_type = file_data.type
     logger.info(f"Loading file: {decoded_file_name}")
     return utility_service.read_file(decoded_file_name, file_type)
 
 @app.get("/get-file-list")
 async def get_file_list(type: str):
-    if type == 'collab':
+    if type == 'collab' or type == 'activity':
         return utility_service.get_files(type)
-    elif type == 'activity':
-        return utility_service.get_activity_files()
     else:
         return JSONResponse(
             status_code=400,
             content={"detail": "Invalid type parameter"}
         )
 
+# FileData model is now imported from app.models.file_data
+
 @app.post("/save-file")
-async def save_file(request: Request, script_data: dict):
-    file_name = unquote(script_data.get('file'))
-    content = script_data.get('content')
-    file_type = script_data.get('type')
-    pid = get_req_pid(request)
+async def save_file(request: Request, script_data: WithContentFileModel):
+    file_name = unquote(script_data.file)
+    content = script_data.content
+    file_type = script_data.type
     if not file_name:
         return JSONResponse(
             status_code=400,
@@ -115,10 +115,9 @@ async def save_file(request: Request, script_data: dict):
     return resp
 
 @app.post("/delete-file")
-async def delete_file(request: Request, file_data: dict):
-    file_name = unquote(file_data.get('file'))
-    file_type = file_data.get('type')
-    pid = get_req_pid(request)
+async def delete_file(request: Request, file_data: FileModel):
+    file_name = unquote(file_data.file)
+    file_type = file_data.type
     if not file_name:
         return JSONResponse(
             status_code=400,
@@ -141,7 +140,7 @@ async def delete_file(request: Request, file_data: dict):
 @app.get("/windows")
 async def get_windows():
     windows = []
-    for window in pyautogui.getAllWindows():
+    for window in pygetwindow.getAllWindows():
         if window.title and window.title == '塔防精灵':
             windows.append({"title": window.title, "pid": window._hWnd})
     return {"windows": windows}
