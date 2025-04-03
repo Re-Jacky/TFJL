@@ -168,7 +168,7 @@ class ImageService:
                     
         return matches
 
-    def analyze_cards(self, window_pid: int, region: Tuple[int, int, int, int], confidence: float = 0.9) -> List[Dict[str, Union[str, Dict[str, int]]]]:
+    def analyze_cards(self, window_pid: int, region: Tuple[int, int, int, int]= (380, 500, 300, 120), confidence: float = 0.9) -> List[Dict[str, Union[str, Dict[str, int]]]]:
         """Analyze a specific region of the game window to identify cards using parallel template matching.
 
         Args:
@@ -192,6 +192,8 @@ class ImageService:
             List of dictionaries containing card names and their center coordinates
             Each dictionary has format: {'card_name': str, 'center': {'x': int, 'y': int}}
         """
+        if not region:
+            region = (380, 500, 300, 120)
         window = WindowControlService.find_window(window_pid)
         screenshot_gray = WindowControlService.capture_region(window, region)
 

@@ -84,7 +84,7 @@ async def parse_file(file_data: FileModel):
 async def start_action(config: dict):
     action = config['action']
     logger.info(f"Starting action: {action}")
-    return image_service.click_on_image(config['pid'], action)
+    return image_service.analyze_cards(config['pid'])
 
 
 @app.post("/start-script")
