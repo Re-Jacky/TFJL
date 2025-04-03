@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 import time
@@ -36,6 +36,14 @@ async def global_exception_handler(request: Request, exc: Exception):
     return JSONResponse(
         status_code=500,
         content={"detail": f"Internal server error: {str(exc)}"}
+    )
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    logger.error(f"HTTP Error: {request.url.path} - {exc.detail}", exc_info=exc)
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": f"HTTP error: {exc.detail}"}
     )
 
 # Configure CORS

@@ -67,7 +67,8 @@ class UtilityService:
         """Parse the content of a script file into structured actions."""
         try:
             from app.utils.command_parser import CommandParser
-            return CommandParser.parse_script(content)
+            cmd_parser = CommandParser(content)
+            return cmd_parser.parse_script()
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error parsing actions: {str(e)}")
             
@@ -102,10 +103,14 @@ class UtilityService:
         try:
             # Ensure base directory is absolute and exists
             public_path = UtilityService.get_public_path()
-
-            # Sanitize file name and create full path
             safe_name = Path(file_name).name
-            file_path = public_path / safe_name
+
+            if file_type == 'collab':
+                file_path = public_path / "合作脚本" / safe_name
+            elif file_type == 'activity':
+                file_path = public_path / "活动脚本" / safe_name
+            else:
+                raise HTTPException(status_code=400, detail="Invalid file type")
 
             # Ensure the resolved path is still within public directory
             if not str(file_path.resolve()).startswith(str(public_path)):
