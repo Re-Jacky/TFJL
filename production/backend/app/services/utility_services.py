@@ -25,6 +25,8 @@ class UtilityService:
                 file_path = public_path / "合作脚本" / safe_name
             elif file_type == 'activity':
                 file_path = public_path / "活动脚本" / safe_name
+            else:
+                raise HTTPException(status_code=400, detail="Invalid file type")
 
             # Ensure the resolved path is still within base directory
             if not str(file_path.resolve()).startswith(str(public_path)):

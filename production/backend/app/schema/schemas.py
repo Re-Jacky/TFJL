@@ -5,7 +5,6 @@ FileTypeEnum = Literal['collab', 'activity']
 
 class FileModel(BaseModel):
     file: str
-    content: str
     type: FileTypeEnum
 
 class WithContentFileModel(FileModel):
