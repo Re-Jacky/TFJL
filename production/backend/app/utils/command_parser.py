@@ -5,10 +5,9 @@ from app.enums.command_types import (
 )
 
 class CommandParser:
-    @staticmethod
-    def parse_script(content: str) -> Dict[str, Union[List[Dict], List[str]]]:
-        """Parse a script file into structured data."""
-        result = {
+    def __init__(self, content: str):
+        self.content = content
+        self.result = {
             "formation": [],  # Initial formation
             "enhanced_cards": [],  # Enhanced/powered up cards
             "main_vehicle": None,  # Main vehicle
@@ -16,8 +15,10 @@ class CommandParser:
             "command_chain": [],  # Ordered list of commands
             "special_events": []  # Special event handlers
         }
-        
-        lines = content.strip().split('\n')
+    
+    def parse_script(self) -> Dict[str, Union[List[Dict], List[str]]]:
+        """Parse a script file into structured data."""
+        lines = self.content.strip().split('\n')
         for line in lines:
             line = line.strip()
             if not line:
@@ -26,48 +27,45 @@ class CommandParser:
             # Parse formation line
             if line.startswith('上阵') and ('：' in line or ':' in line):
                 formation_str = line[2:].replace('：', ':').split(':')[1].strip()
-                result['formation'] = CommandParser._parse_formation(formation_str)
+                self.result['formation'] = self._parse_formation(formation_str)
                 continue
                 
             # Parse enhanced cards
             if line.startswith('魔化') and ('：' in line or ':' in line):
                 enhanced_str = line[2:].replace('：', ':').split(':')[1].strip()
-                result['enhanced_cards'] = CommandParser._parse_enhanced_cards(enhanced_str)
+                self.result['enhanced_cards'] = self._parse_enhanced_cards(enhanced_str)
                 continue
                 
             # Parse vehicles
             if line.startswith('主战车') and ('：' in line or ':' in line):
-                result['main_vehicle'] = line.replace('：', ':').split(':')[1].strip()
+                self.result['main_vehicle'] = line.replace('：', ':').split(':')[1].strip()
                 continue
             if line.startswith('副战车') and ('：' in line or ':' in line):
-                result['sub_vehicle'] = line.replace('：', ':').split(':')[1].strip()
+                self.result['sub_vehicle'] = line.replace('：', ':').split(':')[1].strip()
                 continue
                 
             # Parse command chains
             if line[0].isdigit():
-                command = CommandParser._parse_command_chain(line)
+                command = self._parse_command_chain(line)
                 if command:
-                    result['command_chain'].append(command)
+                    self.result['command_chain'].append(command)
             else:
                 # Parse special events
-                event = CommandParser._parse_special_event(line)
+                event = self._parse_special_event(line)
                 if event:
-                    result['special_events'].append(event)
+                    self.result['special_events'].append(event)
                     
-        return result
+        return self.result
     
-    @staticmethod
-    def _parse_formation(formation_str: str) -> List[str]:
+    def _parse_formation(self, formation_str: str) -> List[str]:
         """Parse initial formation string into list of cards."""
         return [card.strip() for card in formation_str.split(',') if card.strip()]
     
-    @staticmethod
-    def _parse_enhanced_cards(enhanced_str: str) -> List[str]:
+    def _parse_enhanced_cards(self, enhanced_str: str) -> List[str]:
         """Parse enhanced cards string into list of cards."""
         return [card.strip() for card in enhanced_str.split(',') if card.strip()]
     
-    @staticmethod
-    def _parse_command_chain(command_str: str) -> Optional[Dict]:
+    def _parse_command_chain(self, command_str: str) -> Optional[Dict]:
         """Parse a command chain string into structured data."""
         parts = command_str.split(',')
         if not parts:
@@ -89,21 +87,21 @@ class CommandParser:
                     
                 # Parse timing patterns
                 if any(pattern.value in cmd for pattern in TimingPattern):
-                    timing = CommandParser._parse_timing(cmd)
+                    timing = self._parse_timing(cmd)
                     if timing:
                         result['commands'].append(timing)
                         continue
                 
                 # Parse card operations
                 if any(op.value in cmd for op in CardOperation):
-                    operation = CommandParser._parse_card_operation(cmd)
+                    operation = self._parse_card_operation(cmd)
                     if operation:
                         result['commands'].append(operation)
                         continue
                         
                 # Parse formation types
                 if any(form.value in cmd for form in FormationType):
-                    formation = CommandParser._parse_formation_type(cmd)
+                    formation = self._parse_formation_type(cmd)
                     if formation:
                         result['commands'].append(formation)
                         
@@ -111,8 +109,7 @@ class CommandParser:
         except ValueError:
             return None
     
-    @staticmethod
-    def _parse_timing(timing_str: str) -> Optional[Dict]:
+    def _parse_timing(self, timing_str: str) -> Optional[Dict]:
         """Parse timing pattern string into structured data."""
         if TimingPattern.INTERVAL.value in timing_str:
             # Parse interval timing (每x秒共x次xxx)
@@ -157,8 +154,7 @@ class CommandParser:
                 return None
         return None
     
-    @staticmethod
-    def _parse_card_operation(operation_str: str) -> Optional[Dict]:
+    def _parse_card_operation(self, operation_str: str) -> Optional[Dict]:
         """Parse card operation string into structured data."""
         for op in CardOperation:
             if op.value in operation_str:
@@ -182,19 +178,22 @@ class CommandParser:
                     }
         return None
     
-    @staticmethod
-    def _parse_formation_type(formation_str: str) -> Optional[Dict]:
+    def _parse_formation_type(self, formation_str: str) -> Optional[Dict]:
         """Parse formation type string into structured data."""
-        for form in FormationType:
-            if form.value in formation_str:
-                return {
-                    "type": CommandType.FORMATION.value,
-                    "formation": form.value
-                }
+        if FormationType.SAME_ROW.value in formation_str:
+            return {
+                "type": CommandType.FORMATION.value,
+                "formation": FormationType.SAME_ROW.value,
+                "card": [formation_str.split(FormationType.SAME_ROW.value)[0]]
+            }
+        if FormationType.ORDERED.value in formation_str:
+            return {
+                "type": CommandType.FORMATION.value,
+                "formation": FormationType.ORDERED.value,
+            }
         return None
     
-    @staticmethod
-    def _parse_special_event(event_str: str) -> Optional[Dict]:
+    def _parse_special_event(self, event_str: str) -> Optional[Dict]:
         """Parse special event string into structured data."""
         parts = event_str.split(',')
         if not parts:
@@ -211,14 +210,14 @@ class CommandParser:
                 
             # Parse timing patterns
             if any(pattern.value in part for pattern in TimingPattern):
-                timing = CommandParser._parse_timing(part)
+                timing = self._parse_timing(part)
                 if timing:
                     commands.append(timing)
                     continue
             
             # Parse card operations
             if any(op.value in part for op in CardOperation):
-                operation = CommandParser._parse_card_operation(part)
+                operation = self._parse_card_operation(part)
                 if operation:
                     commands.append(operation)
                     
