@@ -104,6 +104,12 @@ class CommandParser:
                     formation = self._parse_formation_type(cmd)
                     if formation:
                         result['commands'].append(formation)
+
+                # Parse special types
+                if any(special.value in cmd for special in SpecialEventType):
+                    special = self._parse_special_event(cmd)
+                    if special:
+                        result['commands'].append(special)
                         
             return result
         except ValueError:
@@ -133,7 +139,7 @@ class CommandParser:
         elif TimingPattern.FIXED.value in timing_str:
             # Parse fixed timing (时钟秒x)
             try:
-                second = float(timing_str[4:])
+                second = float(timing_str[3:])
                 return {
                     "type": CommandType.TIMING.value,
                     "pattern": TimingPattern.FIXED.value,
@@ -188,8 +194,14 @@ class CommandParser:
                     }
         return None
     
-    def _parse_formation_type(self, formation_str: str) -> Optional[Dict]:
+    def _parse_formation_type(self, formation_str: str)  -> Optional[Dict]:
         """Parse formation type string into structured data."""
+        if FormationType.CANCEL_SAME_ROW.value in formation_str:
+            return {
+                "type": CommandType.FORMATION.value,
+                "formation": FormationType.CANCEL_SAME_ROW.value,
+                "card": None
+            }
         if FormationType.SAME_ROW.value in formation_str:
             return {
                 "type": CommandType.FORMATION.value,

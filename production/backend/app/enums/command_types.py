@@ -14,7 +14,7 @@ class CardOperation(Enum):
     SWITCH = "换"  # Switch equipment
     PREPARE = "预备手牌"  # Prepare card
     FORCE_DEPLOY = "强制补星"  # Force deploy
-    CHECK_DEPLOY = "验卡补星"  # Check and deploy
+    CHECK_DEPLOY = "验卡补星"  # Check and deploy, Not support yet
     DISCARD_DEPLOY = "弃牌出牌"  # Discard and deploy
 
 class TimingPattern(Enum):
@@ -26,6 +26,7 @@ class TimingPattern(Enum):
 class FormationType(Enum):
     SAME_ROW = "同排"  # Same row deployment
     ORDERED = "强制顺序上卡"  # Forced order deployment
+    CANCEL_SAME_ROW = "同排取消"  # Cancel same row deployment
 
 class CardLevel(Enum):
     MAX = "满"  # Maximum level
@@ -34,5 +35,5 @@ class CardLevel(Enum):
 
 class SpecialEventType(Enum):
     STOP_BALL = "停球"  # Stop ball
-    CLOSE_VERIFY = "关闭验光"  # Close verification
-    VERIFY_CARD = "验卡"  # Verify card
+    CLOSE_VERIFY = "关闭验光"  # Close verification, Not support yet
+    VERIFY_CARD = "验卡补星"  # Verify card, Not support yet
