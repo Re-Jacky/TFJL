@@ -86,32 +86,7 @@ class ImageService:
                         gpu_pyramid.append(gpu_mat)
                     self._gpu_templates[card_name].append(gpu_pyramid)
     
-    @staticmethod
-    def _find_window(window_pid: int):
-        """Find window by PID."""
-        for win in pygetwindow.getAllWindows():
-            if win._hWnd == window_pid:
-                return win
-        raise HTTPException(status_code=404, detail=f"Window with PID {window_pid} not found")
 
-    @staticmethod
-    def _capture_region(window, region: Optional[Tuple[int, int, int, int]]) -> np.ndarray:
-        """
-        Capture and process a region of the window.
-        region: Tuple of (x, y, width, height) defining the region to analyze
-        """
-        if region:
-            abs_x = window.left + region[0]
-            abs_y = window.top + region[1]
-            width = region[2]
-            height = region[3]
-            screenshot = pyautogui.screenshot(region=(abs_x, abs_y, width, height))
-        else:
-            screenshot = pyautogui.screenshot(region=(
-                window.left, window.top, window.width, window.height))
-        
-        screenshot_array = np.array(screenshot)
-        return cv2.cvtColor(screenshot_array, cv2.COLOR_RGB2GRAY)
 
     def _match_template(self, template_data, screenshot_gray, confidence):
         """Worker function for parallel template matching using image pyramids with GPU acceleration when available."""
@@ -217,8 +192,8 @@ class ImageService:
             List of dictionaries containing card names and their center coordinates
             Each dictionary has format: {'card_name': str, 'center': {'x': int, 'y': int}}
         """
-        window = self._find_window(window_pid)
-        screenshot_gray = self._capture_region(window, region)
+        window = WindowControlService.find_window(window_pid)
+        screenshot_gray = WindowControlService.capture_region(window, region)
 
         # Prepare template data for parallel processing
         template_data = []
@@ -279,9 +254,9 @@ class ImageService:
         Returns:
             Dict with click location and success status
         """
-        window = self._find_window(window_pid)
+        window = WindowControlService.find_window(window_pid)
         template_gray = self._load_template(image_file_name)
-        screenshot_gray = self._capture_region(window, None)
+        screenshot_gray = WindowControlService.capture_region(window, None)
 
         # Match template
         print("Performing template matching...")
