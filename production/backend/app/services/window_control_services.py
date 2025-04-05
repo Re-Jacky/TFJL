@@ -9,7 +9,8 @@ from ctypes import windll
 from PIL import Image
 from typing import Dict, List, Optional, Tuple, Union
 import cv2
-
+import time
+from app.utils.logger import logger
 
 class WindowControlService:
     @staticmethod
@@ -85,6 +86,40 @@ class WindowControlService:
         return hwnd
 
     @staticmethod
+    def horizontal_scroll(window_pid: int, distance: int):
+        """
+        Perform horizontal scrolling by simulating mouse drag from right to left.
+        Uses mouse down/move/up to avoid inertia effects.
+        
+        Args:
+            window_pid: The PID of the target window
+            distance: Positive distance to scroll (right to left)
+        """
+        hwnd = window_pid
+        start_x = 1000
+        y = 300
+        chunk_size = 10  # Max distance per iteration to avoid inertia
+        
+        # Calculate number of iterations needed
+        iterations = max(1, distance // chunk_size)
+        
+        for i in range(iterations):
+            # Mouse down at start position
+            point = win32api.MAKELONG(start_x, y)
+            win32gui.PostMessage(hwnd, win32con.WM_LBUTTONDOWN, win32con.MK_LBUTTON, point)
+            
+            # Mouse move left by chunk_size
+            move_x = start_x - chunk_size
+            point = win32api.MAKELONG(move_x, y)
+            win32gui.PostMessage(hwnd, win32con.WM_MOUSEMOVE, win32con.MK_LBUTTON, point)
+     
+            # Mouse up at new position
+            win32gui.PostMessage(hwnd, win32con.WM_LBUTTONUP, None, point)
+        
+            
+        return {"success": True, "message": f"Horizontal scroll completed for distance {distance}"}
+
+    @staticmethod
     def capture_region(hwnd, region: Optional[Tuple[int, int, int, int]]) -> np.ndarray:
         """
         Capture and process a region of the window using win32gui and ctypes.
@@ -95,51 +130,7 @@ class WindowControlService:
             left, top, right, bottom = win32gui.GetWindowRect(hwnd)
             width = right - left
             height = bottom - top
-            
-            # Adjust region if specified
-            if region:
-                x, y, w, h = region
-                left += x
-                top += y
-                width = w
-                height = h
-            
-            # Create device context
-            hwndDC = win32gui.GetWindowDC(hwnd)
-            mfcDC = win32ui.CreateDCFromHandle(hwndDC)
-            saveDC = mfcDC.CreateCompatibleDC()
-            
-            # Create bitmap
-            saveBitMap = win32ui.CreateBitmap()
-            saveBitMap.CreateCompatibleBitmap(mfcDC, width, height)
-            saveDC.SelectObject(saveBitMap)
-            
-            # Copy window contents to bitmap
-            result = windll.user32.PrintWindow(hwnd, saveDC.GetSafeHdc(), 2)
-            
-            # Convert to numpy array
-            bmpinfo = saveBitMap.GetInfo()
-            bmpstr = saveBitMap.GetBitmapBits(True)
-            
-            # Clean up
-            win32gui.DeleteObject(saveBitMap.GetHandle())
-            saveDC.DeleteDC()
-            mfcDC.DeleteDC()
-            win32gui.ReleaseDC(hwnd, hwndDC)
-            
-            if not result:
-                raise Exception("Failed to capture window contents")
-                
-            screenshot = Image.frombuffer(
-                'RGB',
-                (bmpinfo['bmWidth'], bmpinfo['bmHeight']),
-                bmpstr, 'raw', 'BGRX', 0, 1)
-                
-            screenshot_array = np.array(screenshot)
-            return cv2.cvtColor(screenshot_array, cv2.COLOR_RGB2GRAY)
-            
-        except Exception as e:
-            # Fallback to pyautogui if win32 capture fails
+
             if region:
                 abs_x = left + (region[0] if region else 0)
                 abs_y = top + (region[1] if region else 0)
@@ -151,3 +142,6 @@ class WindowControlService:
             
             screenshot_array = np.array(screenshot)
             return cv2.cvtColor(screenshot_array, cv2.COLOR_RGB2GRAY)
+        except Exception as e:
+            logger.error(f"Error capturing window region: {str(e)}")
+            return None

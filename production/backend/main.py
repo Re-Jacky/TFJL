@@ -6,10 +6,12 @@ from app.services.utility_services import UtilityService
 from app.services.event_services import EventService
 from app.services.image_services import ImageService
 from app.services.window_control_services import WindowControlService
+from app.services.game_service import GameService
 from urllib.parse import unquote
 from app.utils.logger import logger
 from app.schema.schemas import FileModel, WithContentFileModel
 import pygetwindow
+from app.enums.game_positions import GamePositions
 
 app = FastAPI()
 
@@ -83,8 +85,11 @@ async def parse_file(file_data: FileModel):
 @app.post("/start-action")
 async def start_action(config: dict):
     action = config['action']
+    pid = config['pid']
     logger.info(f"Starting action: {action}")
-    return image_service.analyze_cards(config['pid'])
+    ## han bing
+    return GameService.start_battle(pid)
+    # return image_service.analyze_cards(config['pid'])
 
 
 @app.post("/start-script")

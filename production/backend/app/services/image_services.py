@@ -261,7 +261,7 @@ class ImageService:
             raise
 
     @staticmethod
-    def _load_template(image_file_name: str) -> np.ndarray:
+    def load_template(image_file_name: str) -> np.ndarray:
         """Load and process template image."""
         image_path = Path("images").resolve() / (image_file_name.encode('utf-8').decode('utf-8') + ".jpg")
         if not image_path.exists():
@@ -282,7 +282,7 @@ class ImageService:
             Dict with click location and success status
         """
         window = WindowControlService.find_window(window_pid)
-        template_gray = self._load_template(image_file_name)
+        template_gray = self.load_template(image_file_name)
         screenshot_gray = WindowControlService.capture_region(window, None)
 
         # Match template
