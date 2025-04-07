@@ -6,6 +6,7 @@ import {
   CollaborationContent,
   EventContent,
   MainContent,
+  ShortcutContent,
 } from '../content';
 
 const items: TabsProps['items'] = [
@@ -28,6 +29,11 @@ const items: TabsProps['items'] = [
     key: 'event',
     label: '活动',
     children: <EventContent />,
+  },
+  {
+    key: 'shortcut',
+    label: '快捷键',
+    children: <ShortcutContent />,
   },
 ];
 const TaskTabs: React.FC = () => {

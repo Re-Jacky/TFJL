@@ -1,0 +1,10 @@
+.labelInput {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    .inputField {
+      width: 80px;
+      height: 26px;
+      font-size: 10px;
+    }
+}

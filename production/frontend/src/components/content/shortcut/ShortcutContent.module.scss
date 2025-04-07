@@ -1,0 +1,23 @@
+.shortcut {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  .contentArea {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    position: relative;
+  }
+  .modeOptions {
+    margin: 10px  0;
+  }
+  .vehicleGroup {
+    display: flex;
+    gap: 5px;
+  }
+  .inputGroup {
+    gap: 5px;
+    display: flex;
+    flex-direction: column;
+  }
+}

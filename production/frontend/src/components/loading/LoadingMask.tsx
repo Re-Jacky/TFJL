@@ -1,6 +1,6 @@
 import React from 'react';
 import { Spin } from 'antd';
-import styles from './LoadingMask.module.css';
+import styles from './LoadingMask.module.scss';
 
 interface LoadingMaskProps {
   visible: boolean;
