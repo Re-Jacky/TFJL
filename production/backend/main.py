@@ -11,7 +11,6 @@ from urllib.parse import unquote
 from app.utils.logger import logger
 from app.schema.schemas import FileModel, WithContentFileModel
 import pygetwindow
-from app.enums.game_positions import GamePositions
 
 app = FastAPI()
 

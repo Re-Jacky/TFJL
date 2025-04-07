@@ -2,15 +2,12 @@ import win32api
 import win32con
 import win32gui
 import pygetwindow
-import win32ui
 import numpy as np
 import pyautogui
-from ctypes import windll
-from PIL import Image
-from typing import Dict, List, Optional, Tuple, Union
+from typing import  Optional, Tuple
 import cv2
-import time
 from app.utils.logger import logger
+from fastapi import HTTPException
 
 class WindowControlService:
     @staticmethod
@@ -32,29 +29,6 @@ class WindowControlService:
         win32gui.PostMessage(hwnd, win32con.WM_LBUTTONUP, None, point)
 
         return {"success": True, "message": f"Click sent to window {hwnd} at ({x}, {y})"}
-
-    @staticmethod
-    def scroll_to(window_pid: int, x: int, y: int, delta: int, direction: str = 'vertical'):
-        """
-        Send a scroll event to the specified window coordinates using PostMessage.
-
-        Args:
-            window_pid: The PID of the target window
-            x: The x coordinate relative to the window
-            y: The y coordinate relative to the window
-            delta: The scroll amount (positive for up/right, negative for down/left)
-            direction: The scroll direction ('vertical' or 'horizontal')
-        """
-        hwnd = window_pid
-        point = win32api.MAKELONG(x, y)
-
-        # Determine which message to send based on direction
-        message = win32con.WM_MOUSEWHEEL if direction == 'vertical' else win32con.WM_MOUSEHWHEEL
-
-        # Send mouse wheel message
-        win32gui.PostMessage(hwnd, message, win32api.MAKELONG(0, delta), point)
-
-        return {"success": True, "message": f"{direction.capitalize()} scroll sent to window {hwnd} at ({x}, {y}) with delta {delta}"}
         
     @staticmethod
     def locate_window(pid: int) -> dict:
@@ -144,4 +118,4 @@ class WindowControlService:
             return cv2.cvtColor(screenshot_array, cv2.COLOR_RGB2GRAY)
         except Exception as e:
             logger.error(f"Error capturing window region: {str(e)}")
-            return None
+            return np.zeros((0, 0), dtype=np.uint8)
