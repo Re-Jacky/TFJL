@@ -41,6 +41,17 @@
     .cellInput {
       text-align: center;
       font-size: 10px;
+      > input {
+        text-align: center;
+      }
+      &:hover {
+        .inputClearIcon {
+          display: block;
+        }
+      }
+      .inputClearIcon {
+        display: none;
+      }
     }
   }
 
@@ -50,4 +61,5 @@
   .labelActive {
     color: #4096ff;
   }
+
 }
