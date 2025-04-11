@@ -124,8 +124,6 @@ async def get_file_list(type: str):
             content={"detail": "Invalid type parameter"}
         )
 
-# FileData model is now imported from app.models.file_data
-
 @app.post("/save-file")
 async def save_file(request: Request, script_data: WithContentFileModel):
     file_name = unquote(script_data.file)
@@ -197,6 +195,31 @@ async def locate_window(window_data: dict):
             content={"detail": f"Error locating window: {str(e)}"}
         )
 
+
+@app.get("/shortcut")
+async def get_shortcut():
+    try:
+        return utility_service.get_shortcut()
+    except Exception as e:
+        logger.error(f"Error getting shortcut: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"detail": f"Error getting shortcut: {str(e)}"}
+        )
+
+@app.post("/shortcut")
+async def save_shortcut(shortcut_data: dict):
+    try:
+        result = utility_service.save_shortcut(shortcut_data["shortcut"])
+        await event_service.broadcast_log("info", f"保存快捷键成功！")
+        return {"status": "success"}
+    except Exception as e:
+        logger.error(f"Error saving shortcut: {str(e)}")
+        await event_service.broadcast_log("error", f"保存失败: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"detail": f"Error saving shortcut: {str(e)}"}
+        )
 
 @app.get("/sse")
 async def event_stream(request: Request):

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import {  Radio, RadioChangeEvent } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Radio, RadioChangeEvent } from 'antd';
 import styles from './ShortcutContent.module.scss';
 import { produceEmptyCellValues } from '../components/Vehicle';
 import Content, { ShortcutModel } from './Content';
@@ -8,7 +8,8 @@ import {
   VehicleSide,
   GeneralShortcut,
   BattleShortcut,
-} from './enums';
+} from '@src/types';
+import { api } from '@src/services/api';
 
 const emptyShortcut: ShortcutModel = {
   vehicleShortcut: {
@@ -34,9 +35,10 @@ const emptyShortcut: ShortcutModel = {
 };
 
 const ShortcutContent: React.FC = () => {
-  
   const [mode, setMode] = useState<GameMode>(GameMode.NONE);
   const [shortcut, setShortcut] = useState<ShortcutModel>(emptyShortcut);
+  const [defaultShortcut, setDefaultShortcut] = useState<ShortcutModel | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
   const onModeChange = (e: RadioChangeEvent) => {
     setMode(e.target.value);
@@ -45,6 +47,7 @@ const ShortcutContent: React.FC = () => {
 
   const handleSave = () => {
     // service
+    api.saveShortcut(shortcut);
   };
 
   const onReset = () => {
@@ -55,6 +58,14 @@ const ShortcutContent: React.FC = () => {
     // service
   };
 
+  useEffect(() => {
+    api.getShortcut().then((res) => {
+      setShortcut(res.shortcut);
+      setDefaultShortcut(res.shortcut);
+    }).finally(() => {
+      setLoading(false);
+    });
+  }, [])
   return (
     <div className={styles.shortcut}>
       <Radio.Group
@@ -72,12 +83,11 @@ const ShortcutContent: React.FC = () => {
       <Content
         mode={mode}
         shortcut={shortcut}
-        setShortcut={(a) => {
-          setShortcut(a)
-        }}
+        setShortcut={setShortcut}
         onSideChange={onSideChange}
         onSave={handleSave}
         onReset={onReset}
+        isLoading={loading}
       />
     </div>
   );

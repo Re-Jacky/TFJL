@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import sys
+import json
 from pathlib import Path
 from typing import List, Dict, Union, Optional
 from fastapi import HTTPException
@@ -126,6 +127,43 @@ class UtilityService:
 
         except HTTPException as he:
             raise he
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+            
+    @staticmethod
+    def get_shortcut() -> Dict[str, str]:
+        """Get the current shortcut configuration.
+        
+        Returns:
+            Dict[str, str]: The shortcut configuration
+        """
+        try:
+            public_path = UtilityService.get_public_path()
+            shortcut_path = public_path / "shortcut.json"
+            
+            if not shortcut_path.exists():
+                return {"status": "default"}
+                
+            return {"status": "success", "shortcut": json.loads(shortcut_path.read_text(encoding='utf-8'))}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+            
+    @staticmethod
+    def save_shortcut(shortcut: Dict[str, str]) -> Dict[str, str]:
+        """Save the shortcut configuration.
+        
+        Args:
+            shortcut: The shortcut configuration to save
+            
+        Returns:
+            Dict[str, str]: Status of the operation
+        """
+        try:
+            public_path = UtilityService.get_public_path()
+            shortcut_path = public_path / "shortcut.json"
+            
+            shortcut_path.write_text(json.dumps(shortcut), encoding='utf-8')
+            return {"status": "success", "message": "Shortcut saved successfully"}
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
             

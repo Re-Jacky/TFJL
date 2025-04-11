@@ -9,8 +9,9 @@ import {
   VehicleSide,
   GeneralShortcut,
   BattleShortcut,
-} from '@src/components/content/shortcut/enums';
+} from '@src/types';
 import Vehicle, { type CellValues } from '../components/Vehicle';
+import LoadingMask from '@src/components/loading/LoadingMask';
 
 export interface ShortcutModel {
   vehicleShortcut: Record<VehicleSide, CellValues>;
@@ -25,10 +26,19 @@ export interface ContentProps {
   onSave: () => void;
   onReset: () => void;
   onSideChange?: (side: VehicleSide) => void;
+  isLoading?: boolean;
 }
 
 const Content: React.FC<ContentProps> = (props) => {
-  const { mode, shortcut, setShortcut, onReset, onSave, onSideChange } = props;
+  const {
+    mode,
+    shortcut,
+    setShortcut,
+    onReset,
+    onSave,
+    onSideChange,
+    isLoading = true,
+  } = props;
   const [active, setActive] = useState<VehicleSide>(VehicleSide.LEFT);
 
   const onVehShortcutChange = (cellValue: CellValues, side: VehicleSide) => {
@@ -110,6 +120,7 @@ const Content: React.FC<ContentProps> = (props) => {
 
   return (
     <div className={styles.contentArea}>
+      <LoadingMask visible={isLoading} />
       {mode === GameMode.NONE && <Mask />}
       <div className={styles.vehicleGroup}>{renderVehicle()}</div>
       <div className={styles.inputGroup}>

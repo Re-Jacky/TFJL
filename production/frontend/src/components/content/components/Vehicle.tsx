@@ -21,7 +21,7 @@ export const produceEmptyCellValues = () => Array.from({ length: 7 }).reduce(
     return acc;
   },
   {}
-);
+) as CellValues;
 
 const Vehicle: React.FC<VehicleProps> = (props) => {
   const { defaultCellValues, active, onChange, label, onClick, value } = props;
@@ -52,6 +52,7 @@ const Vehicle: React.FC<VehicleProps> = (props) => {
     const newCellValues = { ...displayValues };
     newCellValues[index] = value;
     setCellValues(newCellValues);
+    onChange?.(newCellValues);
   };
 
   const handleClear = (index: number) => {
@@ -61,10 +62,6 @@ const Vehicle: React.FC<VehicleProps> = (props) => {
     setCellValues(newCellValues);
   }
 
-  useEffect(() => {
-    onChange?.(cellValues);
-  }, [cellValues]);
-
   return (
     <div className={styles.vehicle} onClick={onClick}>
       <div className={`${styles.gridContainer} ${active ? styles.active : ''}`}>
@@ -73,7 +70,7 @@ const Vehicle: React.FC<VehicleProps> = (props) => {
           .map((key: string) => {
             const displayIdx =
               Object.keys(displayValues).length - 1 - parseInt(key);
-            
+
             return (
               <div
                 key={displayIdx}
