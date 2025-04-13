@@ -1,7 +1,5 @@
 import cv2
 import numpy as np
-import pyautogui
-import pygetwindow
 from PIL import Image
 from fastapi import HTTPException
 from pathlib import Path

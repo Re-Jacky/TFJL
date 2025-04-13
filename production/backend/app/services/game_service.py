@@ -28,7 +28,7 @@ class GameService:
         if GameService.is_home(pid):
             return True
         else:
-            WindowControlService.click_in_game(pid, GamePositions.BACK.value)
+            GameService.click_in_game(pid, GamePositions.BACK.value)
             return GameService.is_home(pid)
     
     @staticmethod
@@ -37,4 +37,3 @@ class GameService:
         GameService.click_in_game(pid, GamePositions.BATTLE.value)
         GameService.click_in_game(pid, GamePositions.BATTLE_START.value)
         return True
-        
