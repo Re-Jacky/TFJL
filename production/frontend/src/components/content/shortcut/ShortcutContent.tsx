@@ -41,8 +41,10 @@ const ShortcutContent: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
 
   const onModeChange = (e: RadioChangeEvent) => {
-    setMode(e.target.value);
+    const mode = e.target.value as GameMode;
+    setMode(mode);
     // service
+    api.setShortcutConfig({mode});
   };
 
   const handleSave = () => {

@@ -7,6 +7,7 @@ from app.services.event_services import EventService
 from app.services.image_services import ImageService
 from app.services.window_control_services import WindowControlService
 from app.services.game_service import GameService
+from app.services.shortcut_service import ShortcutService
 from urllib.parse import unquote
 from app.utils.logger import logger
 from app.schema.schemas import FileModel, WithContentFileModel
@@ -18,6 +19,7 @@ utility_service = UtilityService()
 event_service = EventService()
 image_service = ImageService()
 image_service.initialize_card_templates()
+shortcut_service = ShortcutService()
 
 
 @app.middleware("http")
@@ -219,6 +221,28 @@ async def save_shortcut(shortcut_data: dict):
         return JSONResponse(
             status_code=500,
             content={"detail": f"Error saving shortcut: {str(e)}"}
+        )
+        
+@app.post("/shortcut-config")
+async def set_shortcut_mode(request: Request, config_data: dict):
+    try:
+        pid = get_req_pid(request)
+        config = config_data.get("config")
+        mode = config.get("mode")
+        quick_sell = config.get("quickSell")
+        if mode != None:
+            shortcut_service.set_mode(pid, mode)
+            await event_service.broadcast_log("info", f"快捷键模式设置为: {mode}")
+        if quick_sell != None:
+            shortcut_service.set_quick_sell(pid, quick_sell)
+            await event_service.broadcast_log("info", f"快速卖卡设置为: {quick_sell}")
+        return {"status": "success", "mode": mode}
+    except Exception as e:
+        logger.error(f"Error setting shortcut config: {str(e)}")
+        await event_service.broadcast_log("error", f"设置快捷键配置失败: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"detail": f"Error setting shortcut config: {str(e)}"}
         )
 
 @app.get("/sse")
