@@ -24,6 +24,8 @@ const emptyShortcut: ShortcutModel = {
     [GeneralShortcut.REFRESH]: '',
     [GeneralShortcut.SELL_CARD]: '',
     [GeneralShortcut.QUICK_SELL]: false,
+    [GeneralShortcut.QUICK_REFRESH]: false,
+    [GeneralShortcut.QUICK_SELL_DELAY]: 0,
   },
   battleShortcut: {
     [BattleShortcut.SURRENDER]: '',
@@ -31,6 +33,7 @@ const emptyShortcut: ShortcutModel = {
     [BattleShortcut.BATTLE]: '',
     [BattleShortcut.QUICK_MATCH]: '',
     [BattleShortcut.VIEW_OPPONENT_HALO]: '',
+    [BattleShortcut.CLOSE_CARD]: '',
   },
 };
 

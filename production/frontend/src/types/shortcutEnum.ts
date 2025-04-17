@@ -18,6 +18,8 @@ export enum GeneralShortcut {
   REFRESH = 'refresh',
   SELL_CARD = 'sellCard',
   QUICK_SELL = 'quickSell',
+  QUICK_SELL_DELAY = 'quickSellDelay',
+  QUICK_REFRESH = 'quickRefresh',
 }
 
 export enum BattleShortcut {
@@ -26,5 +28,6 @@ export enum BattleShortcut {
   BATTLE = 'battle',
   QUICK_MATCH = 'quickMatch',
   VIEW_OPPONENT_HALO = 'viewOpponentHalo',
+  CLOSE_CARD = 'closeCard',
 }
 

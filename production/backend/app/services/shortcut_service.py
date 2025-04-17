@@ -2,7 +2,6 @@ import json
 from re import match
 import time
 import threading
-from unittest import case
 import pygetwindow
 import pyautogui
 from typing import Dict, Optional
@@ -18,7 +17,6 @@ class ShortcutService:
         self.shortcut_config = {}
         self.load_config()
         self.window_configs = {}  # Stores mode per PID
-        self.quick_sell_delay = 0.5  # Delay in seconds before selling
 
     def load_config(self):
         """Load the shortcut configuration from file."""
@@ -36,8 +34,7 @@ class ShortcutService:
         """Start listening for keyboard shortcuts for the specified window."""
         if self.window_configs.get(pid, {}).get('active', False):
             self.stop_listening(pid)
-        
-            
+
         self.window_configs[pid]['active'] = True
         self.listener_thread = threading.Thread(
             target=self._listen_for_shortcuts,
@@ -60,37 +57,42 @@ class ShortcutService:
         Args:
             pid: The process ID of the window to monitor.
         """
-        
+        quick_sell_delay = self.shortcut_config.get('generalShortcut', {}).get('quickSellDelay', 0) / 1000
+        quick_refresh = self.shortcut_config.get('generalShortcut', {}).get('quickRefresh', False)
+        quick_sell = self.shortcut_config.get('generalShortcut', {}).get('quickSell', False)
+        mode = self.window_configs.get(pid, {}).get('mode', GameMode.NONE)
         def on_press(key):
             try:
                 key_str = key.char
-                logger.info(f"Detected key press: {key_str}")
             except AttributeError:
                 key_str = str(key)
-                
-            # for shortcut_key in self.shortcut_config.get('generalShortcut', {}).values():
-            #     if shortcut_key and key_str == shortcut_key:
-            #         logger.info(f"Detected general shortcut key press: {key_str}")
-                    
-            mode = self.window_configs.get(pid, {}).get('mode', GameMode.NONE)
-            quick_sell = self.shortcut_config.get('generalShortcut', {}).get('quickSell', False)
+                key_str = key_str.replace('Key.', '').capitalize()
+
             if mode != GameMode.NONE.value:
                 # monitor general shortcut key press
                 for shortcut_key, shortcut_value in self.shortcut_config.get('generalShortcut', {}).items():
-                    if (shortcut_value and key_str == shortcut_value) or (shortcut_value == 'Space' and key_str == 'Key.space'):
+                    if (shortcut_value and key_str == shortcut_value):
+                        canUseQuickRefresh = False
                         if shortcut_key == 'firstCard':
                             pos = GamePositions.CARD_0.value
+                            canUseQuickRefresh = True
                         elif shortcut_key == 'secondCard':
                             pos = GamePositions.CARD_1.value
+                            canUseQuickRefresh = True
                         elif shortcut_key == 'thirdCard':
                             pos = GamePositions.CARD_2.value
+                            canUseQuickRefresh = True
                         elif shortcut_key == 'upgradeVehicle':
                             pos = GamePositions.UPGRADE_VEHICLE.value
                         elif shortcut_key == 'refresh':
                             pos = GamePositions.REFRESH_CARD.value
                         elif shortcut_key == 'sellCard':
-                            pos = '' ## TBD                        logger.info(f"Clicked at position: {pos}")
-                        # WindowControlService.click_at(pid, pos[0], pos[1])
+                            pos = GamePositions.SELL_CARD.value
+                        WindowControlService.click_at(pid, pos[0], pos[1])
+                        if quick_refresh and canUseQuickRefresh:
+                            time.sleep(0.1)
+                            refresh_card = GamePositions.REFRESH_CARD.value
+                            WindowControlService.click_at(pid, refresh_card[0], refresh_card[1]) # Implement quick sell logic
                         return
                        
 
@@ -104,7 +106,6 @@ class ShortcutService:
                 ## check battle shortcut key press
                 for shortcut_key, shortcut_value in self.shortcut_config.get('battleShortcut', {}).items():
                     if shortcut_value and key_str == shortcut_value:
-                        logger.info(f"Detected battle shortcut key press: {key_str}")
                         if shortcut_key == 'surrender':
                             pos = GamePositions.SURRENDER.value
                         elif shortcut_key =='confirm':
@@ -115,22 +116,25 @@ class ShortcutService:
                             pos = GamePositions.QUICK_MATCH.value
                         elif shortcut_key =='viewOpponentHalo':
                             pos = GamePositions.ENEMY_STATUS.value
-                        logger.info(f"Clicked at position: {pos}")
-                        # WindowControlService.click_at(pid, pos[0], pos[1])
+                        elif shortcut_key == 'closeCard':
+                            pos = GamePositions.CLOST_CARD.value
+                        WindowControlService.click_at(pid, pos[0], pos[1])
                         return
 
                 ## check vehicle shortcut key press
                 for direction, position_enum in direction_map.items():
                     for shortcut_index, shortcut_value in vehicle_shortcuts.get(direction, {}).items():
                         if shortcut_value and key_str == shortcut_value:
-                            logger.info(f"Detected {direction} vehicle shortcut key press: {key_str} (shortcut: {shortcut_index})")
+
                             position = position_enum[f"VEHICLE_{shortcut_index}"].value
                             logger.info(f"Clicked at position: {position}")
-                            # WindowControlService.click_at(pid, position[0], position[1])
+                            WindowControlService.click_at(pid, position[0], position[1])
                             if quick_sell:
-                                time.sleep(self.quick_sell_delay)
-                                logger.info(f"Clicked sell card")
-                                # WindowControlService.click_at(pid, ) # Implement quick sell logic
+                                def delayed_click():
+                                    time.sleep(quick_sell_delay)
+                                    sell_card = GamePositions.SELL_CARD.value
+                                    WindowControlService.click_at(pid, sell_card[0], sell_card[1])
+                                threading.Thread(target=delayed_click, daemon=True).start()
                             return
             elif mode == GameMode.SINGLE_PLAYER_SAILING.value:
                 # Implement logic for two-player mode

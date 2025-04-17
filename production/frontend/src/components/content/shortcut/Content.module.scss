@@ -33,6 +33,14 @@
     }
   }
 
+  .quickSell {
+    display: flex;
+    align-items: center;
+    .quickSellDelay {
+      width: 80px;
+    }
+  }
+
   .actionBtn {
     margin-left: auto;
     margin-top: auto;
