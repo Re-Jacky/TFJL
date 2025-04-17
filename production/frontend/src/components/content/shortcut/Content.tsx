@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styles from './Content.module.scss';
 import Mask from '@src/components/content/shortcut/Mask';
 import LabelInput from '@src/components/content/shortcut/LabelInput';
-import { Button, Checkbox } from 'antd';
+import { Button, Checkbox, InputNumber } from 'antd';
 import { ReloadOutlined, SaveOutlined } from '@ant-design/icons';
 import {
   GameMode,
@@ -15,7 +15,7 @@ import LoadingMask from '@src/components/loading/LoadingMask';
 
 export interface ShortcutModel {
   vehicleShortcut: Record<VehicleSide, CellValues>;
-  generalShortcut: Record<GeneralShortcut, string | boolean>;
+  generalShortcut: Record<GeneralShortcut, string | boolean | number>;
   battleShortcut: Record<BattleShortcut, string>;
 }
 
@@ -51,7 +51,10 @@ const Content: React.FC<ContentProps> = (props) => {
     });
   };
 
-  const onGenerageInputChange = (val: string | boolean, key: string) => {
+  const onGenerageInputChange = (
+    val: string | boolean | number,
+    key: string
+  ) => {
     setShortcut({
       ...shortcut,
       generalShortcut: {
@@ -121,7 +124,7 @@ const Content: React.FC<ContentProps> = (props) => {
   return (
     <div className={styles.contentArea}>
       <LoadingMask visible={isLoading} />
-      {mode === GameMode.NONE && <Mask />}
+      {/* {mode === GameMode.NONE && <Mask />} */}
       <div className={styles.vehicleGroup}>{renderVehicle()}</div>
       <div className={styles.inputGroup}>
         <div className={styles.inputTop}>
@@ -184,20 +187,55 @@ const Content: React.FC<ContentProps> = (props) => {
                 shortcut.generalShortcut[GeneralShortcut.SELL_CARD] as string
               }
             />
+            <div className={styles.quickSell}>
+              <Checkbox
+                onChange={(e) => {
+                  onGenerageInputChange(
+                    e.target.checked,
+                    GeneralShortcut.QUICK_SELL
+                  );
+                }}
+                checked={
+                  shortcut.generalShortcut[
+                    GeneralShortcut.QUICK_SELL
+                  ] as boolean
+                }
+              >
+                一键卖卡
+              </Checkbox>
+              <InputNumber
+                className={styles.quickSellDelay}
+                suffix={'ms'}
+                value={
+                  shortcut.generalShortcut[
+                    GeneralShortcut.QUICK_SELL_DELAY
+                  ] as number
+                }
+                onChange={(val) => {
+                  if (val) {
+                    onGenerageInputChange(
+                      val as number,
+                      GeneralShortcut.QUICK_SELL_DELAY
+                    );
+                  }
+                }}
+              />
+            </div>
+
             <Checkbox
               onChange={(e) => {
                 onGenerageInputChange(
                   e.target.checked,
-                  GeneralShortcut.ONE_KEY_SELL_CARD
+                  GeneralShortcut.QUICK_REFRESH
                 );
               }}
               checked={
                 shortcut.generalShortcut[
-                  GeneralShortcut.ONE_KEY_SELL_CARD
+                  GeneralShortcut.QUICK_REFRESH
                 ] as boolean
               }
             >
-              一键卖卡
+              自动刷新
             </Checkbox>
           </div>
           {mode === GameMode.SINGLE_PLAYER ? (
@@ -237,6 +275,15 @@ const Content: React.FC<ContentProps> = (props) => {
                 }
                 value={
                   shortcut.battleShortcut[BattleShortcut.VIEW_OPPONENT_HALO]
+                }
+              />
+              <LabelInput
+                label='关闭卡牌信息'
+                onChange={(val) =>
+                  onBattleInputChange(val, BattleShortcut.CLOSE_CARD)
+                }
+                value={
+                  shortcut.battleShortcut[BattleShortcut.CLOSE_CARD]
                 }
               />
             </div>

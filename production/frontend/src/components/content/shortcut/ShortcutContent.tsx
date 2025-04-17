@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Radio, RadioChangeEvent } from 'antd';
+import { Button, Radio, RadioChangeEvent } from 'antd';
 import styles from './ShortcutContent.module.scss';
 import { produceEmptyCellValues } from '../components/Vehicle';
 import Content, { ShortcutModel } from './Content';
@@ -23,7 +23,9 @@ const emptyShortcut: ShortcutModel = {
     [GeneralShortcut.UPGRADE_VEHICLE]: '',
     [GeneralShortcut.REFRESH]: '',
     [GeneralShortcut.SELL_CARD]: '',
-    [GeneralShortcut.ONE_KEY_SELL_CARD]: false,
+    [GeneralShortcut.QUICK_SELL]: false,
+    [GeneralShortcut.QUICK_REFRESH]: false,
+    [GeneralShortcut.QUICK_SELL_DELAY]: 0,
   },
   battleShortcut: {
     [BattleShortcut.SURRENDER]: '',
@@ -31,20 +33,24 @@ const emptyShortcut: ShortcutModel = {
     [BattleShortcut.BATTLE]: '',
     [BattleShortcut.QUICK_MATCH]: '',
     [BattleShortcut.VIEW_OPPONENT_HALO]: '',
+    [BattleShortcut.CLOSE_CARD]: '',
   },
 };
 
 const ShortcutContent: React.FC = () => {
-  const [mode, setMode] = useState<GameMode>(GameMode.NONE);
+  const [mode, setMode] = useState<GameMode>(GameMode.SINGLE_PLAYER);
   const [shortcut, setShortcut] = useState<ShortcutModel>(emptyShortcut);
-  const [defaultShortcut, setDefaultShortcut] = useState<ShortcutModel | null>(null);
+  const [defaultShortcut, setDefaultShortcut] = useState<ShortcutModel | null>(
+    null
+  );
   const [loading, setLoading] = useState<boolean>(true);
+  const [active, setActive] = useState<boolean>(false);
 
   const onModeChange = (e: RadioChangeEvent) => {
     const mode = e.target.value as GameMode;
     setMode(mode);
     // service
-    api.setShortcutConfig({mode});
+    api.setShortcutConfig({ mode });
   };
 
   const handleSave = () => {
@@ -60,28 +66,41 @@ const ShortcutContent: React.FC = () => {
     // service
   };
 
+  const toggleActive = () => {
+    setActive(!active);
+    api.monitorShortcut(!active);
+  };
+
   useEffect(() => {
-    api.getShortcut().then((res) => {
-      setShortcut(res.shortcut);
-      setDefaultShortcut(res.shortcut);
-    }).finally(() => {
-      setLoading(false);
-    });
-  }, [])
+    api
+      .getShortcut()
+      .then((res) => {
+        setShortcut(res.shortcut);
+        setDefaultShortcut(res.shortcut);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
   return (
     <div className={styles.shortcut}>
-      <Radio.Group
-        className={styles.modeOptions}
-        onChange={onModeChange}
-        value={mode}
-        options={[
-          { label: '无', value: GameMode.NONE },
-          { label: '对战', value: GameMode.SINGLE_PLAYER },
-          { label: '单人-航海', value: GameMode.SINGLE_PLAYER_SAILING },
-          { label: '双人', value: GameMode.TWO_PLAYER },
-          { label: '双人-天空', value: GameMode.TWO_PLAYER_SKY },
-        ]}
-      />
+      <div className={styles.header}>
+        <Radio.Group
+          className={styles.modeOptions}
+          onChange={onModeChange}
+          value={mode}
+          options={[
+            { label: '对战', value: GameMode.SINGLE_PLAYER },
+            { label: '单人-航海', value: GameMode.SINGLE_PLAYER_SAILING },
+            { label: '双人', value: GameMode.TWO_PLAYER },
+            { label: '双人-天空', value: GameMode.TWO_PLAYER_SKY },
+          ]}
+        />
+        <Button type={active ? 'default' : 'primary'} onClick={toggleActive} danger={active}>
+          {active ? '停用' : '启用'}
+        </Button>
+      </div>
+
       <Content
         mode={mode}
         shortcut={shortcut}

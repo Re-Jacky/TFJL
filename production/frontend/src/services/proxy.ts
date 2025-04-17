@@ -7,7 +7,7 @@ interface Proxy {
 
 const proxy: Proxy = {
   get: async <T>(endpoint: string) => {
-    const pid = window.localStorage.getItem('activeWindow');
+    const pid = window.localStorage.getItem('pid');
     const response = await fetch(`${API_BASE_URL}/${endpoint}`, {
       headers: {
         'x-pid': pid || ''
@@ -19,7 +19,7 @@ const proxy: Proxy = {
     return await response.json() as T;
   },
   post: async <T>(endpoint: string, data?: any) => {
-    const pid = window.localStorage.getItem('activeWindow');
+    const pid = window.localStorage.getItem('pid');
     const response = await fetch(`${API_BASE_URL}/${endpoint}`, {
       method: 'POST',
       headers: {

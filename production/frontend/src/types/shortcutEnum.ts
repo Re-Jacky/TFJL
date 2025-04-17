@@ -1,5 +1,4 @@
 export enum GameMode {
-  NONE,
   SINGLE_PLAYER,
   SINGLE_PLAYER_SAILING,
   TWO_PLAYER,
@@ -18,7 +17,9 @@ export enum GeneralShortcut {
   UPGRADE_VEHICLE = 'upgradeVehicle',
   REFRESH = 'refresh',
   SELL_CARD = 'sellCard',
-  ONE_KEY_SELL_CARD = 'oneKeySellCard',
+  QUICK_SELL = 'quickSell',
+  QUICK_SELL_DELAY = 'quickSellDelay',
+  QUICK_REFRESH = 'quickRefresh',
 }
 
 export enum BattleShortcut {
@@ -27,5 +28,6 @@ export enum BattleShortcut {
   BATTLE = 'battle',
   QUICK_MATCH = 'quickMatch',
   VIEW_OPPONENT_HALO = 'viewOpponentHalo',
+  CLOSE_CARD = 'closeCard',
 }
 
