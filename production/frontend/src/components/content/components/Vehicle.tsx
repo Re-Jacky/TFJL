@@ -60,6 +60,7 @@ const Vehicle: React.FC<VehicleProps> = (props) => {
     const newCellValues = {...displayValues };
     newCellValues[index] = '';
     setCellValues(newCellValues);
+    onChange?.(newCellValues);
   }
 
   return (
