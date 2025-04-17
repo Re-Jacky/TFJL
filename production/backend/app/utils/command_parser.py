@@ -49,12 +49,16 @@ class CommandParser:
                 command = self._parse_command_chain(line)
                 if command:
                     self.result['command_chain'].append(command)
-            else:
-                # Parse special events
-                event = self._parse_special_event(line)
-                if event:
-                    self.result['special_events'].append(event)
-                    
+                continue
+            # Parse special events or named triggers
+            event = self._parse_special_event(line)
+            if event:
+                self.result['special_events'].append(event)
+                continue
+            # 支持花色/牌面等特殊行
+            if any(x in line for x in ['A', 'K', 'Q', 'J', '2', '3', '4', '5', '6', '7', '8', '9', '10']):
+                self.result['special_events'].append({"type": "card_face", "content": line})
+
         return self.result
     
     def _parse_formation(self, formation_str: str) -> List[str]:
@@ -67,50 +71,68 @@ class CommandParser:
     
     def _parse_command_chain(self, command_str: str) -> Optional[Dict]:
         """Parse a command chain string into structured data."""
-        parts = command_str.split(',')
+        parts = [p.strip() for p in command_str.split(',') if p.strip()]
         if not parts:
             return None
-            
         try:
             index = int(parts[0])
             commands = parts[1:]
-            
             result = {
                 "index": index,
                 "commands": []
             }
-            
             for cmd in commands:
-                cmd = cmd.strip()
-                if not cmd:
+                # 支持“或”操作（如换烟斗或龙心）
+                if '或' in cmd:
+                    result['commands'].append({"type": "or", "options": [c.strip() for c in cmd.split('或')]})
                     continue
-                    
-                # Parse timing patterns
+                # 支持“过后”操作（如下鱼人，过后，上鱼人满）
+                if '过后' in cmd:
+                    before, after = cmd.split('过后', 1)
+                    result['commands'].append({"type": "sequence", "before": before.strip(), "after": after.strip()})
+                    continue
+                # 支持“延时毫秒”
+                if '延时毫秒' in cmd:
+                    ms = ''.join([c for c in cmd if c.isdigit()])
+                    result['commands'].append({"type": "delay_ms", "ms": int(ms) if ms else 0})
+                    continue
+                # 支持“强制顺序上卡”
+                if '强制顺序上卡' in cmd:
+                    result['commands'].append({"type": "force_order_play"})
+                    continue
+                # 支持“验卡补星”“回满血”“顺子”“留牌”“吃牌”“最多个数”
+                if any(x in cmd for x in ['验卡补星', '回满血', '顺子', '留牌', '吃牌', '最多个数']):
+                    for key in ['验卡补星', '回满血', '顺子', '留牌', '吃牌', '最多个数']:
+                        if key in cmd:
+                            result['commands'].append({"type": "special", "action": key, "content": cmd})
+                    continue
+                # 关闭验光
+                if cmd in ['关闭验光', '停球', '弃牌出牌停止']:
+                    result['commands'].append({"type": "special", "action": cmd})
+                    continue
+                # 其他命令类型（时钟、每x秒共x次、上/下/换/预备手牌等）
                 if any(pattern.value in cmd for pattern in TimingPattern):
                     timing = self._parse_timing(cmd)
                     if timing:
                         result['commands'].append(timing)
                         continue
-                
-                # Parse card operations
                 if any(op.value in cmd for op in CardOperation):
                     operation = self._parse_card_operation(cmd)
                     if operation:
                         result['commands'].append(operation)
                         continue
-                        
-                # Parse formation types
                 if any(form.value in cmd for form in FormationType):
                     formation = self._parse_formation_type(cmd)
                     if formation:
                         result['commands'].append(formation)
-
-                # Parse special types
+                        continue
                 if any(special.value in cmd for special in SpecialEventType):
                     special = self._parse_special_event(cmd)
                     if special:
                         result['commands'].append(special)
-                        
+                        continue
+                # 默认原样保留
+                result['commands'].append({"type": "raw", "content": cmd})
             return result
         except ValueError:
             return None
@@ -222,32 +244,42 @@ class CommandParser:
     
     def _parse_special_event(self, event_str: str) -> Optional[Dict]:
         """Parse special event string into structured data."""
-        parts = event_str.split(',')
-        if not parts:
-            return None
-            
-        event_type = parts[0].strip()
+        # 允许特殊事件名后无命令
+        if not event_str or ',' not in event_str:
+            return {"type": CommandType.SPECIAL_EVENT.value, "event": event_str.strip(), "commands": []}
+        parts = [p.strip() for p in event_str.split(',') if p.strip()]
+        event_type = parts[0]
         commands = []
-        
-        # Parse following commands
         for part in parts[1:]:
-            part = part.strip()
-                
-            # Parse timing patterns
+            # 嵌套“过后”
+            if '过后' in part:
+                before, after = part.split('过后', 1)
+                commands.append({"type": "sequence", "before": before.strip(), "after": after.strip()})
+                continue
+            if '延时毫秒' in part:
+                ms = ''.join([c for c in part if c.isdigit()])
+                commands.append({"type": "delay_ms", "ms": int(ms) if ms else 0})
+                continue
+            if part in ['关闭验光', '停球', '弃牌出牌停止']:
+                commands.append({"type": "special", "action": part})
+                continue
             if any(pattern.value in part for pattern in TimingPattern):
                 timing = self._parse_timing(part)
                 if timing:
                     commands.append(timing)
-                    # continue
-            
-            # Parse card operations
+                    continue
             if any(op.value in part for op in CardOperation):
                 operation = self._parse_card_operation(part)
                 if operation:
                     commands.append(operation)
-
-            # Parse special operations
-                    
+                    continue
+            if any(form.value in part for form in FormationType):
+                formation = self._parse_formation_type(part)
+                if formation:
+                    commands.append(formation)
+                    continue
+            # 默认原样保留
+            commands.append({"type": "raw", "content": part})
         return {
             "type": CommandType.SPECIAL_EVENT.value,
             "event": event_type,
