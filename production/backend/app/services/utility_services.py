@@ -9,7 +9,7 @@ class UtilityService:
     @staticmethod
     def get_public_path() -> Path:
         if getattr(sys, 'frozen', False):
-            public_path = Path(sys.executable).parent.parent / "public"
+            public_path = Path(sys.executable).parent.parent.parent / "public"
         else:
             public_path = Path().resolve().parent / 'public'
         if not public_path.exists() or not public_path.is_dir():

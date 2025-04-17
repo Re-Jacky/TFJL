@@ -127,7 +127,6 @@ class ShortcutService:
                         if shortcut_value and key_str == shortcut_value:
 
                             position = position_enum[f"VEHICLE_{shortcut_index}"].value
-                            logger.info(f"Clicked at position: {position}")
                             WindowControlService.click_at(pid, position[0], position[1])
                             if quick_sell:
                                 def delayed_click():

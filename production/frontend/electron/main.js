@@ -121,6 +121,18 @@ app.on('will-quit', () => {
       logger.error(`Failed to kill Python server process: ${err.message}`);
     }
   }
+
+  // Kill TFJL server process
+  try {
+    logger.info('Terminating TFJL server process...');
+    const { spawnSync } = require('child_process');
+    const result = spawnSync('taskkill', ['/F', '/IM', 'tfjl_server.exe']);
+    if (result.error) {
+      throw result.error;
+    }
+  } catch (err) {
+    logger.error(`Failed to terminate TFJL server process: ${err.message}`);
+  }
 });
 
 // Handle unexpected exits
@@ -136,6 +148,13 @@ process.on('uncaughtException', (err) => {
     }
   }
   
+  // Kill TFJL Auto process
+  try {
+    spawn('taskkill', ['/F', '/IM', 'tfjl_server.exe']);
+  } catch (err) {
+    logger.error(`Failed to terminate TFJL server process: ${err.message}`);
+  }
+  
   process.exit(1);
 });
 
@@ -149,6 +168,13 @@ process.on('unhandledRejection', (reason, promise) => {
     } catch (killErr) {
       logger.error(`Failed to kill Python server during crash: ${killErr.message}`);
     }
+  }
+  
+  // Kill TFJL Auto process
+  try {
+    spawn('taskkill', ['/F', '/IM', 'tfjl_server.exe']);
+  } catch (err) {
+    logger.error(`Failed to terminate TFJL server process: ${err.message}`);
   }
   
   process.exit(1);
