@@ -212,7 +212,8 @@ async def get_shortcut():
 @app.post("/shortcut")
 async def save_shortcut(shortcut_data: dict):
     try:
-        result = utility_service.save_shortcut(shortcut_data["shortcut"])
+        utility_service.save_shortcut(shortcut_data["shortcut"])
+        shortcut_service.reload_listeners()
         await event_service.broadcast_log("info", f"保存快捷键成功！")
         return {"status": "success"}
     except Exception as e:
@@ -229,13 +230,9 @@ async def set_shortcut_mode(request: Request, config_data: dict):
         pid = get_req_pid(request)
         config = config_data.get("config")
         mode = config.get("mode")
-        quick_sell = config.get("quickSell")
         if mode != None:
             shortcut_service.set_mode(pid, mode)
             await event_service.broadcast_log("info", f"快捷键模式设置为: {mode}")
-        if quick_sell != None:
-            shortcut_service.set_quick_sell(pid, quick_sell)
-            await event_service.broadcast_log("info", f"快速卖卡设置为: {quick_sell}")
         return {"status": "success", "mode": mode}
     except Exception as e:
         logger.error(f"Error setting shortcut config: {str(e)}")
@@ -244,6 +241,17 @@ async def set_shortcut_mode(request: Request, config_data: dict):
             status_code=500,
             content={"detail": f"Error setting shortcut config: {str(e)}"}
         )
+
+@app.post("/monitor-shortcut")
+async def monitor_shortcut(request: Request, config: dict):
+    try:
+        pid = get_req_pid(request)
+        status = config.get("status")
+        shortcut_service.set_active(pid, status)
+        await event_service.broadcast_log("info", "启用快捷键." if status else "禁用快捷键.")
+        return {"status": "success"}
+    except Exception as e:
+        logger.error(f"Error monitoring shortcut: {str(e)}")
 
 @app.get("/sse")
 async def event_stream(request: Request):

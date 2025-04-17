@@ -35,5 +35,5 @@ class GameService:
     def start_battle(pid):
         GameService.back_to_home(pid)
         GameService.click_in_game(pid, GamePositions.BATTLE.value)
-        GameService.click_in_game(pid, GamePositions.BATTLE_START.value)
+        GameService.click_in_game(pid, GamePositions.QUICK_MATCH.value)
         return True

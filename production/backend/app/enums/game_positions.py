@@ -9,7 +9,7 @@ class GamePositions(Enum):
     BACK = (55, 70)   # 返回
     ### BATTLE
     BATTLE = (910, 560)  # 对战模式
-    BATTLE_START = (700, 510)   # 开始战斗
+    QUICK_MATCH = (700, 510)   # 开始战斗
     SURRENDER = (50, 165)   # 投降
     BATTLE_END_CONFIRM = (520, 535)   # 战斗结束确认
     UPGRADE_VEHICLE = (320, 570)   # 升级车辆

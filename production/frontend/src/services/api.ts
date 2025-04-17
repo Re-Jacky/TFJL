@@ -21,6 +21,7 @@ export interface API {
     getShortcut: () => Promise<{ shortcut: ShortcutModel }>;
     saveShortcut: (shortcut: ShortcutModel) => Promise<{ status: string }>;
     setShortcutConfig: (config: ShortcutConfig) => Promise<{ status: string }>;
+    monitorShortcut: (value: boolean) => Promise<{ status: string }>;
 }
 
 export const api: API = {
@@ -58,5 +59,8 @@ export const api: API = {
     },
     setShortcutConfig: async (config: ShortcutConfig) => {
         return await proxy.post('shortcut-config', { config });
+    },
+    monitorShortcut: async (status: boolean) => {
+        return await proxy.post('monitor-shortcut', { status });
     }
 }

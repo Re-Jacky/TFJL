@@ -121,7 +121,7 @@ const Content: React.FC<ContentProps> = (props) => {
   return (
     <div className={styles.contentArea}>
       <LoadingMask visible={isLoading} />
-      {mode === GameMode.NONE && <Mask />}
+      {/* {mode === GameMode.NONE && <Mask />} */}
       <div className={styles.vehicleGroup}>{renderVehicle()}</div>
       <div className={styles.inputGroup}>
         <div className={styles.inputTop}>
@@ -188,12 +188,12 @@ const Content: React.FC<ContentProps> = (props) => {
               onChange={(e) => {
                 onGenerageInputChange(
                   e.target.checked,
-                  GeneralShortcut.ONE_KEY_SELL_CARD
+                  GeneralShortcut.QUICK_SELL
                 );
               }}
               checked={
                 shortcut.generalShortcut[
-                  GeneralShortcut.ONE_KEY_SELL_CARD
+                  GeneralShortcut.QUICK_SELL
                 ] as boolean
               }
             >
