@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import styles from './Content.module.scss';
-import Mask from '@src/components/content/shortcut/Mask';
 import LabelInput from '@src/components/content/shortcut/LabelInput';
-import { Button, Checkbox, InputNumber } from 'antd';
-import { ReloadOutlined, SaveOutlined } from '@ant-design/icons';
+import { Button, Checkbox, InputNumber, Popover } from 'antd';
+import {
+  InfoCircleTwoTone,
+  ReloadOutlined,
+  SaveOutlined,
+} from '@ant-design/icons';
 import {
   GameMode,
   VehicleSide,
@@ -121,10 +124,22 @@ const Content: React.FC<ContentProps> = (props) => {
     onSideChange?.(active);
   }, [active]);
 
+  const EnhanceButtonDesc = () => {
+    return (
+      <>
+        <div>
+          1. 防止短时间内重复按同一按键
+        </div>
+        <div>
+          2. 优化自动卖卡逻辑，防止在卖卡间隔内上卡触发刷新
+        </div>
+      </>
+    );
+  }
+
   return (
     <div className={styles.contentArea}>
       <LoadingMask visible={isLoading} />
-      {/* {mode === GameMode.NONE && <Mask />} */}
       <div className={styles.vehicleGroup}>{renderVehicle()}</div>
       <div className={styles.inputGroup}>
         <div className={styles.inputTop}>
@@ -204,6 +219,7 @@ const Content: React.FC<ContentProps> = (props) => {
                 一键卖卡
               </Checkbox>
               <InputNumber
+                placeholder={'延时'}
                 className={styles.quickSellDelay}
                 suffix={'ms'}
                 value={
@@ -221,7 +237,6 @@ const Content: React.FC<ContentProps> = (props) => {
                 }}
               />
             </div>
-
             <Checkbox
               onChange={(e) => {
                 onGenerageInputChange(
@@ -237,6 +252,26 @@ const Content: React.FC<ContentProps> = (props) => {
             >
               自动刷新
             </Checkbox>
+            <div>
+              <Checkbox
+                onChange={(e) => {
+                  onGenerageInputChange(
+                    e.target.checked,
+                    GeneralShortcut.ENHANCED_BTN_PRESS
+                  );
+                }}
+                checked={
+                  shortcut.generalShortcut[
+                    GeneralShortcut.ENHANCED_BTN_PRESS
+                  ] as boolean
+                }
+              >
+                按键优化
+              </Checkbox>
+              <Popover placement='right' content={<EnhanceButtonDesc />}>
+                <InfoCircleTwoTone />
+              </Popover>
+            </div>
           </div>
           {mode === GameMode.SINGLE_PLAYER ? (
             <div className={styles.battleInputs}>
@@ -282,9 +317,7 @@ const Content: React.FC<ContentProps> = (props) => {
                 onChange={(val) =>
                   onBattleInputChange(val, BattleShortcut.CLOSE_CARD)
                 }
-                value={
-                  shortcut.battleShortcut[BattleShortcut.CLOSE_CARD]
-                }
+                value={shortcut.battleShortcut[BattleShortcut.CLOSE_CARD]}
               />
             </div>
           ) : null}

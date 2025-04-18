@@ -20,6 +20,7 @@ export enum GeneralShortcut {
   QUICK_SELL = 'quickSell',
   QUICK_SELL_DELAY = 'quickSellDelay',
   QUICK_REFRESH = 'quickRefresh',
+  ENHANCED_BTN_PRESS = 'enhancedBtnPress',
 }
 
 export enum BattleShortcut {
