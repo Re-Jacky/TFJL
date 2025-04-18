@@ -72,8 +72,8 @@ app.commandLine.appendSwitch('remote-debugging-port', '8315');
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
-    width: 800,
-    height: 800,
+    width: 850,
+    height: 700,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false

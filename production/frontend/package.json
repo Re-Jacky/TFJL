@@ -7,6 +7,7 @@
     "@ant-design/icons": "^5.2.6",
     "@reduxjs/toolkit": "^2.6.1",
     "antd": "^5.11.4",
+    "lodash": "^4.17.21",
     "monaco-editor": "^0.52.2",
     "pinyin-pro": "^3.26.0",
     "react": "^18.2.0",
@@ -30,6 +31,7 @@
   "devDependencies": {
     "@eslint/js": "^9.22.0",
     "@types/css-modules": "^1.0.5",
+    "@types/lodash": "^4.17.16",
     "@types/react": "^18.2.39",
     "@types/react-dom": "^18.2.17",
     "@vitejs/plugin-react": "^4.2.0",
@@ -77,9 +79,13 @@
     ],
     "win": {
       "target": "nsis",
-      "icon": "assets/icon.ico",
+      "icon": "assets/images/icon.ico",
       "requestedExecutionLevel": "requireAdministrator",
       "artifactName": "${productName}-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
     }
   },
   "lint-staged": {

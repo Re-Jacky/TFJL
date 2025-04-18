@@ -29,6 +29,11 @@
         display: flex;
         gap: 5px;
         flex-direction: column;
+        .infoIcon {
+          height: 18px;
+          width: 18px;
+          min-width: 18px;
+        }
       }
     }
   }
