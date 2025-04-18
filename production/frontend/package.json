@@ -81,8 +81,11 @@
       "target": "nsis",
       "icon": "assets/images/icon.ico",
       "requestedExecutionLevel": "requireAdministrator",
-      "artifactName": "${productName}-Setup-${version}.${ext}",
-      "oneClick": false
+      "artifactName": "${productName}-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
     }
   },
   "lint-staged": {
