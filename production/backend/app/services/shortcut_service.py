@@ -63,7 +63,7 @@ class ShortcutService:
         quick_refresh = general_shortcuts.get('quickRefresh', False)
         quick_sell = general_shortcuts.get('quickSell', False)
         enhanced_btn_press = general_shortcuts.get('enhancedBtnPress', False)
-        mode = self.window_configs.get(pid, {}).get('mode', GameMode.NONE)
+        mode = self.window_configs.get(pid, {}).get('mode', GameMode.SINGLE_PLAYER)
         # Dictionary to store the last time each key was pressed for debouncing
         last_key_press_time = {}
         # Debounce delay in milliseconds (adjust as needed)
@@ -85,35 +85,35 @@ class ShortcutService:
                     return
                 last_key_press_time[key_str] = now
             
-            if mode != GameMode.NONE.value:
-                # monitor general shortcut key press
-                for shortcut_key, shortcut_value in general_shortcuts.items():
-                    if (shortcut_value and key_str == shortcut_value):
-                        isCard = False
-                        if shortcut_key == 'firstCard':
-                            pos = GamePositions.CARD_0.value
-                            isCard = True
-                        elif shortcut_key == 'secondCard':
-                            pos = GamePositions.CARD_1.value
-                            isCard = True
-                        elif shortcut_key == 'thirdCard':
-                            pos = GamePositions.CARD_2.value
-                            isCard = True
-                        elif shortcut_key == 'upgradeVehicle':
-                            pos = GamePositions.UPGRADE_VEHICLE.value
-                        elif shortcut_key == 'refresh':
-                            pos = GamePositions.REFRESH_CARD.value
-                        elif shortcut_key == 'sellCard':
-                            pos = GamePositions.SELL_CARD.value
-                        
-                        if self.shouldBlockCardPress and isCard:
-                            return
-                        WindowControlService.click_at(pid, pos[0], pos[1])
-                        if quick_refresh and isCard:
-                            time.sleep(0.1)
-                            refresh_card = GamePositions.REFRESH_CARD.value
-                            WindowControlService.click_at(pid, refresh_card[0], refresh_card[1]) # Implement quick sell logic 
+
+            # monitor general shortcut key press
+            for shortcut_key, shortcut_value in general_shortcuts.items():
+                if (shortcut_value and key_str == shortcut_value):
+                    isCard = False
+                    if shortcut_key == 'firstCard':
+                        pos = GamePositions.CARD_0.value
+                        isCard = True
+                    elif shortcut_key == 'secondCard':
+                        pos = GamePositions.CARD_1.value
+                        isCard = True
+                    elif shortcut_key == 'thirdCard':
+                        pos = GamePositions.CARD_2.value
+                        isCard = True
+                    elif shortcut_key == 'upgradeVehicle':
+                        pos = GamePositions.UPGRADE_VEHICLE.value
+                    elif shortcut_key == 'refresh':
+                        pos = GamePositions.REFRESH_CARD.value
+                    elif shortcut_key == 'sellCard':
+                        pos = GamePositions.SELL_CARD.value
+
+                    if self.shouldBlockCardPress and isCard:
                         return
+                    WindowControlService.click_at(pid, pos[0], pos[1])
+                    if quick_refresh and isCard:
+                        time.sleep(0.1)
+                        refresh_card = GamePositions.REFRESH_CARD.value
+                        WindowControlService.click_at(pid, refresh_card[0], refresh_card[1]) # Implement quick sell logic
+                    return
                        
 
 
@@ -195,3 +195,15 @@ class ShortcutService:
             self.start_listening(pid)
         else:
             self.stop_listening(pid)
+    
+    def set_mode(self, pid: int, mode: GameMode):
+        """Update the shortcut mode for the specified window."""
+        print(f"Setting mode for window {pid} to {mode}")
+        if pid not in self.window_configs:
+            self.window_configs[pid] = {}
+            self.window_configs[pid]['mode'] = GameMode.SINGLE_PLAYER.value
+            self.window_configs[pid]['active'] = False
+
+        self.window_configs[pid]['mode'] = mode
+        if self.window_configs[pid].get('active'):
+            self.reload_listeners()

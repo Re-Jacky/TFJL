@@ -2,11 +2,10 @@ from enum import Enum
 from app.enums.game_positions import GamePositions
 
 class GameMode(Enum):
-    NONE = 0
-    SINGLE_PLAYER = 1
-    SINGLE_PLAYER_SAILING = 2
-    TWO_PLAYER = 3
-    TWO_PLAYER_SKY = 4
+    SINGLE_PLAYER = 0
+    SINGLE_PLAYER_SAILING = 1
+    TWO_PLAYER = 2
+    TWO_PLAYER_SKY = 3
 
 ## 游戏坐标 (x, y)
 class SingleModeVehiclePositions(Enum):

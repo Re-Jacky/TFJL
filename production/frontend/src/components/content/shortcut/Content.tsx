@@ -2,11 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styles from './Content.module.scss';
 import LabelInput from '@src/components/content/shortcut/LabelInput';
 import { Button, Checkbox, InputNumber, Popover } from 'antd';
-import {
-  InfoOutlined,
-  ReloadOutlined,
-  SaveOutlined,
-} from '@ant-design/icons';
+import { InfoOutlined, ReloadOutlined, SaveOutlined } from '@ant-design/icons';
 import {
   GameMode,
   VehicleSide,
@@ -129,15 +125,11 @@ const Content: React.FC<ContentProps> = (props) => {
   const EnhanceButtonDesc = () => {
     return (
       <>
-        <div>
-          1. 防止短时间内重复按同一按键
-        </div>
-        <div>
-          2. 优化自动卖卡逻辑，防止在卖卡间隔内上卡触发刷新
-        </div>
+        <div>1. 防止短时间内重复按同一按键</div>
+        <div>2. 优化自动卖卡逻辑，防止在卖卡间隔内上卡触发刷新</div>
       </>
     );
-  }
+  };
 
   return (
     <div className={styles.contentArea}>
@@ -230,7 +222,7 @@ const Content: React.FC<ContentProps> = (props) => {
                   ] as number
                 }
                 onChange={(val) => {
-                  if (val) {
+                  if (val !== null) {
                     onGenerageInputChange(
                       val as number,
                       GeneralShortcut.QUICK_SELL_DELAY
@@ -271,7 +263,12 @@ const Content: React.FC<ContentProps> = (props) => {
                 按键优化
               </Checkbox>
               <Popover placement='right' content={<EnhanceButtonDesc />}>
-                <Button className={styles.infoIcon} shape='circle' icon={<InfoOutlined />} size='small'></Button>
+                <Button
+                  className={styles.infoIcon}
+                  shape='circle'
+                  icon={<InfoOutlined />}
+                  size='small'
+                ></Button>
               </Popover>
             </div>
           </div>
@@ -326,7 +323,12 @@ const Content: React.FC<ContentProps> = (props) => {
         </div>
       </div>
       <div className={styles.actionBtn}>
-        <Button type='primary' icon={<SaveOutlined />} onClick={onSave} disabled={disableSave}>
+        <Button
+          type='primary'
+          icon={<SaveOutlined />}
+          onClick={onSave}
+          disabled={disableSave}
+        >
           保存
         </Button>
         <Button icon={<ReloadOutlined />} onClick={onReset}>
