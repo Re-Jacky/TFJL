@@ -3,7 +3,7 @@ import styles from './Content.module.scss';
 import LabelInput from '@src/components/content/shortcut/LabelInput';
 import { Button, Checkbox, InputNumber, Popover } from 'antd';
 import {
-  InfoCircleTwoTone,
+  InfoOutlined,
   ReloadOutlined,
   SaveOutlined,
 } from '@ant-design/icons';
@@ -30,6 +30,7 @@ export interface ContentProps {
   onReset: () => void;
   onSideChange?: (side: VehicleSide) => void;
   isLoading?: boolean;
+  disableSave?: boolean;
 }
 
 const Content: React.FC<ContentProps> = (props) => {
@@ -41,6 +42,7 @@ const Content: React.FC<ContentProps> = (props) => {
     onSave,
     onSideChange,
     isLoading = true,
+    disableSave = true,
   } = props;
   const [active, setActive] = useState<VehicleSide>(VehicleSide.LEFT);
 
@@ -269,7 +271,7 @@ const Content: React.FC<ContentProps> = (props) => {
                 按键优化
               </Checkbox>
               <Popover placement='right' content={<EnhanceButtonDesc />}>
-                <InfoCircleTwoTone />
+                <Button className={styles.infoIcon} shape='circle' icon={<InfoOutlined />} size='small'></Button>
               </Popover>
             </div>
           </div>
@@ -324,7 +326,7 @@ const Content: React.FC<ContentProps> = (props) => {
         </div>
       </div>
       <div className={styles.actionBtn}>
-        <Button type='primary' icon={<SaveOutlined />} onClick={onSave}>
+        <Button type='primary' icon={<SaveOutlined />} onClick={onSave} disabled={disableSave}>
           保存
         </Button>
         <Button icon={<ReloadOutlined />} onClick={onReset}>

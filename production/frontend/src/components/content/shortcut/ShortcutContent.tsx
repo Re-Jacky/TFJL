@@ -10,6 +10,7 @@ import {
   BattleShortcut,
 } from '@src/types';
 import { api } from '@src/services/api';
+import _ from 'lodash';
 
 const emptyShortcut: ShortcutModel = {
   vehicleShortcut: {
@@ -60,7 +61,7 @@ const ShortcutContent: React.FC = () => {
   };
 
   const onReset = () => {
-    setShortcut(emptyShortcut);
+    setShortcut(defaultShortcut ?? emptyShortcut);
   };
 
   const onSideChange = (side: VehicleSide) => {
@@ -110,6 +111,7 @@ const ShortcutContent: React.FC = () => {
         onSave={handleSave}
         onReset={onReset}
         isLoading={loading}
+        disableSave={_.isEqual(shortcut, defaultShortcut)}
       />
     </div>
   );
