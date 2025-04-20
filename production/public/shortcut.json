@@ -36,7 +36,6 @@
         "surrender": "esc",
         "confirm": "n",
         "battle": "p",
-        "quickMatch": "o",
         "viewOpponentHalo": ";",
         "closeCard": "i",
         "autoQuickMatch": true

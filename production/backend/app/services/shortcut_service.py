@@ -172,7 +172,7 @@ class ShortcutService:
                             surrender_confirm = GamePositions.SURRENDER_CONFIRM.value
                             WindowControlService.click_at(pid, surrender_confirm[0], surrender_confirm[1])
                         if shortcut_key == 'battle' and auto_quick_match:
-                            time.sleep(0.5)
+                            time.sleep(0.2)
                             quick_match = GamePositions.QUICK_MATCH.value
                             WindowControlService.click_at(pid, quick_match[0], quick_match[1])
                         return
