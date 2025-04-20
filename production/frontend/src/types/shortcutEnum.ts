@@ -27,7 +27,7 @@ export enum BattleShortcut {
   SURRENDER = 'surrender',
   CONFIRM = 'confirm',
   BATTLE = 'battle',
-  QUICK_MATCH = 'quickMatch',
+  AUTO_QUICK_MATCH = 'autoQuickMatch',
   VIEW_OPPONENT_HALO = 'viewOpponentHalo',
   CLOSE_CARD = 'closeCard',
 }

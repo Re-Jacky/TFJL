@@ -60,10 +60,12 @@ class ShortcutService:
         """
         general_shortcuts = self.shortcut_config.get('generalShortcut', {})
         vehicle_shortcuts = self.shortcut_config.get('vehicleShortcut', {})
+        battle_shortcuts = self.shortcut_config.get('battleShortcut', {})
         quick_sell_delay = general_shortcuts.get('quickSellDelay', 0) / 1000
         quick_refresh = general_shortcuts.get('quickRefresh', False)
         quick_sell = general_shortcuts.get('quickSell', False)
         enhanced_btn_press = general_shortcuts.get('enhancedBtnPress', False)
+        auto_quick_match = battle_shortcuts.get('autoQuickMatch', False)
         mode = self.window_configs.get(pid, {}).get('mode', GameMode.SINGLE_PLAYER)
         # Dictionary to store the last time each key was pressed for debouncing
         last_key_press_time = {}
@@ -87,7 +89,7 @@ class ShortcutService:
                 key_str = key.char
             except AttributeError:
                 key_str = str(key)
-                key_str = key_str.replace('Key.', '').capitalize()
+                key_str = key_str.replace('Key.', '')
             
             # Implement debouncing to prevent rapid repeated keypresses
             if enhanced_btn_press:
@@ -143,13 +145,19 @@ class ShortcutService:
                             pos = GamePositions.BATTLE_END_CONFIRM.value
                         elif shortcut_key =='battle':
                             pos = GamePositions.BATTLE.value
-                        elif shortcut_key =='quickMatch':
-                            pos = GamePositions.QUICK_MATCH.value
                         elif shortcut_key =='viewOpponentHalo':
                             pos = GamePositions.ENEMY_STATUS.value
                         elif shortcut_key == 'closeCard':
                             pos = GamePositions.CLOST_CARD.value
                         WindowControlService.click_at(pid, pos[0], pos[1])
+                        if shortcut_key == 'surrender':
+                            time.sleep(0.5)
+                            surrender_confirm = GamePositions.SURRENDER_CONFIRM.value
+                            WindowControlService.click_at(pid, surrender_confirm[0], surrender_confirm[1])
+                        if shortcut_key == 'battle' and auto_quick_match:
+                            time.sleep(0.5)
+                            quick_match = GamePositions.QUICK_MATCH.value
+                            WindowControlService.click_at(pid, quick_match[0], quick_match[1])
                         return
 
                 ## check vehicle shortcut key press

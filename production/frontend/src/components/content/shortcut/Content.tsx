@@ -15,7 +15,7 @@ import LoadingMask from '@src/components/loading/LoadingMask';
 export interface ShortcutModel {
   vehicleShortcut: Record<VehicleSide, CellValues>;
   generalShortcut: Record<GeneralShortcut, string | boolean | number>;
-  battleShortcut: Record<BattleShortcut, string>;
+  battleShortcut: Record<BattleShortcut, string | boolean>;
 }
 
 export interface ContentProps {
@@ -65,7 +65,7 @@ const Content: React.FC<ContentProps> = (props) => {
     });
   };
 
-  const onBattleInputChange = (val: string, key: string) => {
+  const onBattleInputChange = (val: string | boolean, key: string) => {
     setShortcut({
       ...shortcut,
       battleShortcut: {
@@ -129,6 +129,10 @@ const Content: React.FC<ContentProps> = (props) => {
         <div>2. 优化自动卖卡逻辑，防止在卖卡间隔内上卡触发刷新</div>
       </>
     );
+  };
+
+  const QuickMatchDesc = () => {
+    return <div>自动执行快速匹配</div>;
   };
 
   return (
@@ -275,32 +279,29 @@ const Content: React.FC<ContentProps> = (props) => {
           {mode === GameMode.SINGLE_PLAYER ? (
             <div className={styles.battleInputs}>
               <LabelInput
-                label='投降'
+                label='一键投降'
                 onChange={(val) =>
                   onBattleInputChange(val, BattleShortcut.SURRENDER)
                 }
-                value={shortcut.battleShortcut[BattleShortcut.SURRENDER]}
+                value={
+                  shortcut.battleShortcut[BattleShortcut.SURRENDER] as string
+                }
               />
               <LabelInput
                 label='确认'
                 onChange={(val) =>
                   onBattleInputChange(val, BattleShortcut.CONFIRM)
                 }
-                value={shortcut.battleShortcut[BattleShortcut.CONFIRM]}
+                value={
+                  shortcut.battleShortcut[BattleShortcut.CONFIRM] as string
+                }
               />
               <LabelInput
                 label='对战'
                 onChange={(val) =>
                   onBattleInputChange(val, BattleShortcut.BATTLE)
                 }
-                value={shortcut.battleShortcut[BattleShortcut.BATTLE]}
-              />
-              <LabelInput
-                label='快速匹配'
-                onChange={(val) =>
-                  onBattleInputChange(val, BattleShortcut.QUICK_MATCH)
-                }
-                value={shortcut.battleShortcut[BattleShortcut.QUICK_MATCH]}
+                value={shortcut.battleShortcut[BattleShortcut.BATTLE] as string}
               />
               <LabelInput
                 label='查看对方光环'
@@ -308,7 +309,7 @@ const Content: React.FC<ContentProps> = (props) => {
                   onBattleInputChange(val, BattleShortcut.VIEW_OPPONENT_HALO)
                 }
                 value={
-                  shortcut.battleShortcut[BattleShortcut.VIEW_OPPONENT_HALO]
+                  shortcut.battleShortcut[BattleShortcut.VIEW_OPPONENT_HALO] as string
                 }
               />
               <LabelInput
@@ -316,8 +317,33 @@ const Content: React.FC<ContentProps> = (props) => {
                 onChange={(val) =>
                   onBattleInputChange(val, BattleShortcut.CLOSE_CARD)
                 }
-                value={shortcut.battleShortcut[BattleShortcut.CLOSE_CARD]}
+                value={shortcut.battleShortcut[BattleShortcut.CLOSE_CARD] as string}
               />
+                            <div>
+                <Checkbox
+                  onChange={(e) => {
+                    onBattleInputChange(
+                      e.target.checked,
+                      BattleShortcut.AUTO_QUICK_MATCH
+                    );
+                  }}
+                  checked={
+                    shortcut.battleShortcut[
+                      BattleShortcut.AUTO_QUICK_MATCH
+                    ] as boolean
+                  }
+                >
+                  自动匹配
+                </Checkbox>
+                <Popover placement='right' content={<QuickMatchDesc />}>
+                  <Button
+                    className={styles.infoIcon}
+                    shape='circle'
+                    icon={<InfoOutlined />}
+                    size='small'
+                  ></Button>
+                </Popover>
+              </div>
             </div>
           ) : null}
         </div>

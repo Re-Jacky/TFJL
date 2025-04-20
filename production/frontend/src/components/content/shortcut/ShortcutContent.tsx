@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Radio, RadioChangeEvent } from 'antd';
+import { InfoCircleFilled, InfoCircleOutlined, InfoCircleTwoTone } from '@ant-design/icons';
 import styles from './ShortcutContent.module.scss';
 import { produceEmptyCellValues } from '../components/Vehicle';
 import Content, { ShortcutModel } from './Content';
@@ -33,7 +34,7 @@ const emptyShortcut: ShortcutModel = {
     [BattleShortcut.SURRENDER]: '',
     [BattleShortcut.CONFIRM]: '',
     [BattleShortcut.BATTLE]: '',
-    [BattleShortcut.QUICK_MATCH]: '',
+    [BattleShortcut.AUTO_QUICK_MATCH]: false,
     [BattleShortcut.VIEW_OPPONENT_HALO]: '',
     [BattleShortcut.CLOSE_CARD]: '',
   },
@@ -103,7 +104,15 @@ const ShortcutContent: React.FC = () => {
           {active ? '停用' : '启用'}
         </Button>
       </div>
-
+      <div className={styles.info}>
+        <InfoCircleTwoTone />
+        <span className={styles.infoText}>
+          注意：请不要使用特殊键位，如：
+          <span className={styles.highlight}>Ctrl</span>、
+          <span className={styles.highlight}>Alt</span>、
+          <span className={styles.highlight}>Meta/CMD</span>
+        </span>
+      </div>
       <Content
         mode={mode}
         shortcut={shortcut}
