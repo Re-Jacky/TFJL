@@ -40,5 +40,11 @@
         "viewOpponentHalo": ";",
         "closeCard": "i",
         "autoQuickMatch": true
+    },
+    "auctionShortcut": {
+        "auctionCard0": "j",
+        "auctionCard1": "k",
+        "auctionCard2": "l",
+        "auctionCard3": ";"
     }
 }

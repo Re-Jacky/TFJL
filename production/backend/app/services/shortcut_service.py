@@ -61,6 +61,7 @@ class ShortcutService:
         general_shortcuts = self.shortcut_config.get('generalShortcut', {})
         vehicle_shortcuts = self.shortcut_config.get('vehicleShortcut', {})
         battle_shortcuts = self.shortcut_config.get('battleShortcut', {})
+        auction_shortcuts = self.shortcut_config.get('auctionShortcut', {})
         quick_sell_delay = general_shortcuts.get('quickSellDelay', 0) / 1000
         quick_refresh = general_shortcuts.get('quickRefresh', False)
         quick_sell = general_shortcuts.get('quickSell', False)
@@ -90,6 +91,23 @@ class ShortcutService:
             except AttributeError:
                 key_str = str(key)
                 key_str = key_str.replace('Key.', '')
+            # handle aunction mode first
+            if mode == GameMode.AUCTION.value:
+               for shortcut_key, shortcut_value in auction_shortcuts.items():
+                    if (shortcut_value and key_str == shortcut_value):
+                        if shortcut_key =='auctionCard0':
+                            pos = GamePositions.AUNCTION_CARD_0.value
+                        elif shortcut_key =='auctionCard1':
+                            pos = GamePositions.AUNCTION_CARD_1.value
+                        elif shortcut_key =='auctionCard2':
+                            pos = GamePositions.AUNCTION_CARD_2.value
+                        elif shortcut_key =='auctionCard3':
+                            pos = GamePositions.AUNCTION_CARD_3.value
+                        WindowControlService.click_at(pid, pos[0], pos[1])
+                        time.sleep(0.1)
+                        confirm_pos = GamePositions.AUCTION_CONFIRM.value
+                        WindowControlService.click_at(pid, confirm_pos[0], confirm_pos[1])
+                        return
             
             # Implement debouncing to prevent rapid repeated keypresses
             if enhanced_btn_press:
@@ -98,7 +116,6 @@ class ShortcutService:
                 if now - last_time < debounce_delay:
                     return
                 last_key_press_time[key_str] = now
-            
 
             # monitor general shortcut key press
             for shortcut_key, shortcut_value in general_shortcuts.items():
@@ -235,7 +252,6 @@ class ShortcutService:
     
     def set_config(self, pid: int, config: dict):
         """Update the shortcut mode for the specified window."""
-        print(f"Setting mode for window {pid} to {mode}")
         if pid not in self.window_configs:
             self.window_configs[pid] = {}
             self.window_configs[pid]['mode'] = GameMode.SINGLE_PLAYER.value

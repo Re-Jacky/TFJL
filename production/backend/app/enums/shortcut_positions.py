@@ -6,6 +6,7 @@ class GameMode(Enum):
     SINGLE_PLAYER_SAILING = 1
     TWO_PLAYER = 2
     TWO_PLAYER_SKY = 3
+    AUCTION = 4
 
 ## 游戏坐标 (x, y)
 class SingleModeVehiclePositions(Enum):
