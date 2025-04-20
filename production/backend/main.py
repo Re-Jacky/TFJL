@@ -230,9 +230,14 @@ async def set_shortcut_mode(request: Request, config_data: dict):
         pid = get_req_pid(request)
         config = config_data.get("config")
         mode = config.get("mode")
+        side = config.get("side")
+        shortcut_service.set_config(pid, config)
+        broadcase_msg = "快捷键模式设置为: "
         if mode != None:
-            shortcut_service.set_mode(pid, mode)
-            await event_service.broadcast_log("info", f"快捷键模式设置为: {mode}")
+            broadcase_msg += f"{mode} "
+        if side!= None:
+            broadcase_msg += f"{side} "
+        await event_service.broadcast_log("info", f"快捷键模式设置为: {mode}")
         return {"status": "success", "mode": mode}
     except Exception as e:
         logger.error(f"Error setting shortcut config: {str(e)}")

@@ -58,6 +58,7 @@ const ShortcutContent: React.FC = () => {
   const handleSave = () => {
     // service
     api.saveShortcut(shortcut);
+    setDefaultShortcut(shortcut);
   };
 
   const onReset = () => {
