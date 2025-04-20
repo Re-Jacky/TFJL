@@ -11,6 +11,7 @@ class GamePositions(Enum):
     BATTLE = (910, 560)  # 对战模式
     QUICK_MATCH = (700, 510)   # 开始战斗
     SURRENDER = (50, 165)   # 投降
+    SURRENDER_CONFIRM = (660, 465)   # 投降确认
     BATTLE_END_CONFIRM = (520, 535)   # 战斗结束确认
     UPGRADE_VEHICLE = (320, 570)   # 升级车辆
     REFRESH_CARD = (720, 570)   # 刷新卡片

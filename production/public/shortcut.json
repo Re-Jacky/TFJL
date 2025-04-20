@@ -1,1 +1,44 @@
-{"vehicleShortcut": {"left": {"0": "x", "1": "z", "2": "s", "3": "a", "4": "w", "5": "q", "6": "1"}, "right": {"0": "v", "1": "c", "2": "f", "3": "d", "4": "r", "5": "e", "6": "2"}}, "generalShortcut": {"firstCard": "j", "secondCard": "k", "thirdCard": "l", "upgradeVehicle": "Space", "refresh": "u", "sellCard": "", "quickSell": true, "quickRefresh": true, "quickSellDelay": 10, "enhancedBtnPress": true}, "battleShortcut": {"surrender": "", "confirm": "n", "battle": "p", "quickMatch": "o", "viewOpponentHalo": ";", "closeCard": "i"}}
+{
+    "vehicleShortcut": {
+        "left": {
+            "0": "x",
+            "1": "z",
+            "2": "s",
+            "3": "a",
+            "4": "w",
+            "5": "q",
+            "6": "1"
+        },
+        "right": {
+            "0": "v",
+            "1": "c",
+            "2": "f",
+            "3": "d",
+            "4": "r",
+            "5": "e",
+            "6": "2"
+        }
+    },
+    "generalShortcut": {
+        "firstCard": "j",
+        "secondCard": "k",
+        "thirdCard": "l",
+        "upgradeVehicle": "space",
+        "refresh": "u",
+        "sellCard": "",
+        "quickSell": true,
+        "quickRefresh": true,
+        "quickSellDelay": 10,
+        "enhancedBtnPress": true,
+        "autoQuickMatch": true
+    },
+    "battleShortcut": {
+        "surrender": "esc",
+        "confirm": "n",
+        "battle": "p",
+        "quickMatch": "o",
+        "viewOpponentHalo": ";",
+        "closeCard": "i",
+        "autoQuickMatch": true
+    }
+}

@@ -46,7 +46,23 @@ const LabelInput: React.FC<LabelInputProps> = (props) => {
         onKeyDown={(e) => {
           let value = e.key;
           if (e.key === ' ') {
-            value = 'Space';
+            value = 'space';
+          } else if (e.key === 'Escape') {
+            value = 'esc';
+          } else if (e.key === 'Enter') {
+            value = 'enter';
+          } else if (e.key === 'Tab') {
+            value = 'tab';
+          } else if (e.key === 'Backspace') {
+            value = 'backspace';
+          } else if (e.key === 'ArrowUp') {
+            value = 'up';
+          } else if (e.key === 'ArrowDown') {
+            value = 'down';
+          } else if (e.key === 'ArrowLeft') {
+            value = 'left';
+          } else if (e.key === 'ArrowRight') {
+            value = 'right';
           }
           handleBlur(value);
         }}

@@ -7,7 +7,7 @@ import pyautogui
 from typing import Dict, Optional
 from app.utils.logger import logger
 from app.enums.game_positions import GamePositions
-from app.enums.shortcut_positions import GameMode, SingleModeVehiclePositions, SingleModeEnemyVehiclePositions
+from app.enums.shortcut_positions import GameMode, SingleModeVehiclePositions, SingleModeEnemyVehiclePositions,TwoModeLeftVehiclePositions,TwoModeRightVehiclePositions,SailModeVehiclePositions,SkyTwoModeLeftVehiclePositions,SkyTwoModeRightVehiclePositions
 from app.services.window_control_services import WindowControlService
 from pynput import keyboard
 
@@ -59,15 +59,29 @@ class ShortcutService:
             pid: The process ID of the window to monitor.
         """
         general_shortcuts = self.shortcut_config.get('generalShortcut', {})
+        vehicle_shortcuts = self.shortcut_config.get('vehicleShortcut', {})
+        battle_shortcuts = self.shortcut_config.get('battleShortcut', {})
         quick_sell_delay = general_shortcuts.get('quickSellDelay', 0) / 1000
         quick_refresh = general_shortcuts.get('quickRefresh', False)
         quick_sell = general_shortcuts.get('quickSell', False)
         enhanced_btn_press = general_shortcuts.get('enhancedBtnPress', False)
+        auto_quick_match = battle_shortcuts.get('autoQuickMatch', False)
         mode = self.window_configs.get(pid, {}).get('mode', GameMode.SINGLE_PLAYER)
         # Dictionary to store the last time each key was pressed for debouncing
         last_key_press_time = {}
         # Debounce delay in milliseconds (adjust as needed)
         debounce_delay = 200
+
+
+        def handle_quick_sell():
+            if quick_sell:
+                self.shouldBlockCardPress = True if enhanced_btn_press else False
+                def delayed_click():
+                    time.sleep(quick_sell_delay)
+                    sell_card = GamePositions.SELL_CARD.value
+                    WindowControlService.click_at(pid, sell_card[0], sell_card[1])
+                    self.shouldBlockCardPress = False
+                threading.Thread(target=delayed_click, daemon=True).start()
         
             
         def on_press(key):
@@ -75,7 +89,7 @@ class ShortcutService:
                 key_str = key.char
             except AttributeError:
                 key_str = str(key)
-                key_str = key_str.replace('Key.', '').capitalize()
+                key_str = key_str.replace('Key.', '')
             
             # Implement debouncing to prevent rapid repeated keypresses
             if enhanced_btn_press:
@@ -118,7 +132,6 @@ class ShortcutService:
 
 
             if mode == GameMode.SINGLE_PLAYER.value:
-                vehicle_shortcuts = self.shortcut_config.get('vehicleShortcut', {})
                 direction_map = {
                     'left': SingleModeVehiclePositions,
                     'right': SingleModeEnemyVehiclePositions
@@ -132,13 +145,19 @@ class ShortcutService:
                             pos = GamePositions.BATTLE_END_CONFIRM.value
                         elif shortcut_key =='battle':
                             pos = GamePositions.BATTLE.value
-                        elif shortcut_key =='quickMatch':
-                            pos = GamePositions.QUICK_MATCH.value
                         elif shortcut_key =='viewOpponentHalo':
                             pos = GamePositions.ENEMY_STATUS.value
                         elif shortcut_key == 'closeCard':
                             pos = GamePositions.CLOST_CARD.value
                         WindowControlService.click_at(pid, pos[0], pos[1])
+                        if shortcut_key == 'surrender':
+                            time.sleep(0.5)
+                            surrender_confirm = GamePositions.SURRENDER_CONFIRM.value
+                            WindowControlService.click_at(pid, surrender_confirm[0], surrender_confirm[1])
+                        if shortcut_key == 'battle' and auto_quick_match:
+                            time.sleep(0.5)
+                            quick_match = GamePositions.QUICK_MATCH.value
+                            WindowControlService.click_at(pid, quick_match[0], quick_match[1])
                         return
 
                 ## check vehicle shortcut key press
@@ -148,24 +167,41 @@ class ShortcutService:
 
                             position = position_enum[f"VEHICLE_{shortcut_index}"].value
                             WindowControlService.click_at(pid, position[0], position[1])
-                            if quick_sell:
-                                self.shouldBlockCardPress = True if enhanced_btn_press else False
-                                def delayed_click():
-                                    time.sleep(quick_sell_delay)
-                                    sell_card = GamePositions.SELL_CARD.value
-                                    WindowControlService.click_at(pid, sell_card[0], sell_card[1])
-                                    self.shouldBlockCardPress = False
-                                threading.Thread(target=delayed_click, daemon=True).start()
+                            handle_quick_sell()
                             return
             elif mode == GameMode.SINGLE_PLAYER_SAILING.value:
-                # Implement logic for two-player mode
-                pass
+                for shortcut_index, shortcut_value in vehicle_shortcuts.get('left', {}).items():
+                    if shortcut_value and key_str == shortcut_value:
+                        position = SailModeVehiclePositions[f"VEHICLE_{shortcut_index}"].value
+                        WindowControlService.click_at(pid, position[0], position[1])
+                        handle_quick_sell()
+                        return
             elif mode == GameMode.TWO_PLAYER.value:
-                # Implement logic for two-player mode
-                pass
+                ## check vehicle shortcut key press
+                direction_map = {
+                    'left': TwoModeLeftVehiclePositions,
+                    'right': TwoModeRightVehiclePositions
+                }
+                for direction, position_enum in direction_map.items():
+                    for shortcut_index, shortcut_value in vehicle_shortcuts.get(direction, {}).items():
+                        if shortcut_value and key_str == shortcut_value:
+                            position = position_enum[f"VEHICLE_{shortcut_index}"].value
+                            WindowControlService.click_at(pid, position[0], position[1])
+                            handle_quick_sell()
+                            return
             elif mode == GameMode.TWO_PLAYER_SKY.value:
-                # Implement logic for two-player mode
-                pass
+                direction_map = {
+                    'left': SkyTwoModeLeftVehiclePositions,
+                    'right': SkyTwoModeRightVehiclePositions
+                }
+                for direction, position_enum in direction_map.items():
+                    for shortcut_index, shortcut_value in vehicle_shortcuts.get(direction, {}).items():
+                        if shortcut_value and key_str == shortcut_value:
+                            position = position_enum[f"VEHICLE_{shortcut_index}"].value
+                            WindowControlService.click_at(pid, position[0], position[1])
+                            handle_quick_sell()
+                            return
+                
         
         listener = keyboard.Listener(on_press=on_press)
         listener.start()
@@ -178,6 +214,7 @@ class ShortcutService:
     def reload_listeners(self):
         """Reload listeners for all active windows."""
         logger.info("Reloading listeners for all active windows")
+        self.load_config()
         for pid in self.window_configs:
             if self.window_configs[pid].get('active', False):
                 self.start_listening(pid)
@@ -196,14 +233,20 @@ class ShortcutService:
         else:
             self.stop_listening(pid)
     
-    def set_mode(self, pid: int, mode: GameMode):
+    def set_config(self, pid: int, config: dict):
         """Update the shortcut mode for the specified window."""
         print(f"Setting mode for window {pid} to {mode}")
         if pid not in self.window_configs:
             self.window_configs[pid] = {}
             self.window_configs[pid]['mode'] = GameMode.SINGLE_PLAYER.value
             self.window_configs[pid]['active'] = False
-
-        self.window_configs[pid]['mode'] = mode
+            self.window_configs[pid]['side'] = 'left'
+        
+        mode = config.get('mode')
+        side = config.get('side')
+        if mode != None:
+            self.window_configs[pid]['mode'] = mode
+        if side!= None:
+            self.window_configs[pid]['side'] = side
         if self.window_configs[pid].get('active'):
             self.reload_listeners()
