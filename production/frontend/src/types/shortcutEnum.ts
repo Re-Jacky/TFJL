@@ -3,6 +3,7 @@ export enum GameMode {
   SINGLE_PLAYER_SAILING,
   TWO_PLAYER,
   TWO_PLAYER_SKY,
+  AUCTION
 }
 
 export enum VehicleSide {
@@ -32,3 +33,9 @@ export enum BattleShortcut {
   CLOSE_CARD = 'closeCard',
 }
 
+export enum AuctionShortcut {
+  CARD_0 = 'auctionCard0', 
+  CARD_1 = 'auctionCard1',
+  CARD_2 = 'auctionCard2',
+  CARD_3 = 'auctionCard3'
+}

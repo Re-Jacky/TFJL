@@ -9,6 +9,7 @@ import {
   VehicleSide,
   GeneralShortcut,
   BattleShortcut,
+  AuctionShortcut,
 } from '@src/types';
 import { api } from '@src/services/api';
 import _ from 'lodash';
@@ -38,6 +39,12 @@ const emptyShortcut: ShortcutModel = {
     [BattleShortcut.VIEW_OPPONENT_HALO]: '',
     [BattleShortcut.CLOSE_CARD]: '',
   },
+  auctionShortcut: {
+    [AuctionShortcut.CARD_0]: '',
+    [AuctionShortcut.CARD_1]: '',
+    [AuctionShortcut.CARD_2]: '',
+    [AuctionShortcut.CARD_3]: '',
+  }
 };
 
 const ShortcutContent: React.FC = () => {
@@ -98,6 +105,7 @@ const ShortcutContent: React.FC = () => {
             { label: '单人-航海', value: GameMode.SINGLE_PLAYER_SAILING },
             { label: '双人', value: GameMode.TWO_PLAYER },
             { label: '双人-天空', value: GameMode.TWO_PLAYER_SKY },
+            { label: '竞拍', value: GameMode.AUCTION },
           ]}
         />
         <Button type={active ? 'default' : 'primary'} onClick={toggleActive} danger={active}>
@@ -110,7 +118,7 @@ const ShortcutContent: React.FC = () => {
           注意：请不要使用特殊键位，如：
           <span className={styles.highlight}>Ctrl</span>、
           <span className={styles.highlight}>Alt</span>、
-          <span className={styles.highlight}>Meta/CMD</span>
+          <span className={styles.highlight}>Meta/Win</span>
         </span>
       </div>
       <Content

@@ -22,4 +22,12 @@ class GamePositions(Enum):
     CARD_0 = (440, 560)   # 卡片0
     CARD_1 = (525, 560)   # 卡片1
     CARD_2 = (610, 560)   # 卡片2
+
+    ## Auction
+    AUCTION_CONFIRM = (650, 465)   # 确认购买
+    AUNCTION_CARD_0 = (755, 242)   # 卡片0
+    AUNCTION_CARD_1 = (755, 326)   # 卡片1
+    AUNCTION_CARD_2 = (755, 412)   # 卡片2
+    AUNCTION_CARD_3 = (755, 497)   # 卡片3
+
     

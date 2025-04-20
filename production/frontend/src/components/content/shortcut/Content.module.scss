@@ -53,4 +53,22 @@
     flex-direction: column;
     gap: 10px;
   }
+
+  .auction {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    .aunctionInfo {
+      margin-bottom: 5px;
+      .aunctionInfoText {
+        margin-left: 5px;
+      }
+    }
+    .aunctionItems {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+  }
+  
 }
