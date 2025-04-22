@@ -14,7 +14,7 @@ import CodeEditor, {
 import CreateFileButton from '../components/CreateFileButton';
 import DeleteFileButton from '../components/DeleteFileButton';
 import { useSelector } from 'react-redux';
-import { selectActiveWindow } from '@src/store/selectors';
+import { selectActiveWindow, selectInitializing } from '@src/store/selectors';
 
 interface FileOption {
   value: string;
@@ -30,6 +30,7 @@ const CollaborationContent: React.FC = () => {
   const [disableSaveBtn, setDisableSaveBtn] = useState<boolean>(true);
   const editorRef = useRef<EditorHandler | null>(null);
   const activeWindow = useSelector(selectActiveWindow);
+  const initializing = useSelector(selectInitializing);
 
   const onStart = () => {
     if (!selected || !activeWindow) return;
@@ -43,14 +44,6 @@ const CollaborationContent: React.FC = () => {
         setInitContent(content || '');
         setDisableSaveBtn(true);
       });
-    }
-  };
-
-  const onDelete = () => {
-    if (selected) {
-      // api.deleteFile(selected).then(() => {
-      //   setSelected(options?.[0].value);
-      // });
     }
   };
 
@@ -101,13 +94,15 @@ const CollaborationContent: React.FC = () => {
 
   // load file list
   useEffect(() => {
-    loadFiles().then((options) => {
-      if (options) {
-        setOptions(options || []);
-        setSelected(options[0].value);
-      }
-    });
-  }, []);
+    if (!initializing) {
+      loadFiles().then((options) => {
+        if (options) {
+          setOptions(options || []);
+          setSelected(options[0].value);
+        }
+      });
+    }
+  }, [initializing]);
 
   // get file content
   useEffect(() => {

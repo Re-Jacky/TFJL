@@ -1,26 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Layout } from 'antd';
 import Header from './components/header/Header';
 import TaskTabs from './components/tabs/TaskTabs';
 import LoadingMask from './components/loading/LoadingMask';
 import { api } from '@src/services/api';
 import { useSSE } from './hooks/useSSE';
-import { selectActiveWindow } from './store/selectors';
-import { useAppSelector,useAppDispatch } from './store/store';
+import { selectActiveWindow, selectInitializing } from './store/selectors';
+import { setInitializing } from './store/actions';
+import { useAppSelector, useAppDispatch } from './store/store';
 
 const App: React.FC = () => {
-  const [initializing, setInitializing] = useState(true);
+  const initializing = useAppSelector(selectInitializing);
   const activeWindow = useAppSelector(selectActiveWindow)
+  const dispatch = useAppDispatch();
   const { connect, disconnect } = useSSE();
 
   useEffect(() => {
     // Check if the API is healthy every 1 second until it is healthy
     const intervalId = setInterval(() => {
       api.healthCheck().then(() => {
-        setInitializing(false);
+        dispatch(setInitializing(false));
         clearInterval(intervalId);
       }).catch(() => {
-        setInitializing(true);
+        dispatch(setInitializing(true));
       });
     }, 1000);
     // Clean up the interval when the component unmounts

@@ -3,7 +3,7 @@ import { Select, Button, Checkbox } from 'antd';
 import { WindowsFilled, AimOutlined, ReloadOutlined } from '@ant-design/icons';
 import styles from './WindowController.module.scss';
 import { useSelector } from 'react-redux';
-import { selectActiveWindow, selectWindows } from '@src/store/selectors';
+import { selectActiveWindow, selectInitializing, selectWindows } from '@src/store/selectors';
 import { setActiveWindow } from '@src/store/actions';
 import { useAppDispatch } from '@src/store/store';
 import { getWindows } from '@src/store/thunks';
@@ -11,6 +11,7 @@ import { api } from '@src/services/api';
 
 const WindowController: React.FC = () => {
   const activeWindow = useSelector(selectActiveWindow);
+  const initializing = useSelector(selectInitializing);
   const dispatch = useAppDispatch();
   const [isWindowLocked, setIsWindowLocked] = useState<boolean>(false);
   const windows = useSelector(selectWindows);
@@ -31,7 +32,9 @@ const WindowController: React.FC = () => {
 
   const handleCheckWindow = (e: any) => {
     if (activeWindow) {
-      setIsWindowLocked(!isWindowLocked);
+      api.lockWindow({ lock: e.target.checked }).then(() => {
+        setIsWindowLocked(!isWindowLocked);
+      });
     }
   };
 
@@ -40,8 +43,10 @@ const WindowController: React.FC = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    dispatch(getWindows());
-  }, []);
+    if (!initializing) {
+      dispatch(getWindows());
+    }
+  }, [initializing]);
 
   return (
     <div className={styles.container}>

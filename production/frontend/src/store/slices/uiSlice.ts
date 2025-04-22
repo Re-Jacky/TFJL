@@ -21,6 +21,7 @@ export interface Vehicle {
 }
 
 export interface UIState {
+    isInitializing: boolean;
     activeWindow: string | null;
     windows: Array<Wnd>
     logRecords: Array<LogRecord>;
@@ -39,6 +40,7 @@ const generateVehicleInfo = () => {
 };
 
 const initialState: UIState = {
+  isInitializing: true,
   activeWindow: null,
   windows: [],
   logRecords: [],
@@ -59,8 +61,12 @@ const uiSlice = createSlice({
     selectLogRecords: (state) => state.logRecords,
     selectVehicle: (state) => state.vehicle,
     selectWindows: (state) => state.windows,
+    selectInitializing: (state) => state.isInitializing,
   },
   reducers: {
+    setInitializing: (state, action: PayloadAction<boolean>) => {
+      state.isInitializing = action.payload;
+    },
     setActiveWindow: (state, action: PayloadAction<string | null>) => {
       state.activeWindow = action.payload;
     },

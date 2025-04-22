@@ -10,6 +10,9 @@ from app.utils.logger import logger
 from fastapi import HTTPException
 
 class WindowControlService:
+    def __init__(self):
+        self.locked_windows = set()
+
     @staticmethod
     def click_at(window_pid: int, x: int, y: int):
         """
@@ -119,3 +122,18 @@ class WindowControlService:
         except Exception as e:
             logger.error(f"Error capturing window region: {str(e)}")
             return np.zeros((0, 0), dtype=np.uint8)
+
+    def lock_window(self, window_pid: int, lock: bool):
+        """
+        Lock/unlock the specified window.
+        """
+        if lock:
+            if window_pid in self.locked_windows:
+                raise HTTPException(status_code=400, detail=f"Window with PID {window_pid} is already locked")
+            else:
+                self.locked_windows.add(window_pid)
+        elif window_pid in self.locked_windows:
+           self.locked_windows.remove(window_pid)
+           return {"status": "success", "message": f"Window {window_pid} unlocked"}
+        else:
+            raise HTTPException(status_code=400, detail=f"Window with PID {window_pid} is not locked")
