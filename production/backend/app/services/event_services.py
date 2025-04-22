@@ -72,13 +72,9 @@ class EventService:
         await self.broadcast('log', formatted_data, session_ids)
 
     # vehicle data should be like : {'side': 'left', 'info': {1: {'card': 'GuGu', 'level': 4}, 2: {'card': 'Xiao ye', 'level': 1}}
-    async def broadcast_vehicle(self, side: str, info: Dict, session_ids: Optional[list[str]] = None) -> None:
+    async def broadcast_vehicle(self, info: Dict, session_ids: Optional[list[str]] = None) -> None:
         """Broadcast a vehicle event to clients in specified sessions."""
-        formatted_data = {
-            "side": side,
-            "info": info
-        }
-        await self.broadcast('vehicle', formatted_data, session_ids)
+        await self.broadcast('vehicle', info, session_ids)
 
     async def format_sse(self, data: Dict) -> str:
         """Format the data as a Server-Sent Event message."""

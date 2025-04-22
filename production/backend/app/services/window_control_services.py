@@ -132,6 +132,7 @@ class WindowControlService:
                 raise HTTPException(status_code=400, detail=f"Window with PID {window_pid} is already locked")
             else:
                 self.locked_windows.add(window_pid)
+                return {"status": "success", "message": f"Window {window_pid} locked"}
         elif window_pid in self.locked_windows:
            self.locked_windows.remove(window_pid)
            return {"status": "success", "message": f"Window {window_pid} unlocked"}

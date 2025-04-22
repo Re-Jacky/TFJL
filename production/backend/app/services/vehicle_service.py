@@ -3,7 +3,7 @@ from app.utils.logger import logger
 from app.services.event_services import EventService
 
 class VehicleService:
-    def __init__(self) -> None:
+    def __init__(self, pid) -> None:
         self.vehicle_info = {
             "side": None,  # 'left' or 'right'
             "equipment": None,  # equipment name
@@ -12,6 +12,7 @@ class VehicleService:
             "info": self._generate_vehicle_info()
         }
         self.event_service = EventService()
+        self.pid = pid
 
     def _generate_vehicle_info(self) -> Dict[int, Dict[str, Any]]:
         """Generate empty vehicle info structure."""
@@ -30,9 +31,7 @@ class VehicleService:
     def set_vehicle_info(self, vehicle_info: Dict[str, Any]) -> None:
         """Set the vehicle information."""
         self.vehicle_info = vehicle_info
-        # Broadcast vehicle update if side is specified
-        if "side" in vehicle_info and vehicle_info["side"]:
-            self.broadcast_vehicle_update()
+        self.broadcast_vehicle_update()
 
     def update_vehicle_side(self, side: str) -> None:
         """Update the vehicle side."""
@@ -82,10 +81,7 @@ class VehicleService:
         """Clear all cards from the vehicle."""
         self.vehicle_info["info"] = self._generate_vehicle_info()
         self.broadcast_vehicle_update()
-
-    async def broadcast_vehicle_update(self) -> None:
-        """Broadcast vehicle update to connected clients."""
-        side = self.vehicle_info.get("side")
-        if side:
-            await self.event_service.broadcast_vehicle(side, self.vehicle_info)
-        
+    
+    def broadcast_vehicle_update(self) -> None:
+        """Broadcast the vehicle update to all connected clients."""
+        self.event_service.broadcast_vehicle(self.vehicle_info, [self.pid])

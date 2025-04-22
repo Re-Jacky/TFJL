@@ -170,8 +170,8 @@ async def delete_file(request: Request, file_data: FileModel):
 async def get_windows():
     windows = []
     for window in pygetwindow.getAllWindows():
-        if window.title and window.title == '塔防精灵' and window._hWnd:
-            title = window.title + f"(已锁定)" if window._hWnd in window_service.locked_windows else ""
+        if window.title and window.title == '塔防精灵':
+            title = window.title +( "(已锁定)" if window._hWnd in window_service.locked_windows else "")
             windows.append({"title": title, "pid": window._hWnd})
     return {"windows": windows}
 
