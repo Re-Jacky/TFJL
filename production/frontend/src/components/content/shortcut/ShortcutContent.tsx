@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Radio, RadioChangeEvent } from 'antd';
-import { InfoCircleFilled, InfoCircleOutlined, InfoCircleTwoTone } from '@ant-design/icons';
+import { InfoCircleTwoTone } from '@ant-design/icons';
 import styles from './ShortcutContent.module.scss';
 import { produceEmptyCellValues } from '../components/Vehicle';
 import Content, { ShortcutModel } from './Content';
@@ -13,6 +13,8 @@ import {
 } from '@src/types';
 import { api } from '@src/services/api';
 import _ from 'lodash';
+import { useSelector } from 'react-redux';
+import { selectInitializing } from '@src/store/selectors';
 
 const emptyShortcut: ShortcutModel = {
   vehicleShortcut: {
@@ -55,6 +57,7 @@ const ShortcutContent: React.FC = () => {
   );
   const [loading, setLoading] = useState<boolean>(true);
   const [active, setActive] = useState<boolean>(false);
+  const initializing = useSelector(selectInitializing)
 
   const onModeChange = (e: RadioChangeEvent) => {
     const mode = e.target.value as GameMode;
@@ -83,7 +86,8 @@ const ShortcutContent: React.FC = () => {
   };
 
   useEffect(() => {
-    api
+    if (!initializing) {
+      api
       .getShortcut()
       .then((res) => {
         setShortcut(res.shortcut);
@@ -92,7 +96,8 @@ const ShortcutContent: React.FC = () => {
       .finally(() => {
         setLoading(false);
       });
-  }, []);
+    }
+  }, [initializing]);
   return (
     <div className={styles.shortcut}>
       <div className={styles.header}>

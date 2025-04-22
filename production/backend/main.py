@@ -20,6 +20,7 @@ event_service = EventService()
 image_service = ImageService()
 image_service.initialize_card_templates()
 shortcut_service = ShortcutService()
+window_service = WindowControlService()
 
 
 @app.middleware("http")
@@ -170,8 +171,28 @@ async def get_windows():
     windows = []
     for window in pygetwindow.getAllWindows():
         if window.title and window.title == '塔防精灵':
-            windows.append({"title": window.title, "pid": window._hWnd})
+            title = window.title +( "(已锁定)" if window._hWnd in window_service.locked_windows else "")
+            windows.append({"title": title, "pid": window._hWnd})
     return {"windows": windows}
+
+@app.post("/lock-window")
+async def lock_window(request: Request, config: dict):
+    lock_wnd = config.get("lock")
+    pid = config.get("pid")
+    if not pid:
+        pid = get_req_pid(request)
+    if not pid:
+        return JSONResponse(
+            status_code=422,
+            content={"detail": "missing pid in the request header"}
+        )
+    if lock_wnd and pid in window_service.locked_windows:
+        event_service.broadcast_log("error", "窗口已被其他进程锁定.", [pid])
+        return JSONResponse(
+            status_code=400,
+            content={"detail": "窗口已被其他进程锁定."}
+        )
+    return window_service.lock_window(pid, lock_wnd)
 
 
 @app.post("/locate-window")
@@ -183,7 +204,7 @@ async def locate_window(window_data: dict):
     """
     try:
         pid = int(window_data['pid'])
-        result = WindowControlService.locate_window(pid)
+        result = window_service.locate_window(pid)
         if result["status"] == "error":
             return JSONResponse(
                 status_code=404 if "not found" in result["message"] else 500,

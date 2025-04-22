@@ -1,15 +1,11 @@
-import json
-from re import match
 import time
 import threading
-import pygetwindow
-import pyautogui
-from typing import Dict, Optional
 from app.utils.logger import logger
 from app.enums.game_positions import GamePositions
 from app.enums.shortcut_positions import GameMode, SingleModeVehiclePositions, SingleModeEnemyVehiclePositions,TwoModeLeftVehiclePositions,TwoModeRightVehiclePositions,SailModeVehiclePositions,SkyTwoModeLeftVehiclePositions,SkyTwoModeRightVehiclePositions
 from app.services.window_control_services import WindowControlService
 from pynput import keyboard
+from app.services.vehicle_service import VehicleService
 
 class ShortcutService:
     def __init__(self):

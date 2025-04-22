@@ -22,6 +22,7 @@ export interface API {
     saveShortcut: (shortcut: ShortcutModel) => Promise<{ status: string }>;
     setShortcutConfig: (config: ShortcutConfig) => Promise<{ status: string }>;
     monitorShortcut: (value: boolean) => Promise<{ status: string }>;
+    lockWindow: (config: { lock: boolean; pid?: number }) => Promise<{ status: string }>;
 }
 
 export const api: API = {
@@ -62,5 +63,8 @@ export const api: API = {
     },
     monitorShortcut: async (status: boolean) => {
         return await proxy.post('monitor-shortcut', { status });
-    }
+    },
+    lockWindow: async (config) => {
+        return await proxy.post('lock-window', config);
+    },
 }
