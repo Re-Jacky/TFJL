@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Radio, RadioChangeEvent } from 'antd';
-import { InfoCircleFilled, InfoCircleOutlined, InfoCircleTwoTone } from '@ant-design/icons';
+import { InfoCircleTwoTone } from '@ant-design/icons';
 import styles from './ShortcutContent.module.scss';
 import { produceEmptyCellValues } from '../components/Vehicle';
 import Content, { ShortcutModel } from './Content';

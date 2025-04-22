@@ -7,25 +7,26 @@ export interface LogRecord {
   level: 'info' | 'warn' | 'error';
 }
 
+export interface VehicleCell {
+  card: string | undefined;
+  level: number | undefined;
+}
 export interface Vehicle {
   side: 'left' | 'right' | undefined;
   equipment: string | undefined;
   level: number | undefined; // current level of a game
   seat: number | undefined; // 1-6, opened seats for cards
   info: {
-    [key: number] : {
-      card: string | undefined;
-      level: number | undefined;
-    }
+    [key: number]: VehicleCell;
   };
 }
 
 export interface UIState {
-    isInitializing: boolean;
-    activeWindow: string | null;
-    windows: Array<Wnd>
-    logRecords: Array<LogRecord>;
-    vehicle: Vehicle;
+  isInitializing: boolean;
+  activeWindow: string | null;
+  windows: Array<Wnd>;
+  logRecords: Array<LogRecord>;
+  vehicle: Vehicle;
 }
 
 const generateVehicleInfo = () => {
@@ -49,9 +50,9 @@ const initialState: UIState = {
     level: undefined,
     seat: undefined,
     equipment: undefined,
-    info: generateVehicleInfo()
-  }
-}
+    info: generateVehicleInfo(),
+  },
+};
 
 const uiSlice = createSlice({
   name: 'ui',

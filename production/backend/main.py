@@ -187,7 +187,7 @@ async def lock_window(request: Request, config: dict):
             content={"detail": "missing pid in the request header"}
         )
     if lock_wnd and pid in window_service.locked_windows:
-        event_service.broadcast_log("error", "窗口已被其他进程锁定.")
+        event_service.broadcast_log("error", "窗口已被其他进程锁定.", [pid])
         return JSONResponse(
             status_code=400,
             content={"detail": "窗口已被其他进程锁定."}
