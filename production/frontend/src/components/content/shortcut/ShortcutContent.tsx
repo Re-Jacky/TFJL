@@ -12,7 +12,7 @@ import {
   AuctionShortcut,
 } from '@src/types';
 import { api } from '@src/services/api';
-import _ from 'lodash';
+import { isEqual } from 'lodash-es';
 import { useSelector } from 'react-redux';
 import { selectInitializing } from '@src/store/selectors';
 
@@ -46,7 +46,7 @@ const emptyShortcut: ShortcutModel = {
     [AuctionShortcut.CARD_1]: '',
     [AuctionShortcut.CARD_2]: '',
     [AuctionShortcut.CARD_3]: '',
-  }
+  },
 };
 
 const ShortcutContent: React.FC = () => {
@@ -57,7 +57,7 @@ const ShortcutContent: React.FC = () => {
   );
   const [loading, setLoading] = useState<boolean>(true);
   const [active, setActive] = useState<boolean>(false);
-  const initializing = useSelector(selectInitializing)
+  const initializing = useSelector(selectInitializing);
 
   const onModeChange = (e: RadioChangeEvent) => {
     const mode = e.target.value as GameMode;
@@ -88,14 +88,14 @@ const ShortcutContent: React.FC = () => {
   useEffect(() => {
     if (!initializing) {
       api
-      .getShortcut()
-      .then((res) => {
-        setShortcut(res.shortcut);
-        setDefaultShortcut(res.shortcut);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+        .getShortcut()
+        .then((res) => {
+          setShortcut(res.shortcut);
+          setDefaultShortcut(res.shortcut);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
     }
   }, [initializing]);
   return (
@@ -113,7 +113,11 @@ const ShortcutContent: React.FC = () => {
             { label: '竞拍', value: GameMode.AUCTION },
           ]}
         />
-        <Button type={active ? 'default' : 'primary'} onClick={toggleActive} danger={active}>
+        <Button
+          type={active ? 'default' : 'primary'}
+          onClick={toggleActive}
+          danger={active}
+        >
           {active ? '停用' : '启用'}
         </Button>
       </div>
@@ -134,7 +138,7 @@ const ShortcutContent: React.FC = () => {
         onSave={handleSave}
         onReset={onReset}
         isLoading={loading}
-        disableSave={_.isEqual(shortcut, defaultShortcut)}
+        disableSave={isEqual(shortcut, defaultShortcut)}
       />
     </div>
   );
