@@ -1,0 +1,66 @@
+{
+  "name": "tfjl-app",
+  "version": "1.0.0",
+  "description": "electron app",
+  "main": "src/main.js",
+  "scripts": {
+    "build:ui": "node scripts/buildFrontend.js",
+    "dev:ui": "node scripts/devFrontend.js",
+    "electron:dev": "cross-env NODE_ENV=development concurrently \"npm run dev:ui\" \"electron .\"",
+    "electron:build": "rimraf dist_electron && npm run build:ui && cross-env NODE_ENV=production electron-builder"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "winston": "^3.17.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "cross-env": "^7.0.3",
+    "electron": "^35.0.1",
+    "electron-builder": "^24.9.1",
+    "rimraf": "^6.0.1"
+  },
+  "build": {
+    "appId": "com.tfjlauto.app",
+    "productName": "TFJL Auto",
+    "directories": {
+      "output": "dist_electron",
+      "buildResources": "assets"
+    },
+    "mac": {
+      "category": "public.app-category.productivity"
+    },
+    "files": [
+      "src/**/*",
+      {
+        "from": "../frontend/dist",
+        "to": "dist",
+        "filter": [
+          "**/*",
+          "!bundle-analyzer.html"
+        ]
+      }
+    ],
+    "extraResources": [
+      {
+        "from": "../backend/dist/tfjl_server.exe",
+        "to": "backend/tfjl_server.exe"
+      },
+      {
+        "from": "../public",
+        "to": "../public"
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/images/icon.ico",
+      "requestedExecutionLevel": "requireAdministrator",
+      "artifactName": "${productName}-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

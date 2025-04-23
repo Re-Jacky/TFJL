@@ -43,14 +43,7 @@ export default defineConfig({
     chunkSizeWarningLimit: 1000, // Increase warning limit to reduce noise
     minify: 'esbuild',
     rollupOptions: {
-      input: {
-        main: './index.html',
-        electron: './electron/main.js'
-      },
       output: {
-        entryFileNames: (chunkInfo) => {
-          return chunkInfo.name === 'electron' ? '[name].js' : 'assets/[name]-[hash].js';
-        },
         // Manually split chunks for better caching and smaller bundles
         manualChunks: {
           // Split vendor chunks
