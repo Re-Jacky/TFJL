@@ -102,7 +102,7 @@ setup_python_env
 build_backend
 
 # prepare ui env
-cd../frontend
+cd ../frontend
 setup_ui_env
 
 # Build frontend
