@@ -9,6 +9,7 @@ const isDev = process.env.NODE_ENV === 'development' || !fs.existsSync(path.join
 // Disable the single instance lock to allow multiple instances
 app.allowRendererProcessReuse = true;
 app.commandLine.appendSwitch('disable-site-isolation-trials');
+app.commandLine.appendSwitch('no-sandbox');
 
 
 let pythonServer = null;
@@ -27,7 +28,8 @@ function checkPortInUse(port) {
 
 async function startPythonServer() {
   try {
-    const serverPath = path.join(process.resourcesPath, 'backend/tfjl_server.exe');
+    const serverPath = path.join(process.resourcesPath, 'backend', 'tfjl_server.exe');
+    const normalizedPath = path.normalize(serverPath);
 
     if (!fs.existsSync(serverPath)) {
       throw new Error(`Python server executable not found at: ${serverPath}`);
@@ -41,7 +43,7 @@ async function startPythonServer() {
     }
 
     logger.info('Starting Python server...');
-    pythonServer = spawn(serverPath, [], {
+    pythonServer = spawn(`"${normalizedPath}"`, [], {
       shell: true,
       windowsHide: true
     });
