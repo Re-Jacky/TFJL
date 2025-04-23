@@ -76,7 +76,7 @@ build_backend() {
 }
 
 # Function to build frontend
-build_frontend() {
+build_app() {
     if [ ! -d "node_modules" ]; then
         log_message "Installing npm dependencies..."
         npm install
@@ -87,13 +87,26 @@ build_frontend() {
     npm run electron:build
 }
 
+setup_ui_env() {
+     if [ ! -d "node_modules" ]; then
+        log_message "Installing npm dependencies..."
+        npm install
+    else
+        log_message "npm dependencies already installed, skipping installation..."
+    fi
+}
+
 # Build backend
 cd ./backend
 setup_python_env
 build_backend
 
-# Build frontend
+# prepare ui env
 cd ../frontend
-build_frontend
+setup_ui_env
+
+# Build frontend
+cd ../electron
+build_app
 
 log_message "Build completed successfully!"

@@ -23,9 +23,10 @@ yarn-error.log*
 .npm
 
 # Build outputs
-/frontend/dist/
-/frontend/dist_electron/
-/frontend/build/
+dist/
+dist_electron/
+build/
+
 
 # IDE and editor files
 .idea/
