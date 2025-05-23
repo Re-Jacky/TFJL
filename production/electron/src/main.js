@@ -1,4 +1,4 @@
-const { app, BrowserWindow, globalShortcut } = require('electron');
+const { app, BrowserWindow, globalShortcut, ipcMain } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 const fs = require('fs');
@@ -69,6 +69,21 @@ async function startPythonServer() {
   }
 }
 
+function registerHandler() {
+  ipcMain.on('restart-server', () => {
+    if (isDev) {
+      console.log('Dev mode, not restarting server');
+      return;
+    }
+    if (pythonServer) {
+      logger.info('Restarting Python server...');
+      pythonServer.kill('SIGKILL');
+      pythonServer = null;
+    }
+    startPythonServer();
+  });
+}
+
 // Enable DevTools in production
 app.commandLine.appendSwitch('remote-debugging-port', '8315');
 
@@ -78,7 +93,7 @@ function createWindow() {
     height: 700,
     webPreferences: {
       nodeIntegration: true,
-      contextIsolation: false
+      preload: path.join(__dirname, 'preload.js'),
     }
   });
 
@@ -99,6 +114,7 @@ app.whenReady().then(() => {
   if (!isDev) {
     startPythonServer();
   }
+  registerHandler();
   createWindow();
 
   app.on('activate', function () {

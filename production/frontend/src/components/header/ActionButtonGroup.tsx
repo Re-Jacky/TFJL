@@ -4,6 +4,7 @@ import styles from './ActionButtonGroup.module.scss';
 
 const ActionButtonGroup: React.FC = () => {
   const handleStart = () => {
+    window.nodeAPI?.restartServer();
     location.reload();
   };
 
