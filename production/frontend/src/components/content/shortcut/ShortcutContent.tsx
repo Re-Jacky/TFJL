@@ -5,7 +5,7 @@ import styles from './ShortcutContent.module.scss';
 import { produceEmptyCellValues } from '../components/Vehicle';
 import Content, { ShortcutModel } from './Content';
 import {
-  GameMode,
+  ShortcutMode,
   VehicleSide,
   GeneralShortcut,
   BattleShortcut,
@@ -50,7 +50,7 @@ const emptyShortcut: ShortcutModel = {
 };
 
 const ShortcutContent: React.FC = () => {
-  const [mode, setMode] = useState<GameMode>(GameMode.SINGLE_PLAYER);
+  const [mode, setMode] = useState<ShortcutMode>(ShortcutMode.SINGLE_PLAYER);
   const [shortcut, setShortcut] = useState<ShortcutModel>(emptyShortcut);
   const [defaultShortcut, setDefaultShortcut] = useState<ShortcutModel | null>(
     null
@@ -60,7 +60,7 @@ const ShortcutContent: React.FC = () => {
   const initializing = useSelector(selectInitializing);
 
   const onModeChange = (e: RadioChangeEvent) => {
-    const mode = e.target.value as GameMode;
+    const mode = e.target.value as ShortcutMode;
     setMode(mode);
     // service
     api.setShortcutConfig({ mode });
@@ -106,11 +106,11 @@ const ShortcutContent: React.FC = () => {
           onChange={onModeChange}
           value={mode}
           options={[
-            { label: '对战', value: GameMode.SINGLE_PLAYER },
-            { label: '单人-航海', value: GameMode.SINGLE_PLAYER_SAILING },
-            { label: '双人', value: GameMode.TWO_PLAYER },
-            { label: '双人-天空', value: GameMode.TWO_PLAYER_SKY },
-            { label: '竞拍', value: GameMode.AUCTION },
+            { label: '对战', value: ShortcutMode.SINGLE_PLAYER },
+            { label: '单人-航海', value: ShortcutMode.SINGLE_PLAYER_SAILING },
+            { label: '双人', value: ShortcutMode.TWO_PLAYER },
+            { label: '双人-天空', value: ShortcutMode.TWO_PLAYER_SKY },
+            { label: '竞拍', value: ShortcutMode.AUCTION },
           ]}
         />
         <Button

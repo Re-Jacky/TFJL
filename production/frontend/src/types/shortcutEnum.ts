@@ -1,9 +1,15 @@
-export enum GameMode {
+export enum ShortcutMode {
   SINGLE_PLAYER,
   SINGLE_PLAYER_SAILING,
   TWO_PLAYER,
   TWO_PLAYER_SKY,
   AUCTION
+}
+
+export enum GameMode {
+  Collab,
+  IceCastle,
+  MoonIsland,
 }
 
 export enum VehicleSide {

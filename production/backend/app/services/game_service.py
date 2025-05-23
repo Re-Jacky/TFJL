@@ -37,3 +37,27 @@ class GameService:
         GameService.click_in_game(pid, GamePositions.BATTLE.value)
         GameService.click_in_game(pid, GamePositions.QUICK_MATCH.value)
         return True
+
+    @staticmethod
+    def start_collab(main, sub):
+        GameService.back_to_home(main.game)
+        GameService.back_to_home(sub.game)
+
+        # main game window starts
+        GameService.click_in_game(main.game, GamePositions.COLLAB.value)
+        # TODO: start game, get room number
+
+        # sub game window starts
+        GameService.click_in_game(sub.game, GamePositions.COLLAB.value)
+        # TODO: input room number
+        # TODO: confirm and start game
+        
+        return True
+    
+    @staticmethod
+    def start_ice_castle():
+        return True
+
+    @staticmethod
+    def start_moon_island():
+        return True

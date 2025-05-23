@@ -34,7 +34,7 @@ class WindowControlService:
         return {"success": True, "message": f"Click sent to window {hwnd} at ({x}, {y})"}
         
     @staticmethod
-    def locate_window(pid: int) -> dict:
+    def locate_resize_window(pid: int) -> dict:
         """
         Move and resize the specified window to top-left corner of screen.
         Args:
@@ -48,6 +48,19 @@ class WindowControlService:
                     # Move to top-left corner (0,0) and resize to 800x600
                     window.moveTo(0, 0)
                     window.resizeTo(1056, 637)
+                    return {"status": "success", "message": f"Window {pid} moved and resized"}
+            
+            return {"status": "error", "message": f"Window with pid {pid} not found"}
+        except Exception as e:
+            return {"status": "error", "message": f"Error locating window: {str(e)}"}
+    
+    @staticmethod
+    def locate_window(pid: int, x: int, y: int):
+        try:
+            for window in pygetwindow.getAllWindows():
+                if window._hWnd == pid:
+                    # Move to top-left corner (0,0) and resize to 800x600
+                    window.moveTo(x, y)
                     return {"status": "success", "message": f"Window {pid} moved and resized"}
             
             return {"status": "error", "message": f"Window with pid {pid} not found"}

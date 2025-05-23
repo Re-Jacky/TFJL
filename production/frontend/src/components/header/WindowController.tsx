@@ -3,10 +3,10 @@ import { Select, Button, Checkbox } from 'antd';
 import { WindowsFilled, AimOutlined, ReloadOutlined } from '@ant-design/icons';
 import styles from './WindowController.module.scss';
 import { useSelector } from 'react-redux';
-import { selectActiveWindow, selectInitializing, selectWindows } from '@src/store/selectors';
+import { selectActiveWindow, selectInitializing, selectGameWindows } from '@src/store/selectors';
 import { setActiveWindow } from '@src/store/actions';
 import { useAppDispatch } from '@src/store/store';
-import { getWindows } from '@src/store/thunks';
+import { getGameWindows } from '@src/store/thunks';
 import { api } from '@src/services/api';
 
 const WindowController: React.FC = () => {
@@ -14,7 +14,7 @@ const WindowController: React.FC = () => {
   const initializing = useSelector(selectInitializing);
   const dispatch = useAppDispatch();
   const [isWindowLocked, setIsWindowLocked] = useState<boolean>(false);
-  const windows = useSelector(selectWindows);
+  const windows = useSelector(selectGameWindows);
   const options = useMemo(
     () =>
       windows.map((item) => ({
@@ -39,12 +39,12 @@ const WindowController: React.FC = () => {
   };
 
   const onRefresh = useCallback(() => {
-    dispatch(getWindows());
+    dispatch(getGameWindows());
   }, [dispatch]);
 
   useEffect(() => {
     if (!initializing) {
-      dispatch(getWindows());
+      dispatch(getGameWindows());
     }
   }, [initializing]);
 

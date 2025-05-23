@@ -10,7 +10,7 @@ import {
   SaveOutlined,
 } from '@ant-design/icons';
 import {
-  GameMode,
+  ShortcutMode,
   VehicleSide,
   GeneralShortcut,
   BattleShortcut,
@@ -27,7 +27,7 @@ export interface ShortcutModel {
 }
 
 export interface ContentProps {
-  mode: GameMode;
+  mode: ShortcutMode;
   shortcut: ShortcutModel;
   setShortcut: (shortcut: ShortcutModel) => void;
   onSave: () => void;
@@ -95,7 +95,7 @@ const Content: React.FC<ContentProps> = (props) => {
 
   const renderVehicle = () => {
     switch (mode) {
-      case GameMode.SINGLE_PLAYER_SAILING:
+      case ShortcutMode.SINGLE_PLAYER_SAILING:
         return (
           <Vehicle
             active
@@ -103,23 +103,23 @@ const Content: React.FC<ContentProps> = (props) => {
             value={shortcut.vehicleShortcut[VehicleSide.LEFT]}
           />
         );
-      case GameMode.SINGLE_PLAYER:
-      case GameMode.TWO_PLAYER:
-      case GameMode.TWO_PLAYER_SKY:
+      case ShortcutMode.SINGLE_PLAYER:
+      case ShortcutMode.TWO_PLAYER:
+      case ShortcutMode.TWO_PLAYER_SKY:
         return (
           <>
             <Vehicle
-              label={mode === GameMode.SINGLE_PLAYER ? '我方' : '左'}
+              label={mode === ShortcutMode.SINGLE_PLAYER ? '我方' : '左'}
               active={active === VehicleSide.LEFT}
               onClick={() => setActive(VehicleSide.LEFT)}
               onChange={(val) => onVehShortcutChange(val, VehicleSide.LEFT)}
               value={shortcut.vehicleShortcut[VehicleSide.LEFT]}
             />
             <Vehicle
-              label={mode === GameMode.SINGLE_PLAYER ? '敌方' : '右'}
+              label={mode === ShortcutMode.SINGLE_PLAYER ? '敌方' : '右'}
               active={active === VehicleSide.RIGHT}
               onClick={() => {
-                if (mode === GameMode.SINGLE_PLAYER) {
+                if (mode === ShortcutMode.SINGLE_PLAYER) {
                   return;
                 }
                 setActive(VehicleSide.RIGHT);
@@ -156,7 +156,7 @@ const Content: React.FC<ContentProps> = (props) => {
   return (
     <div className={styles.contentArea}>
       <LoadingMask visible={isLoading} />
-      {mode === GameMode.AUCTION ? (
+      {mode === ShortcutMode.AUCTION ? (
         <div className={styles.auction}>
           <div className={styles.auctionInfo}>
             <InfoCircleTwoTone />
@@ -339,7 +339,7 @@ const Content: React.FC<ContentProps> = (props) => {
                   </Popover>
                 </div>
               </div>
-              {mode === GameMode.SINGLE_PLAYER ? (
+              {mode === ShortcutMode.SINGLE_PLAYER ? (
                 <div className={styles.battleInputs}>
                   <LabelInput
                     label='一键投降'
