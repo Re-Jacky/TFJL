@@ -30,4 +30,18 @@ class GamePositions(Enum):
     AUNCTION_CARD_2 = (755, 412)   # 卡片2
     AUNCTION_CARD_3 = (755, 497)   # 卡片3
 
+    ## Text Area
+    TEXT_AREA = (525, 360)    # 文本区域
+    TEXT_AREA_CONFIRM = (465, 375)   # 确认
+
+    ## Input Room Number
+    ROOM_INPUT_FIELD = (525, 360)   # 房间号输入框
+    ROOM_INPUT_CONFIRM = (530, 430)   # 确认输入
+
+    ## Collab
+    PLAY_WITH_FRIEND = (350, 510)
+    START_ROOM = (437, 430)
+    JOIN_ROOM = (615, 430)
+    JOIN_ROOM_CONFIRM = (530, 430)
+    ADS_REGION = (535, 430)  # 广告区域，用于检测广告是否出现
     

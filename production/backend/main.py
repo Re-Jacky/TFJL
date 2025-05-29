@@ -18,9 +18,9 @@ app = FastAPI()
 utility_service = UtilityService()
 event_service = EventService()
 image_service = ImageService()
-image_service.initialize_card_templates()
 shortcut_service = ShortcutService()
 window_service = WindowControlService()
+game_service = GameService()
 
 
 @app.middleware("http")
@@ -84,30 +84,9 @@ async def parse_file(file_data: FileModel):
     content = utility_service.read_file(decoded_file_name, file_data.type)
     return utility_service.parse_actions(content)
 ## testing purpose
-@app.post("/start-action")
-async def start_action(config: dict):
-    action = config['action']
-    pid = config['pid']
-    logger.info(f"Starting action: {action}")
-    ## han bing
-    return GameService.start_battle(pid)
-    # return image_service.analyze_cards(config['pid'])
-
-
-@app.post("/start-script")
-async def start_script(request: Request, script_data: FileModel):
-    pid = get_req_pid(request)
-    if not pid:
-        return JSONResponse(
-            status_code=422,
-            content={"detail": "pid is required"}
-        )
-    file_name = unquote(script_data.file)
-    await event_service.broadcast_log("info", "开始执行脚本: " + file_name)
-    content = utility_service.read_file(file_name, script_data.type)
-    logger.info(f"Starting script: {file_name}")
-    actions = utility_service.parse_actions(content)
-    return image_service.start_script(pid, file_name, content)
+@app.get("/test-api")
+async def test():
+    return game_service.start_tool(132818,111)
 
 
 @app.post("/read-file")
@@ -166,13 +145,21 @@ async def delete_file(request: Request, file_data: FileModel):
             content={"detail": f"Error deleting file: {str(e)}"}
         )
 
-@app.get("/windows")
-async def get_windows():
+@app.get("/game-windows")
+async def get_game_windows():
     windows = []
     for window in pygetwindow.getAllWindows():
         if window.title and window.title == '塔防精灵':
             title = window.title +( "(已锁定)" if window._hWnd in window_service.locked_windows else "")
             windows.append({"title": title, "pid": window._hWnd})
+    return {"windows": windows}
+
+@app.get("/tool-windows")
+async def get_tool_windows():
+    windows = []
+    for window in pygetwindow.getAllWindows():
+        if window.title and (window.title.startswith('版本:') or window.title.startswith('2.17')):
+            windows.append({"title": "老马", "pid": window._hWnd})
     return {"windows": windows}
 
 @app.post("/lock-window")
@@ -204,7 +191,7 @@ async def locate_window(window_data: dict):
     """
     try:
         pid = int(window_data['pid'])
-        result = window_service.locate_window(pid)
+        result = window_service.locate_game_window(pid, 0, 0)
         if result["status"] == "error":
             return JSONResponse(
                 status_code=404 if "not found" in result["message"] else 500,
@@ -217,6 +204,68 @@ async def locate_window(window_data: dict):
             status_code=500,
             content={"detail": f"Error locating window: {str(e)}"}
         )
+
+@app.post("/locate-auto-window")
+async def locate_auto_window(window_data: dict):
+    """
+    Move the windows for users to identify.
+    """
+    try:
+        gameWnd = window_data['game']
+        toolWnd = window_data['tool']
+        index = int(window_data['idx'])
+        x_pos = 1056 * index
+        window_service.locate_game_window(gameWnd, x_pos, 0)
+        window_service.locate_tool_window(toolWnd, x_pos, 600)
+    except Exception as e:
+        logger.error(f"check the game and tool windows in automator: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"detail": f"Error checking windows: {str(e)}"}
+        )
+
+
+@app.post("/start-auto-game")
+async def start_auto_game(request: Request, config: dict):
+    try:
+        main = config['main']
+        sub = config['sub']
+        mode = config['mode']
+        if mode == 0:
+            game_service.start_collab(main, sub)
+        elif mode == 1:
+            game_service.start_ice_castle(main, sub)
+        elif mode == 2:
+            game_service.start_moon_island(main, sub)
+        
+        return {"status": "success"}
+
+    except Exception as e:
+        logger.error(f"Error starting auto game: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"detail": f"Error starting auto game: {str(e)}"}
+        )
+
+@app.post("/is-in-game")
+async def is_in_game(request: Request, config: dict):
+    try:
+        main = config['main']
+        sub = config['sub']
+        main_result = image_service.find_image(main, '笑脸')
+        sub_result = image_service.find_image(sub, '笑脸')
+        if main_result['found'] == True and sub_result['found'] == True:
+            return {"status": True}
+        else :
+            return {"status": False}
+    except Exception as e:
+        logger.error(f"Error checking if in game: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"detail": f"Error checking if in game: {str(e)}"}
+        )
+    return {"status": False}
+
 
 
 @app.get("/shortcut")

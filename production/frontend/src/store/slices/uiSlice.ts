@@ -24,7 +24,8 @@ export interface Vehicle {
 export interface UIState {
   isInitializing: boolean;
   activeWindow: string | null;
-  windows: Array<Wnd>;
+  gameWindows: Array<Wnd>;
+  toolWindows: Array<Wnd>;
   logRecords: Array<LogRecord>;
   vehicle: Vehicle;
 }
@@ -43,7 +44,8 @@ const generateVehicleInfo = () => {
 const initialState: UIState = {
   isInitializing: true,
   activeWindow: null,
-  windows: [],
+  gameWindows: [],
+  toolWindows: [],
   logRecords: [],
   vehicle: {
     side: undefined,
@@ -61,7 +63,8 @@ const uiSlice = createSlice({
     selectActiveWindow: (state) => state.activeWindow,
     selectLogRecords: (state) => state.logRecords,
     selectVehicle: (state) => state.vehicle,
-    selectWindows: (state) => state.windows,
+    selectGameWindows: (state) => state.gameWindows,
+    selectToolWIndows: (state) => state.toolWindows,
     selectInitializing: (state) => state.isInitializing,
   },
   reducers: {
@@ -83,8 +86,11 @@ const uiSlice = createSlice({
     setVehicle: (state, action: PayloadAction<Vehicle>) => {
       state.vehicle = action.payload;
     },
-    setWindows: (state, action: PayloadAction<Array<Wnd>>) => {
-      state.windows = action.payload;
+    setGameWindows: (state, action: PayloadAction<Array<Wnd>>) => {
+      state.gameWindows = action.payload;
+    },
+    setToolWindows: (state, action: PayloadAction<Array<Wnd>>) => {
+      state.toolWindows = action.payload;
     },
   },
 });
