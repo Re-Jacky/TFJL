@@ -34,14 +34,16 @@ export interface API {
     pid?: number;
   }) => Promise<{ status: string }>;
   startAutoGame: (config: {
-    main: { game: string; tool: string };
-    sub: { game: string; tool: string };
+    main: { game: number; tool: number };
+    sub: { game: number; tool: number };
     mode: GameMode;
   }) => Promise<{ status: string }>;
   isInGame: (config: {
-    main: string;
-    sub: string;
+    main: number;
+    sub: number;
   }) => Promise<{ status: boolean }>;
+  locateAutoWindow: (config: {game: number; tool: number; idx: 0 | 1}) => Promise<{ status: string }>;
+  test: () => Promise<{ status: string }>;
 }
 
 export const api: API = {
@@ -57,22 +59,10 @@ export const api: API = {
     return await proxy.get('health');
   },
   getGameWindows: async () => {
-    return Promise.resolve({
-      windows: [
-        { title: 'window 1', pid: 1 },
-        { title: 'window 2', pid: 2 },
-      ],
-    }); // TODO: remove this late
-    // return await proxy.get('game-windows');
+    return await proxy.get('game-windows');
   },
   getToolWindows: async () => {
-    return Promise.resolve({
-      windows: [
-        { title: 'window 1', pid: 3 },
-        { title: 'window 2', pid: 4 },
-      ],
-    }); // TODO: remove this late
-    // return await proxy.get('tool-windows');
+    return await proxy.get('tool-windows');
   },
   startAction: async (config) => {
     return await proxy.post('start-action', config);
@@ -107,4 +97,10 @@ export const api: API = {
   isInGame: async (config) => {
     return await proxy.post('is-in-game', config);
   },
+  locateAutoWindow: async (config) => {
+    return await proxy.post('locate-auto-window', config);
+  },
+  test: async () => {
+    return await proxy.get('test-api');
+  }
 };

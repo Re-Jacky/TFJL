@@ -36,7 +36,6 @@ const Automator: React.FC = () => {
     getDefaultGameRounds(mode)
   );
   const [currentRound, setCurrentRound] = useState<number>(0);
-  const [rolesReady, setRolesReady] = useState<Array<boolean>>([false, false]); // only 2 roles
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const currentRoundRef = useRef(currentRound);
   const roleRef_0 = useRef<RoleHandler | null>(null);
@@ -65,13 +64,16 @@ const Automator: React.FC = () => {
 
   const startGame = async () => {
     const start = !active;
-    setActive(start);
 
     if (start) {
       if (!roleRef_0?.current || !roleRef_1?.current) {
         return;
       }
-      api.startAutoGame({ ...getValidSelectedWindows(), mode });
+      const result = await api.startAutoGame({ ...getValidSelectedWindows(), mode });
+      if (!result.status) {
+        return;
+      }
+      setActive(start);
       setCurrentRound((pre) => pre + 1);
       // create a interval to check if the game is over every 10 seconds
       const interval = setInterval(() => {
@@ -89,26 +91,22 @@ const Automator: React.FC = () => {
             }
           }
         });
-      }, 1000);
+      }, 10000);
       intervalRef.current = interval;
     } else {
-      //
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
+      setActive(false);
     }
   };
 
-  const onValidChange = (index: number) => (ready: boolean) => {
-    const newReady = [...rolesReady];
-    newReady[index] = ready;
-    setRolesReady(newReady);
-  };
-
-  const checkWindow = (handler: RoleHandler | null) => () => {
+  const checkWindow = (idx: 0 | 1) => () => {
+    const handler = idx === 0 ? roleRef_0.current : roleRef_1.current;
     const options = handler?.getSelectedWindow();
     if (options?.game && options?.tool) {
+      api.locateAutoWindow({game: options.game, tool: options.tool, idx })
     }
   };
 
@@ -158,7 +156,6 @@ const Automator: React.FC = () => {
           type={active ? 'default' : 'primary'}
           onClick={startGame}
           danger={active}
-          disabled={!(rolesReady[0] && rolesReady[1])}
         >
           {active ? '停止' : '开始'}
         </Button>
@@ -180,21 +177,19 @@ const Automator: React.FC = () => {
       </div>
       <div className={styles.content}>
         <div className={styles.contentRow}>
-          <Role role='主卡' onValidChange={onValidChange(0)} ref={roleRef_0} />
+          <Role role='主卡' ref={roleRef_0} defaultSelectedIndex={0}/>
           <Button
             icon={<AimOutlined />}
-            disabled={!rolesReady[0]}
-            onClick={checkWindow(roleRef_0?.current)}
+            onClick={checkWindow(0)}
           >
             检查窗口
           </Button>
         </div>
         <div className={styles.contentRow}>
-          <Role role='副卡' onValidChange={onValidChange(1)} ref={roleRef_1} />
+          <Role role='副卡' ref={roleRef_1} defaultSelectedIndex={1}/>
           <Button
             icon={<AimOutlined />}
-            disabled={!rolesReady[1]}
-            onClick={checkWindow(roleRef_1?.current)}
+            onClick={checkWindow(1)}
           >
             检查窗口
           </Button>

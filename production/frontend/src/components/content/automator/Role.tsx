@@ -3,6 +3,7 @@ import React, {
   useState,
   forwardRef,
   useImperativeHandle,
+  useEffect,
 } from 'react';
 import { Select } from 'antd';
 import { useSelector } from 'react-redux';
@@ -12,12 +13,13 @@ import styles from './Role.module.scss';
 export interface RoleProps {
   role: string;
   onValidChange?: (valid: boolean) => void;
+  defaultSelectedIndex?: number;
 }
 
 export interface RoleHandler {
   getSelectedWindow: () => {
-    game: string;
-    tool: string;
+    game: number;
+    tool: number;
   };
 }
 
@@ -25,7 +27,7 @@ const Role: React.ForwardRefRenderFunction<RoleHandler, RoleProps> = (
   props,
   ref
 ) => {
-  const { role, onValidChange } = props;
+  const { role, onValidChange, defaultSelectedIndex } = props;
   const gameWindows = useSelector(selectGameWindows);
   const toolWindows = useSelector(selectToolWIndows);
   const [selectedWindow, setSelectedWindow] = useState<{
@@ -61,8 +63,17 @@ const Role: React.ForwardRefRenderFunction<RoleHandler, RoleProps> = (
   };
 
   useImperativeHandle(ref, () => ({
-    getSelectedWindow: () => selectedWindow,
+    getSelectedWindow: () => ({ game: parseInt(selectedWindow.game), tool: parseInt(selectedWindow.tool) }),
   }));
+
+  useEffect(() => {
+    if (gameWindows.length > 1 && toolWindows.length > 1 && defaultSelectedIndex !== undefined) {
+      setSelectedWindow({
+        game: gameWindows[defaultSelectedIndex].pid.toString(),
+        tool: toolWindows[defaultSelectedIndex].pid.toString(),
+      })
+    }
+  }, [defaultSelectedIndex, gameWindows, toolWindows])
 
   return (
     <div className={styles.automatorRole}>
@@ -72,12 +83,14 @@ const Role: React.ForwardRefRenderFunction<RoleHandler, RoleProps> = (
         placeholder='游戏窗口'
         options={gameOptions}
         onChange={onSelectedChange('game')}
+        value={selectedWindow.game}
       />
       <Select
         className={styles.select}
         placeholder='老马窗口'
         options={toolOptions}
         onChange={onSelectedChange('tool')}
+        value={selectedWindow.tool}
       />
     </div>
   );

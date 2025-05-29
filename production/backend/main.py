@@ -84,13 +84,9 @@ async def parse_file(file_data: FileModel):
     content = utility_service.read_file(decoded_file_name, file_data.type)
     return utility_service.parse_actions(content)
 ## testing purpose
-@app.post("/start-action")
-async def start_action(config: dict):
-    action = config['action']
-    pid = config['pid']
-    logger.info(f"Starting action: {action}")
-    ## han bing
-    return GameService.start_battle(pid)
+@app.get("/test-api")
+async def test():
+    return game_service.start_tool(132818,111)
 
 
 @app.post("/read-file")
@@ -162,8 +158,8 @@ async def get_game_windows():
 async def get_tool_windows():
     windows = []
     for window in pygetwindow.getAllWindows():
-        if window.title and window.title == '塔防精灵':
-            windows.append({"title": title, "pid": window._hWnd})
+        if window.title and (window.title.startswith('版本:') or window.title.startswith('2.17')):
+            windows.append({"title": "老马", "pid": window._hWnd})
     return {"windows": windows}
 
 @app.post("/lock-window")
@@ -195,7 +191,7 @@ async def locate_window(window_data: dict):
     """
     try:
         pid = int(window_data['pid'])
-        result = window_service.locate_resize_window(pid)
+        result = window_service.locate_game_window(pid, 0, 0)
         if result["status"] == "error":
             return JSONResponse(
                 status_code=404 if "not found" in result["message"] else 500,
@@ -209,21 +205,18 @@ async def locate_window(window_data: dict):
             content={"detail": f"Error locating window: {str(e)}"}
         )
 
-@app.post("/check-automator-windows")
-async def check_automator_windows(window_data: dict):
+@app.post("/locate-auto-window")
+async def locate_auto_window(window_data: dict):
     """
     Move the windows for users to identify.
     """
     try:
-        gameWnd = int(window_data['game'])
-        toolWnd = int(window_data['tool'])
-        gameResult = window_service.locate_window(gameWnd, 0, 0)
-        toolResult = window_service.locate_window(toolWnd, 0, 500)
-        if gameResult["status"] == "error" or toolResult["status"] == "error":
-            return JSONResponse(
-                status_code=404 if "not found" in result["message"] else 500,
-                content={"detail": result["message"]}
-            )
+        gameWnd = window_data['game']
+        toolWnd = window_data['tool']
+        index = int(window_data['idx'])
+        x_pos = 1056 * index
+        window_service.locate_game_window(gameWnd, x_pos, 0)
+        window_service.locate_tool_window(toolWnd, x_pos, 600)
     except Exception as e:
         logger.error(f"check the game and tool windows in automator: {str(e)}")
         return JSONResponse(
@@ -259,8 +252,8 @@ async def is_in_game(request: Request, config: dict):
     try:
         main = config['main']
         sub = config['sub']
-        main_result = image_service.find_image(main, 'image')
-        sub_result = image_service.find_image(sub, 'image')
+        main_result = image_service.find_image(main, '笑脸')
+        sub_result = image_service.find_image(sub, '笑脸')
         if main_result['found'] == True and sub_result['found'] == True:
             return {"status": True}
         else :

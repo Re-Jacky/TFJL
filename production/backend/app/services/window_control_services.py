@@ -4,10 +4,14 @@ import win32gui
 import pygetwindow
 import numpy as np
 import pyautogui
-from typing import  Optional, Tuple
 import cv2
 from app.utils.logger import logger
 from fastapi import HTTPException
+import win32ui
+from ctypes import windll
+from PIL import Image
+from typing import Optional, Tuple
+import time
 
 class WindowControlService:
     def __init__(self):
@@ -32,9 +36,41 @@ class WindowControlService:
         win32gui.PostMessage(hwnd, win32con.WM_LBUTTONUP, None, point)
 
         return {"success": True, "message": f"Click sent to window {hwnd} at ({x}, {y})"}
+    
+    @staticmethod
+    def bring_window_to_foreground(window_pid: int):
+        hwnd = window_pid  # window_pid is the window handle (hwnd)
+        # Validate window exists
+        if not win32gui.IsWindow(hwnd):
+            raise HTTPException(status_code=404, detail=f"Window with handle {hwnd} not found")
+    
+        # Restore window if minimized
+        if win32gui.IsIconic(hwnd):  # Check if window is minimized (iconic)
+            win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)  # Restore minimized window
+
+        # Bring window to foreground
+        try:
+            win32gui.SendMessage(hwnd, win32con.WM_SYSCOMMAND, win32con.SC_RESTORE, 0)
+            win32gui.SetForegroundWindow(hwnd)
+        except Exception as e:
+            return False
+        time.sleep(0.1)  # Short delay to ensure window is active
+        return {"success": True, "message": f"Window {hwnd} brought to foreground"}
+
+    ## use pyautogui to click in window, it works for any window but can't work for overlapped windows
+    @staticmethod
+    def click_at_native(window_pid: int, x: int, y: int):
+        # bring the window to the foreground
+        WindowControlService.bring_window_to_foreground(window_pid)
+         # Get window's screen coordinates
+        left, top, _, _ = win32gui.GetWindowRect(window_pid)
+        screen_x = left + x  # Convert window-relative x to screen x
+        screen_y = top + y   # Convert window-relative y to screen y
+        pyautogui.click(screen_x, screen_y)
+        return {"success": True, "message": f"PyAutoGUI click at ({x}, {y}) in window {window_pid}"}
         
     @staticmethod
-    def locate_resize_window(pid: int) -> dict:
+    def locate_game_window(pid: int, x, y) -> dict:
         """
         Move and resize the specified window to top-left corner of screen.
         Args:
@@ -46,7 +82,7 @@ class WindowControlService:
             for window in pygetwindow.getAllWindows():
                 if window._hWnd == pid:
                     # Move to top-left corner (0,0) and resize to 800x600
-                    window.moveTo(0, 0)
+                    window.moveTo(x, y)
                     window.resizeTo(1056, 637)
                     return {"status": "success", "message": f"Window {pid} moved and resized"}
             
@@ -55,12 +91,13 @@ class WindowControlService:
             return {"status": "error", "message": f"Error locating window: {str(e)}"}
     
     @staticmethod
-    def locate_window(pid: int, x: int, y: int):
+    def locate_tool_window(pid: int, x: int, y: int):
         try:
             for window in pygetwindow.getAllWindows():
                 if window._hWnd == pid:
                     # Move to top-left corner (0,0) and resize to 800x600
                     window.moveTo(x, y)
+                    window.resizeTo(821, 705)
                     return {"status": "success", "message": f"Window {pid} moved and resized"}
             
             return {"status": "error", "message": f"Window with pid {pid} not found"}
@@ -109,33 +146,6 @@ class WindowControlService:
             
         return {"success": True, "message": f"Horizontal scroll completed for distance {distance}"}
 
-    @staticmethod
-    def capture_region(hwnd, region: Optional[Tuple[int, int, int, int]]) -> np.ndarray:
-        """
-        Capture and process a region of the window using win32gui and ctypes.
-        region: Tuple of (x, y, width, height) defining the region to analyze
-        """
-        try:
-            # Get window dimensions
-            left, top, right, bottom = win32gui.GetWindowRect(hwnd)
-            width = right - left
-            height = bottom - top
-
-            if region:
-                abs_x = left + (region[0] if region else 0)
-                abs_y = top + (region[1] if region else 0)
-                width = region[2] if region else width
-                height = region[3] if region else height
-                screenshot = pyautogui.screenshot(region=(abs_x, abs_y, width, height))
-            else:
-                screenshot = pyautogui.screenshot(region=(left, top, width, height))
-            
-            screenshot_array = np.array(screenshot)
-            return cv2.cvtColor(screenshot_array, cv2.COLOR_RGB2GRAY)
-        except Exception as e:
-            logger.error(f"Error capturing window region: {str(e)}")
-            return np.zeros((0, 0), dtype=np.uint8)
-
     def lock_window(self, window_pid: int, lock: bool):
         """
         Lock/unlock the specified window.
@@ -151,3 +161,96 @@ class WindowControlService:
            return {"status": "success", "message": f"Window {window_pid} unlocked"}
         else:
             raise HTTPException(status_code=400, detail=f"Window with PID {window_pid} is not locked")
+
+    @staticmethod
+    def capture_region(hwnd, region: Optional[Tuple[int, int, int, int]]) -> np.ndarray:
+        """
+        Capture and process a region of the window using win32gui and ctypes.
+        region: Tuple of (x, y, width, height) defining the region to analyze
+        """
+        try:
+            # Get window dimensions
+            left, top, right, bottom = win32gui.GetWindowRect(hwnd)
+            window_width = right - left
+            window_height = bottom - top
+            
+            if region:
+                x, y, width, height = region
+            else:
+                x, y = 0, 0
+                width, height = window_width, window_height
+
+            # Create device context
+            hwndDC = win32gui.GetWindowDC(hwnd)
+            mfcDC = win32ui.CreateDCFromHandle(hwndDC)
+            saveDC = mfcDC.CreateCompatibleDC()
+            
+            # Create bitmap
+            saveBitMap = win32ui.CreateBitmap()
+            saveBitMap.CreateCompatibleBitmap(mfcDC, window_width, window_height)
+            saveDC.SelectObject(saveBitMap)
+
+            # Copy window contents to bitmap
+            result = windll.user32.PrintWindow(hwnd, saveDC.GetSafeHdc(), 2)
+            
+            # Convert to numpy array
+            bmpinfo = saveBitMap.GetInfo()
+            bmpstr = saveBitMap.GetBitmapBits(True)
+            
+            # Clean up
+            win32gui.DeleteObject(saveBitMap.GetHandle())
+            saveDC.DeleteDC()
+            mfcDC.DeleteDC()
+            win32gui.ReleaseDC(hwnd, hwndDC)
+            
+            if not result:
+                raise Exception("Failed to capture window contents")
+                
+            screenshot = Image.frombuffer(
+                'RGB',
+                (bmpinfo['bmWidth'], bmpinfo['bmHeight']),
+                bmpstr, 'raw', 'BGRX', 0, 1)
+            cropped_screenshot = screenshot.crop((x, y, x + width, y + height))
+            screenshot_array = np.array(cropped_screenshot)
+            return cv2.cvtColor(screenshot_array, cv2.COLOR_RGB2GRAY)
+            
+        except Exception as e:
+            # Fallback to pyautogui if win32 capture fails
+            logger.error(f"Error capturing window region: {str(e)}")
+            if region:
+                abs_x = left + (region[0] if region else 0)
+                abs_y = top + (region[1] if region else 0)
+                width = region[2] if region else width
+                height = region[3] if region else height
+                screenshot = pyautogui.screenshot(region=(abs_x, abs_y, width, height))
+            else:
+                screenshot = pyautogui.screenshot(region=(left, top, width, height))
+            
+            screenshot_array = np.array(screenshot)
+            return cv2.cvtColor(screenshot_array, cv2.COLOR_RGB2GRAY)
+
+    @staticmethod
+    def type_text(hwnd: int, text: str, delay: float = 0.1) -> dict:
+        """
+        Simulate typing text into a target window using WM_CHAR messages.
+        
+        Args:
+            hwnd: Window handle of the target window
+            text: Text string to type into the window
+            delay: Delay in seconds between characters (default: 0.01s)
+            
+        Returns:
+            dict: Success status and message
+        """
+        if not win32gui.IsWindow(hwnd):
+            raise HTTPException(status_code=404, detail=f"Window with handle {hwnd} not found")
+        
+        try:
+            for char in text:
+                # Send WM_CHAR message with character's Unicode value
+                win32gui.SendMessage(hwnd, win32con.WM_CHAR, ord(char), 0)
+                time.sleep(delay)  # Add small delay between characters
+                
+            return {"success": True, "message": f"Typed '{text}' into window {hwnd}"}
+        except Exception as e:
+            return {"status": "error", "message": f"Error typing text: {str(e)}"}
