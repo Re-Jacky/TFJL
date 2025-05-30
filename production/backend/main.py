@@ -231,13 +231,17 @@ async def start_auto_game(request: Request, config: dict):
         main = config['main']
         sub = config['sub']
         mode = config['mode']
+        info = ""
         if mode == 0:
             game_service.start_collab(main, sub)
+            info = "合作"
         elif mode == 1:
             game_service.start_ice_castle(main, sub)
+            info = "寒冰"
         elif mode == 2:
             game_service.start_moon_island(main, sub)
-        
+            info = "暗月"
+        await event_service.broadcast_log("info", f"开始{info}")
         return {"status": "success"}
 
     except Exception as e:
@@ -255,6 +259,7 @@ async def is_in_game(request: Request, config: dict):
         main_result = image_service.find_image(main, '笑脸')
         sub_result = image_service.find_image(sub, '笑脸')
         if main_result['found'] == True and sub_result['found'] == True:
+            await event_service.broadcast_log("info", "游戏中...")
             return {"status": True}
         else :
             return {"status": False}

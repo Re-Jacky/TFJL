@@ -30,9 +30,9 @@ class ImageService:
     @staticmethod
     def load_template(image_file_name: str) -> np.ndarray:
         """Load and process template image."""
-        image_path = Path("images").resolve() / (image_file_name.encode('utf-8').decode('utf-8') + ".jpg")
+        image_path = UtilityService.get_public_path() / "images"/ (image_file_name.encode('utf-8').decode('utf-8') + ".jpg")
         if not image_path.exists():
-            raise HTTPException(status_code=404, detail=f"Image file {image_file_name} not found")
+            raise HTTPException(status_code=404, detail=f"Image file {image_file_name} not found: {image_path}")
         template = np.array(Image.open(image_path))
         return cv2.cvtColor(template, cv2.COLOR_RGB2GRAY)
 
