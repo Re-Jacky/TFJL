@@ -45,3 +45,11 @@ class GamePositions(Enum):
     JOIN_ROOM_CONFIRM = (530, 430)
     ADS_REGION = (535, 430)  # 广告区域，用于检测广告是否出现
     
+    ## Ice Castle
+    ICE_CASTLE = (850, 565)
+    ICE_BUY_ROUND = (655, 460)
+    ICE_SUPPORT = (395, 460)
+
+    ## moon island
+    MOON_ISLAND = (845, 570)
+  
