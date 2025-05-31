@@ -37,6 +37,7 @@ export interface API {
     main: { game: number; tool: number };
     sub: { game: number; tool: number };
     mode: GameMode;
+    iceOnlySupport?: boolean;
   }) => Promise<{ status: string }>;
   isInGame: (config: {
     main: number;

@@ -68,6 +68,16 @@ class GameService:
         result = cv2.matchTemplate(screenshot_gray, template_gray, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, _ = cv2.minMaxLoc(result)
         return max_val > 0.9
+
+    @staticmethod
+    def ice_need_buy_round(pid):
+        round_region = (320, 440, 155, 50)  # 回合区域，用于检测回合是否结束
+        window = WindowControlService.find_window(pid)
+        screenshot_gray = WindowControlService.capture_region(window, round_region)
+        template_gray = image_service.load_template('寒冰助战')
+        result = cv2.matchTemplate(screenshot_gray, template_gray, cv2.TM_CCOEFF_NORMED)
+        _, max_val, _, _ = cv2.minMaxLoc(result)
+        return max_val > 0.9
         
     @staticmethod
     def back_to_home(pid):
@@ -92,48 +102,54 @@ class GameService:
         GameService.back_to_home(subWndPid)
 
         # main game window starts
-        GameService.click_in_window(mainWndPid, GamePositions.COLLAB.value)
-
-        # detect ads
-        watch_ads = GameService.need_ads(mainWndPid)
-        print(f"watch_ads: {watch_ads}")
-        if watch_ads:
-            GameService.click_in_window(mainWndPid, GamePositions.ADS_REGION.value)
-            time.sleep(2)
+        GameService.click_collab(mainWndPid)
 
         # start room
-        GameService.click_in_window(mainWndPid, GamePositions.PLAY_WITH_FRIEND.value)
-        GameService.click_in_window(mainWndPid, GamePositions.START_ROOM.value)
+        GameService.start_room(mainWndPid)
         ## capture room number in pic
-        room = GameService.recognize_room_number(mainWndPid)
-        timeout = 3
-        while room is None:
-            time.sleep(1)
-            timeout -= 1
-            if timeout == 0:
-                logger.error("Failed to recognize room number")
-                return False
-            room = GameService.recognize_room_number(mainWndPid)
-        logger.info(f"Room number: {room}")
+        room = GameService.recognize_room_number_with_retry(mainWndPid)
 
         # sub game window starts
-        GameService.click_in_window(subWndPid, GamePositions.COLLAB.value)
-        GameService.click_in_window(subWndPid, GamePositions.PLAY_WITH_FRIEND.value)
-        GameService.click_in_window(subWndPid, GamePositions.JOIN_ROOM.value)
-        time.sleep(0.5)  # 等待输入框出现
-        GameService.type_room_number(subWndPid, room)
-        GameService.click_in_window(subWndPid, GamePositions.ROOM_INPUT_CONFIRM.value)
-        time.sleep(1)  # 等待进入房间
+        GameService.click_collab(subWndPid)
+        GameService.join_room(subWndPid, room)
         GameService.stop_tool(main['tool'], sub['tool'])
         GameService.start_tool(main['tool'], sub['tool'])
         return True
     
     @staticmethod
-    def start_ice_castle():
+    def start_ice_castle(main, sub, only_support = False):
+        mainWndPid = main['game']
+        subWndPid = sub['game']
+        # main game window starts
+        GameService.click_ice_castle(mainWndPid, False)
+        # start room
+        GameService.start_room(mainWndPid)
+        ## capture room number in pic
+        room = GameService.recognize_room_number_with_retry(mainWndPid)
+
+        # sub game window starts
+        GameService.click_ice_castle(subWndPid, only_support)
+        GameService.join_room(subWndPid, room)
+        GameService.stop_tool(main['tool'], sub['tool'])
+        GameService.start_tool(main['tool'], sub['tool'])
         return True
 
     @staticmethod
-    def start_moon_island():
+    def start_moon_island(main, sub):
+        mainWndPid = main['game']
+        subWndPid = sub['game']
+        # main game window starts
+        GameService.click_moon_island(mainWndPid)
+         # start room
+        GameService.start_room(mainWndPid)
+        ## capture room number in pic
+        room = GameService.recognize_room_number_with_retry(mainWndPid)
+
+         # sub game window starts
+        GameService.click_moon_island(subWndPid)
+        GameService.join_room(subWndPid, room)
+        GameService.stop_tool(main['tool'], sub['tool'])
+        GameService.start_tool(main['tool'], sub['tool'])
         return True
 
     @staticmethod
@@ -152,3 +168,63 @@ class GameService:
         WindowControlService.click_at_native(sub, x, y)
         time.sleep(2)
         return True
+
+    @staticmethod
+    def click_collab(pid):
+        GameService.click_in_window(pid, GamePositions.COLLAB.value)
+        # detect ads
+        watch_ads = GameService.need_ads(pid)
+        if watch_ads:
+            GameService.click_in_window(pid, GamePositions.ADS_REGION.value)
+            time.sleep(1)
+            GameService.click_in_window(pid, GamePositions.COLLAB.value)
+        return True
+    
+    @staticmethod
+    def click_ice_castle(pid, only_support = False):
+        GameService.click_in_window(pid, GamePositions.ICE_CASTLE.value)
+        # detect buy rounds
+        need_buy_round = GameService.ice_need_buy_round(pid)
+        if need_buy_round:
+            if only_support:
+                GameService.click_in_window(pid, GamePositions.ICE_SUPPORT.value)
+            else:
+                GameService.click_in_window(pid, GamePositions.ICE_BUY_ROUND.value)
+            time.sleep(1)
+            GameService.click_in_window(pid, GamePositions.ICE_CASTLE.value)
+        return True
+    
+    @staticmethod
+    def click_moon_island(pid):
+        GameService.click_in_window(pid, GamePositions.MOON_ISLAND.value)
+        return True
+    
+    @staticmethod
+    def recognize_room_number_with_retry(pid):
+        ## capture room number in pic
+        room = GameService.recognize_room_number(pid)
+        timeout = 3
+        while room is None:
+            time.sleep(1)
+            timeout -= 1
+            if timeout == 0:
+                logger.error("Failed to recognize room number")
+                raise Exception("Failed to recognize room number")
+            room = GameService.recognize_room_number(pid)
+        logger.info(f"Room number: {room}")
+        return room
+    
+    @staticmethod
+    def start_room(pid):
+         # start room
+        GameService.click_in_window(pid, GamePositions.PLAY_WITH_FRIEND.value)
+        GameService.click_in_window(pid, GamePositions.START_ROOM.value)
+
+    @staticmethod
+    def join_room(pid, room):
+        GameService.click_in_window(pid, GamePositions.PLAY_WITH_FRIEND.value)
+        GameService.click_in_window(pid, GamePositions.JOIN_ROOM.value)
+        time.sleep(0.5)  # 等待输入框出现
+        GameService.type_room_number(pid, room)
+        GameService.click_in_window(pid, GamePositions.ROOM_INPUT_CONFIRM.value)
+        time.sleep(1)  # 等待进入房间

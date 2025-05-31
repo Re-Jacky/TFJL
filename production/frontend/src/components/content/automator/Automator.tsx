@@ -35,6 +35,7 @@ const Automator: React.FC = () => {
   const [gameRounds, setGameRounds] = useState<number>(
     getDefaultGameRounds(mode)
   );
+  const [iceOnlySupport, setIceOnlySupport] = useState<boolean>(false);
   const [currentRound, setCurrentRound] = useState<number>(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const currentRoundRef = useRef(currentRound);
@@ -69,7 +70,11 @@ const Automator: React.FC = () => {
       if (!roleRef_0?.current || !roleRef_1?.current) {
         return;
       }
-      const result = await api.startAutoGame({ ...getValidSelectedWindows(), mode });
+      const result = await api.startAutoGame({
+        ...getValidSelectedWindows(),
+        mode,
+        iceOnlySupport,
+      });
       if (!result.status) {
         return;
       }
@@ -106,7 +111,7 @@ const Automator: React.FC = () => {
     const handler = idx === 0 ? roleRef_0.current : roleRef_1.current;
     const options = handler?.getSelectedWindow();
     if (options?.game && options?.tool) {
-      api.locateAutoWindow({game: options.game, tool: options.tool, idx })
+      api.locateAutoWindow({ game: options.game, tool: options.tool, idx });
     }
   };
 
@@ -149,7 +154,10 @@ const Automator: React.FC = () => {
             className={styles.gameRoundsInput}
             prefix='次数'
             value={gameRounds}
-            onChange={(e) => setGameRounds(parseInt(e.target.value))}
+            onChange={(e) => {
+              const newValue = e.target.value;
+              setGameRounds(newValue ? parseInt(newValue) : 0);
+            }}
           />
         </div>
         <Button
@@ -177,22 +185,25 @@ const Automator: React.FC = () => {
       </div>
       <div className={styles.content}>
         <div className={styles.contentRow}>
-          <Role role='主卡' ref={roleRef_0} defaultSelectedIndex={0}/>
-          <Button
-            icon={<AimOutlined />}
-            onClick={checkWindow(0)}
-          >
+          <Role role='主卡' ref={roleRef_0} defaultSelectedIndex={0} />
+          <Button icon={<AimOutlined />} onClick={checkWindow(0)}>
             检查窗口
           </Button>
         </div>
         <div className={styles.contentRow}>
-          <Role role='副卡' ref={roleRef_1} defaultSelectedIndex={1}/>
-          <Button
-            icon={<AimOutlined />}
-            onClick={checkWindow(1)}
-          >
+          <Role role='副卡' ref={roleRef_1} defaultSelectedIndex={1} />
+          <Button icon={<AimOutlined />} onClick={checkWindow(1)}>
             检查窗口
           </Button>
+          {mode === GameMode.IceCastle ? (
+            <Checkbox
+              onChange={(e) => {
+                setIceOnlySupport(e.target.checked);
+              }}
+            >
+              仅助战
+            </Checkbox>
+          ) : null}
         </div>
       </div>
       <div>
