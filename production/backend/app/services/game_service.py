@@ -88,10 +88,19 @@ class GameService:
             return GameService.is_home(pid)
     
     @staticmethod
-    def start_battle(pid):
-        GameService.back_to_home(pid)
-        GameService.click_in_window(pid, GamePositions.BATTLE.value)
-        GameService.click_in_window(pid, GamePositions.QUICK_MATCH.value)
+    def start_auto_battle(main, sub):
+        mainWndPid = main['game']
+        subWndPid = sub['game']
+        GameService.back_to_home(mainWndPid)
+        GameService.back_to_home(subWndPid)
+
+        ## switch tool window to main page
+        GameService.switch_tool_page(main['tool'], sub['tool'], ToolPositions.MAIN_PAGE.value)
+
+        x, y = ToolPositions.EXECUTE_BUTTON.value
+        WindowControlService.click_at_native(main['tool'], x, y)
+        time.sleep(1)
+        WindowControlService.click_at_native(sub['tool'], x, y)
         return True
 
     @staticmethod
@@ -112,6 +121,7 @@ class GameService:
         # sub game window starts
         GameService.click_collab(subWndPid)
         GameService.join_room(subWndPid, room)
+        GameService.switch_tool_page(main['tool'], sub['tool'], ToolPositions.COLLAB_PAGE.value)
         GameService.stop_tool(main['tool'], sub['tool'])
         GameService.start_tool(main['tool'], sub['tool'])
         return True
@@ -130,6 +140,7 @@ class GameService:
         # sub game window starts
         GameService.click_ice_castle(subWndPid, only_support)
         GameService.join_room(subWndPid, room)
+        GameService.switch_tool_page(main['tool'], sub['tool'], ToolPositions.COLLAB_PAGE.value)
         GameService.stop_tool(main['tool'], sub['tool'])
         GameService.start_tool(main['tool'], sub['tool'])
         return True
@@ -148,6 +159,7 @@ class GameService:
          # sub game window starts
         GameService.click_moon_island(subWndPid)
         GameService.join_room(subWndPid, room)
+        GameService.switch_tool_page(main['tool'], sub['tool'], ToolPositions.COLLAB_PAGE.value)
         GameService.stop_tool(main['tool'], sub['tool'])
         GameService.start_tool(main['tool'], sub['tool'])
         return True
@@ -155,6 +167,14 @@ class GameService:
     @staticmethod
     def start_tool(main: str, sub: str):
         x, y = ToolPositions.GAME_START.value
+        WindowControlService.click_at_native(main, x, y)
+        time.sleep(1)
+        WindowControlService.click_at_native(sub, x, y)
+        return True
+    
+    @staticmethod
+    def switch_tool_page(main: str, sub: str, position):
+        x, y = position
         WindowControlService.click_at_native(main, x, y)
         time.sleep(1)
         WindowControlService.click_at_native(sub, x, y)

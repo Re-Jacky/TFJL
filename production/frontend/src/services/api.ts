@@ -39,11 +39,16 @@ export interface API {
     mode: GameMode;
     iceOnlySupport?: boolean;
   }) => Promise<{ status: string }>;
+  startAutoBattle: (config: {
+    main: { game: number; tool: number };
+    sub: { game: number; tool: number };
+  }) => Promise<{ status: string }>;
   isInGame: (config: {
     main: number;
     sub: number;
   }) => Promise<{ status: boolean }>;
   locateAutoWindow: (config: {game: number; tool: number; idx: 0 | 1}) => Promise<{ status: string }>;
+  turnOffPC: () => Promise<{ status: string }>;
   test: () => Promise<{ status: string }>;
 }
 
@@ -95,11 +100,17 @@ export const api: API = {
   startAutoGame: async (config) => {
     return await proxy.post('start-auto-game', config);
   },
+  startAutoBattle: async (config) => {
+    return await proxy.post('start-auto-battle', config);
+  },
   isInGame: async (config) => {
     return await proxy.post('is-in-game', config);
   },
   locateAutoWindow: async (config) => {
     return await proxy.post('locate-auto-window', config);
+  },
+  turnOffPC: async () => {
+    return await proxy.post('turn-off-pc');
   },
   test: async () => {
     return await proxy.get('test-api');
