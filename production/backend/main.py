@@ -86,7 +86,8 @@ async def parse_file(file_data: FileModel):
 ## testing purpose
 @app.get("/test-api")
 async def test():
-    return game_service.click_moon_island(854874)
+    return True
+    # return utility_service.turn_off_pc()
 
 
 @app.post("/read-file")
@@ -252,6 +253,21 @@ async def start_auto_game(request: Request, config: dict):
             content={"detail": f"Error starting auto game: {str(e)}"}
         )
 
+@app.post("/start-auto-battle")
+async def start_auto_battle(request: Request, config: dict):
+    try:
+        main = config['main']
+        sub = config['sub']
+        game_service.start_auto_battle(main, sub)
+        await event_service.broadcast_log("info", "开始对战")
+        return {"status": "success"}
+    except Exception as e:
+        logger.error(f"Error stopping auto battle: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"detail": f"Error stopping auto battle: {str(e)}"}
+        )
+
 @app.post("/is-in-game")
 async def is_in_game(request: Request, config: dict):
     try:
@@ -374,6 +390,17 @@ async def event_stream(request: Request):
         await event_service.disconnect(client_queue)
         raise
 
+@app.post("/turn-off-pc")
+async def turn_off_pc(request: Request, config: dict):
+    try:
+        utility_service.turn_off_pc()
+        return {"status": "success"}
+    except Exception as e:
+        logger.error(f"Error turning off PC: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"detail": f"Error turning off PC: {str(e)}"}
+        )
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

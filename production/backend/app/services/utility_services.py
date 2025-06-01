@@ -164,3 +164,9 @@ class UtilityService:
             return {"status": "success", "message": "Shortcut saved successfully"}
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+    
+    @staticmethod
+    def turn_off_pc():
+        """Turn off the PC."""
+        import os
+        os.system("shutdown /s /t 0")

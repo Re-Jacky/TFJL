@@ -37,6 +37,8 @@ const Automator: React.FC = () => {
   );
   const [iceOnlySupport, setIceOnlySupport] = useState<boolean>(false);
   const [currentRound, setCurrentRound] = useState<number>(0);
+  const [autoBattle, setAutoBattle] = useState<boolean>(false);
+  const [autoTurnOff, setAutoTurnOff] = useState<boolean>(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const currentRoundRef = useRef(currentRound);
   const roleRef_0 = useRef<RoleHandler | null>(null);
@@ -93,6 +95,12 @@ const Automator: React.FC = () => {
               clearInterval(interval);
               intervalRef.current = null;
               setActive(false);
+              if (autoTurnOff) {
+                api.turnOffPC();
+              }
+              if (autoBattle) {
+                api.startAutoBattle({ ...getValidSelectedWindows() });
+              }
             }
           }
         });
@@ -207,7 +215,32 @@ const Automator: React.FC = () => {
         </div>
       </div>
       <div>
-        <Checkbox>结束后开始对战</Checkbox>
+        <Checkbox
+          checked={autoBattle}
+          onChange={(e) => {
+            const val = e.target.checked;
+            setAutoBattle(val);
+            if (val) {
+              setAutoTurnOff(false);
+            }
+          }}
+        >
+          结束后开始对战(使用老马自动关机)
+        </Checkbox>
+      </div>
+      <div>
+        <Checkbox
+          checked={autoTurnOff}
+          onChange={(e) => {
+            const val = e.target.checked;
+            setAutoTurnOff(val);
+            if (val) {
+              setAutoBattle(false);
+            }
+          }}
+        >
+          结束后关机
+        </Checkbox>
       </div>
       <h2 className={styles.footerNote}>{`第 ${currentRound} 轮`}</h2>
     </div>

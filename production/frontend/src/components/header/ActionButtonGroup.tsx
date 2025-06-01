@@ -19,9 +19,9 @@ const ActionButtonGroup: React.FC = () => {
       <Button type="primary" onClick={handleStart}>
         刷新
       </Button>
-      <Button type="primary" onClick={handleTest}>
+      {/* <Button type="primary" onClick={handleTest}>
         test
-      </Button>
+      </Button> */}
     </div>
   );
 };
