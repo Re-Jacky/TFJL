@@ -55,7 +55,7 @@ class ImageService:
         logger.info("Performing template matching...")
         result = cv2.matchTemplate(screenshot_gray, template_gray, cv2.TM_CCOEFF_NORMED)
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
-        logger.info(f"Template match confidence: {max_val:.2f}")
+        logger.info(f"Template {image_file_name} match confidence: {max_val:.2f}")
 
         if max_val < confidence:
             logger.warning(f"Match confidence {max_val:.2f} below threshold {confidence}")

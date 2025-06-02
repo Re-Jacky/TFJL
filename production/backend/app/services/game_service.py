@@ -105,31 +105,38 @@ class GameService:
 
     @staticmethod
     def start_collab(main, sub):
-        mainWndPid = main['game']
-        subWndPid = sub['game']
-        retry = 3
-        while not GameService.is_home(main['game']) or not GameService.is_home(sub['game']):
-            if retry > 0:
+        try:
+            mainWndPid = main['game']
+            subWndPid = sub['game']
+            retry = 3
+            while retry > 0 and (not GameService.is_home(mainWndPid) or not GameService.is_home(subWndPid)):
                 retry -= 1
                 time.sleep(5)
-        GameService.back_to_home(mainWndPid)
-        GameService.back_to_home(subWndPid)
+                logger.error(f"Detect home page, retry: {3-retry}...")
+            if (not GameService.is_home(mainWndPid) or not GameService.is_home(subWndPid)):
+                logger.error("Failed to start collab due to maximum retry waiting for the home page")
+                return False
+            GameService.back_to_home(mainWndPid)
+            GameService.back_to_home(subWndPid)
 
-        # main game window starts
-        GameService.click_collab(mainWndPid)
+            # main game window starts
+            GameService.click_collab(mainWndPid)
 
-        # start room
-        GameService.start_room(mainWndPid)
-        ## capture room number in pic
-        room = GameService.recognize_room_number_with_retry(mainWndPid)
+            # start room
+            GameService.start_room(mainWndPid)
+            ## capture room number in pic
+            room = GameService.recognize_room_number_with_retry(mainWndPid)
 
-        # sub game window starts
-        GameService.click_collab(subWndPid)
-        GameService.join_room(subWndPid, room)
-        GameService.switch_tool_page(main['tool'], sub['tool'], ToolPositions.COLLAB_PAGE.value)
-        GameService.stop_tool(main['tool'], sub['tool'])
-        GameService.start_tool(main['tool'], sub['tool'])
-        return True
+            # sub game window starts
+            GameService.click_collab(subWndPid)
+            GameService.join_room(subWndPid, room)
+            GameService.switch_tool_page(main['tool'], sub['tool'], ToolPositions.COLLAB_PAGE.value)
+            GameService.stop_tool(main['tool'], sub['tool'])
+            GameService.start_tool(main['tool'], sub['tool'])
+            return True
+        except Exception as e:
+            logger.error(f"[GameService] start collab error: {e}")
+            return False
     
     @staticmethod
     def is_in_ice_castle(pid):
@@ -139,38 +146,46 @@ class GameService:
         template_gray = image_service.load_template('寒冰堡')
         result = cv2.matchTemplate(screenshot_gray, template_gray, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, _ = cv2.minMaxLoc(result)
+        logger.info(f"[GameService] is in ice castle confidence: {max_val}")
         return max_val > 0.95
     
     @staticmethod
-    def start_ice_castle(main, sub, only_support = False):
-        retry = 3
-        while not GameService.is_in_ice_castle(main['game']) or not GameService.is_in_ice_castle(sub['game']):
-            if retry > 0:
+    def start_ice_castle(main, sub, only_support):
+        try:
+            mainWndPid = main['game']
+            subWndPid = sub['game']
+            retry = 3
+            while retry > 0 and (not GameService.is_in_ice_castle(mainWndPid) or not GameService.is_in_ice_castle(subWndPid)):
                 retry -= 1
                 time.sleep(5)
+                logger.error(f"Detect ice castle page, retry: {3-retry}...")
+            if (not GameService.is_in_ice_castle(mainWndPid) or not GameService.is_in_ice_castle(subWndPid)):
+                logger.error("Failed to start ice castle due to maximum retry waiting for the ice castle page")
+                return False
+            # close support first
+            GameService.click_in_window(mainWndPid, GamePositions.CLOSE_SUPPORT.value)
+            time.sleep(1)
+            # main game window starts
+            GameService.click_ice_castle(mainWndPid, False)
+            # start room
+            GameService.start_room(mainWndPid)
+            ## capture room number in pic
+            room = GameService.recognize_room_number_with_retry(mainWndPid)
 
-        mainWndPid = main['game']
-        subWndPid = sub['game']
-        # close support first
-        GameService.click_in_window(mainWndPid, GamePositions.CLOSE_SUPPORT.value)
-        time.sleep(1)
-        # main game window starts
-        GameService.click_ice_castle(mainWndPid, False)
-        # start room
-        GameService.start_room(mainWndPid)
-        ## capture room number in pic
-        room = GameService.recognize_room_number_with_retry(mainWndPid)
+            # sub game window starts
+            GameService.click_in_window(subWndPid, GamePositions.CLOSE_SUPPORT.value)
+            time.sleep(1)
+            GameService.click_ice_castle(subWndPid, only_support)
+            GameService.join_room(subWndPid, room)
+            GameService.switch_tool_page(main['tool'], sub['tool'], ToolPositions.COLLAB_PAGE.value)
+            GameService.stop_tool(main['tool'], sub['tool'])
+            GameService.start_tool(main['tool'], sub['tool'])
+            return True
+        except Exception as e:
+            logger.error(f"[GameService] start ice castle error: {e}")
+            return False
 
-        # sub game window starts
-        GameService.click_in_window(subWndPid, GamePositions.CLOSE_SUPPORT.value)
-        time.sleep(1)
-        GameService.click_ice_castle(subWndPid, only_support)
-        GameService.join_room(subWndPid, room)
-        GameService.switch_tool_page(main['tool'], sub['tool'], ToolPositions.COLLAB_PAGE.value)
-        GameService.stop_tool(main['tool'], sub['tool'])
-        GameService.start_tool(main['tool'], sub['tool'])
-        return True
-
+    @staticmethod
     def is_in_moon_island(pid):
         region = (475, 71, 124, 54)  # 暗月标题区域
         window = WindowControlService.find_window(pid)
@@ -178,37 +193,45 @@ class GameService:
         template_gray = image_service.load_template('暗月岛')
         result = cv2.matchTemplate(screenshot_gray, template_gray, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, _ = cv2.minMaxLoc(result)
+        logger.info(f"[GameService] is in moon island confidence: {max_val}")
         return max_val > 0.95
 
     @staticmethod
     def start_moon_island(main, sub):
-        retry = 3
-        while not GameService.is_in_moon_island(main['game']) or not GameService.is_in_moon_island(sub['game']):
-            if retry > 0:
+        try:
+            mainWndPid = main['game']
+            subWndPid = sub['game']
+            retry = 3
+            while retry > 0 and (not GameService.is_in_moon_island(mainWndPid) or not GameService.is_in_moon_island(subWndPid)):
                 retry -= 1
                 time.sleep(5)
-        mainWndPid = main['game']
-        subWndPid = sub['game']
-        # close support first
-        GameService.click_in_window(mainWndPid, GamePositions.CLOSE_SUPPORT.value)
-        time.sleep(1)
-        # main game window starts
-        GameService.click_moon_island(mainWndPid)
-         # start room
-        GameService.start_room(mainWndPid)
-        ## capture room number in pic
-        room = GameService.recognize_room_number_with_retry(mainWndPid)
+                logger.error(f"Detect moon island page, retry: {3-retry}...")
+            if (not GameService.is_in_moon_island(mainWndPid) or not GameService.is_in_moon_island(subWndPid)):
+                logger.error("Failed to start moon island due to maximum retry waiting for the moon island page")
+                return False
+            # close support first
+            GameService.click_in_window(mainWndPid, GamePositions.CLOSE_SUPPORT.value)
+            time.sleep(1)
+            # main game window starts
+            GameService.click_moon_island(mainWndPid)
+            # start room
+            GameService.start_room(mainWndPid)
+            ## capture room number in pic
+            room = GameService.recognize_room_number_with_retry(mainWndPid)
 
-        # close support first
-        GameService.click_in_window(subWndPid, GamePositions.CLOSE_SUPPORT.value)
-        time.sleep(1)
-         # sub game window starts
-        GameService.click_moon_island(subWndPid)
-        GameService.join_room(subWndPid, room)
-        GameService.switch_tool_page(main['tool'], sub['tool'], ToolPositions.COLLAB_PAGE.value)
-        GameService.stop_tool(main['tool'], sub['tool'])
-        GameService.start_tool(main['tool'], sub['tool'])
-        return True
+            # close support first
+            GameService.click_in_window(subWndPid, GamePositions.CLOSE_SUPPORT.value)
+            time.sleep(1)
+            # sub game window starts
+            GameService.click_moon_island(subWndPid)
+            GameService.join_room(subWndPid, room)
+            GameService.switch_tool_page(main['tool'], sub['tool'], ToolPositions.COLLAB_PAGE.value)
+            GameService.stop_tool(main['tool'], sub['tool'])
+            GameService.start_tool(main['tool'], sub['tool'])
+            return True
+        except Exception as e:
+            logger.error(f"[GameService] start moon island error: {e}")
+            return False
 
     @staticmethod
     def start_tool(main: str, sub: str):
@@ -247,7 +270,7 @@ class GameService:
         return True
     
     @staticmethod
-    def click_ice_castle(pid, only_support = False):
+    def click_ice_castle(pid, only_support):
         GameService.click_in_window(pid, GamePositions.ICE_CASTLE.value)
         # detect buy rounds
         need_buy_round = GameService.ice_need_buy_round(pid)

@@ -86,8 +86,8 @@ async def parse_file(file_data: FileModel):
 ## testing purpose
 @app.get("/test-api")
 async def test():
-    return True
-    # return utility_service.turn_off_pc()
+    # return True
+    return game_service.start_moon_island({"game":1836896, "tool":1836896},{"game":1836896, "tool":1836896})
 
 
 @app.post("/read-file")
@@ -237,7 +237,11 @@ async def start_auto_game(request: Request, config: dict):
             game_service.start_collab(main, sub)
             info = "合作"
         elif mode == 1:
-            ice_only_support = config['iceOnlySupport']
+            ice_only_support = False
+            try:
+                ice_only_support = config['iceOnlySupport']
+            except e:
+                logger.error(f"Error getting iceOnlySupport: {str(e)}")
             game_service.start_ice_castle(main, sub, ice_only_support)
             info = "寒冰"
         elif mode == 2:
