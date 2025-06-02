@@ -49,6 +49,7 @@ class GamePositions(Enum):
     ICE_CASTLE = (850, 565)
     ICE_BUY_ROUND = (655, 460)
     ICE_SUPPORT = (395, 460)
+    CLOSE_SUPPORT = (816, 156)
 
     ## moon island
     MOON_ISLAND = (845, 570)

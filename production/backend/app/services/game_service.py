@@ -107,6 +107,11 @@ class GameService:
     def start_collab(main, sub):
         mainWndPid = main['game']
         subWndPid = sub['game']
+        retry = 3
+        while not GameService.is_home(main['game']) or not GameService.is_home(sub['game']):
+            if retry > 0:
+                retry -= 1
+                time.sleep(5)
         GameService.back_to_home(mainWndPid)
         GameService.back_to_home(subWndPid)
 
@@ -127,9 +132,28 @@ class GameService:
         return True
     
     @staticmethod
+    def is_in_ice_castle(pid):
+        region = (461, 72, 133, 61)  # 寒冰标题区域
+        window = WindowControlService.find_window(pid)
+        screenshot_gray = WindowControlService.capture_region(window, region)
+        template_gray = image_service.load_template('寒冰堡')
+        result = cv2.matchTemplate(screenshot_gray, template_gray, cv2.TM_CCOEFF_NORMED)
+        _, max_val, _, _ = cv2.minMaxLoc(result)
+        return max_val > 0.95
+    
+    @staticmethod
     def start_ice_castle(main, sub, only_support = False):
+        retry = 3
+        while not GameService.is_in_ice_castle(main['game']) or not GameService.is_in_ice_castle(sub['game']):
+            if retry > 0:
+                retry -= 1
+                time.sleep(5)
+
         mainWndPid = main['game']
         subWndPid = sub['game']
+        # close support first
+        GameService.click_in_window(mainWndPid, GamePositions.CLOSE_SUPPORT.value)
+        time.sleep(1)
         # main game window starts
         GameService.click_ice_castle(mainWndPid, False)
         # start room
@@ -138,6 +162,8 @@ class GameService:
         room = GameService.recognize_room_number_with_retry(mainWndPid)
 
         # sub game window starts
+        GameService.click_in_window(subWndPid, GamePositions.CLOSE_SUPPORT.value)
+        time.sleep(1)
         GameService.click_ice_castle(subWndPid, only_support)
         GameService.join_room(subWndPid, room)
         GameService.switch_tool_page(main['tool'], sub['tool'], ToolPositions.COLLAB_PAGE.value)
@@ -145,10 +171,27 @@ class GameService:
         GameService.start_tool(main['tool'], sub['tool'])
         return True
 
+    def is_in_moon_island(pid):
+        region = (475, 71, 124, 54)  # 暗月标题区域
+        window = WindowControlService.find_window(pid)
+        screenshot_gray = WindowControlService.capture_region(window, region)
+        template_gray = image_service.load_template('暗月岛')
+        result = cv2.matchTemplate(screenshot_gray, template_gray, cv2.TM_CCOEFF_NORMED)
+        _, max_val, _, _ = cv2.minMaxLoc(result)
+        return max_val > 0.95
+
     @staticmethod
     def start_moon_island(main, sub):
+        retry = 3
+        while not GameService.is_in_moon_island(main['game']) or not GameService.is_in_moon_island(sub['game']):
+            if retry > 0:
+                retry -= 1
+                time.sleep(5)
         mainWndPid = main['game']
         subWndPid = sub['game']
+        # close support first
+        GameService.click_in_window(mainWndPid, GamePositions.CLOSE_SUPPORT.value)
+        time.sleep(1)
         # main game window starts
         GameService.click_moon_island(mainWndPid)
          # start room
@@ -156,6 +199,9 @@ class GameService:
         ## capture room number in pic
         room = GameService.recognize_room_number_with_retry(mainWndPid)
 
+        # close support first
+        GameService.click_in_window(subWndPid, GamePositions.CLOSE_SUPPORT.value)
+        time.sleep(1)
          # sub game window starts
         GameService.click_moon_island(subWndPid)
         GameService.join_room(subWndPid, room)
