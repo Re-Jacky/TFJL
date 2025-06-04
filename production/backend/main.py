@@ -159,7 +159,7 @@ async def get_game_windows():
 async def get_tool_windows():
     windows = []
     for window in pygetwindow.getAllWindows():
-        if window.title and (window.title.startswith('版本:') or window.title.startswith('2.17')):
+        if window.title and (window.title.startswith('版本:') or window.title.startswith('2.')):
             windows.append({"title": "老马", "pid": window._hWnd})
     return {"windows": windows}
 
