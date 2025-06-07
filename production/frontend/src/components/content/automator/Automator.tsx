@@ -208,6 +208,7 @@ const Automator: React.FC = () => {
               </Button>
               {mode === GameMode.IceCastle ? (
                 <Checkbox
+                  className={styles.iceCastleOnlySupport}
                   onChange={(e) => {
                     setIceOnlySupport(e.target.checked);
                   }}

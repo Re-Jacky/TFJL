@@ -41,9 +41,15 @@
       margin: 20px 0;
       .contentRow {
         display: flex;
-        gap: 50px;
+        gap: 30px;
         align-items: center;
+        position: relative;
       }
+    }
+    .iceCastleOnlySupport {
+      position: absolute;
+      left: 600px;
+      width: 100px;
     }
   }
 
