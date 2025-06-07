@@ -65,6 +65,31 @@ const Automator: React.FC = () => {
     };
   };
 
+  const inGameHeartbeat = () => {
+    const interval = setInterval(() => {
+      const { main, sub } = getValidSelectedWindows();
+      api.isInGame({ main: main.game, sub: sub.game }).then((res) => {
+        if (!res.status) {
+          // start a new game
+          if (currentRoundRef.current < gameRounds) {
+            api.startAutoGame({ ...getValidSelectedWindows(), mode });
+            setCurrentRound((pre) => pre + 1);
+          } else {
+            clearInterval(interval);
+            intervalRef.current = null;
+            setActive(false);
+            if (autoTurnOff) {
+              api.turnOffPC();
+            }
+            if (autoBattle) {
+              api.startAutoBattle({ ...getValidSelectedWindows() });
+            }
+          }
+        }
+      });
+    }, 10000);
+    intervalRef.current = interval;
+  }
   const startGame = async () => {
     const start = !active;
 
@@ -83,29 +108,7 @@ const Automator: React.FC = () => {
       setActive(start);
       setCurrentRound((pre) => pre + 1);
       // create a interval to check if the game is over every 10 seconds
-      const interval = setInterval(() => {
-        const { main, sub } = getValidSelectedWindows();
-        api.isInGame({ main: main.game, sub: sub.game }).then((res) => {
-          if (!res.status) {
-            // start a new game
-            if (currentRoundRef.current < gameRounds) {
-              api.startAutoGame({ ...getValidSelectedWindows(), mode });
-              setCurrentRound((pre) => pre + 1);
-            } else {
-              clearInterval(interval);
-              intervalRef.current = null;
-              setActive(false);
-              if (autoTurnOff) {
-                api.turnOffPC();
-              }
-              if (autoBattle) {
-                api.startAutoBattle({ ...getValidSelectedWindows() });
-              }
-            }
-          }
-        });
-      }, 10000);
-      intervalRef.current = interval;
+      inGameHeartbeat();
     } else {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
@@ -115,6 +118,12 @@ const Automator: React.FC = () => {
     }
   };
 
+  const continueGame = () => {
+    if (!roleRef_0?.current ||!roleRef_1?.current) {
+      return;
+    }
+    inGameHeartbeat();
+  };
   const checkWindow = (idx: 0 | 1) => () => {
     const handler = idx === 0 ? roleRef_0.current : roleRef_1.current;
     const options = handler?.getSelectedWindow();
@@ -146,101 +155,112 @@ const Automator: React.FC = () => {
 
   return (
     <div className={styles.automator}>
-      <div className={styles.header}>
-        <div>
-          <Radio.Group
-            className={styles.modeOptions}
-            onChange={onModeChange}
-            value={mode}
-            options={[
-              { label: '合作', value: GameMode.Collab },
-              { label: '寒冰', value: GameMode.IceCastle },
-              { label: '暗月', value: GameMode.MoonIsland },
-            ]}
-          />
-          <Input
-            className={styles.gameRoundsInput}
-            prefix='次数'
-            value={gameRounds}
-            onChange={(e) => {
-              const newValue = e.target.value;
-              setGameRounds(newValue ? parseInt(newValue) : 0);
-            }}
-          />
-        </div>
-        <Button
-          type={active ? 'default' : 'primary'}
-          onClick={startGame}
-          danger={active}
-        >
-          {active ? '停止' : '开始'}
-        </Button>
-      </div>
-      <div className={styles.info}>
-        <InfoCircleTwoTone />
-        <span className={styles.infoText}>
-          注意：先通过本软件设置好游戏、老马窗口后，才能在老马中
-          <b>
-            <i>锁定窗口</i>
-          </b>
-          <br />
-          在老马中设置好脚本后，点击{' '}
-          <b>
-            <i>开始</i>
-          </b>{' '}
-          按钮，即可开始自动执行脚本
-        </span>
-      </div>
-      <div className={styles.content}>
-        <div className={styles.contentRow}>
-          <Role role='主卡' ref={roleRef_0} defaultSelectedIndex={0} />
-          <Button icon={<AimOutlined />} onClick={checkWindow(0)}>
-            检查窗口
-          </Button>
-        </div>
-        <div className={styles.contentRow}>
-          <Role role='副卡' ref={roleRef_1} defaultSelectedIndex={1} />
-          <Button icon={<AimOutlined />} onClick={checkWindow(1)}>
-            检查窗口
-          </Button>
-          {mode === GameMode.IceCastle ? (
-            <Checkbox
+      <div className={styles.bodyArea}>
+        <div className={styles.leftPanel}>
+          <div className={styles.header}>
+            <Radio.Group
+              className={styles.modeOptions}
+              onChange={onModeChange}
+              value={mode}
+              options={[
+                { label: '合作', value: GameMode.Collab },
+                { label: '寒冰', value: GameMode.IceCastle },
+                { label: '暗月', value: GameMode.MoonIsland },
+              ]}
+            />
+            <Input
+              className={styles.gameRoundsInput}
+              prefix='次数'
+              value={gameRounds}
               onChange={(e) => {
-                setIceOnlySupport(e.target.checked);
+                const newValue = e.target.value;
+                setGameRounds(newValue ? parseInt(newValue) : 0);
+              }}
+            />
+          </div>
+          <div className={styles.info}>
+            <InfoCircleTwoTone />
+            <span className={styles.infoText}>
+              注意：先通过本软件设置好游戏、老马窗口后，才能在老马中
+              <b>
+                <i>锁定窗口</i>
+              </b>
+              <br />
+              在老马中设置好脚本后，点击{' '}
+              <b>
+                <i>开始</i>
+              </b>{' '}
+              按钮，即可开始自动执行脚本
+            </span>
+          </div>
+          <div className={styles.content}>
+            <div className={styles.contentRow}>
+              <Role role='主卡' ref={roleRef_0} defaultSelectedIndex={0} />
+              <Button icon={<AimOutlined />} onClick={checkWindow(0)}>
+                检查窗口
+              </Button>
+            </div>
+            <div className={styles.contentRow}>
+              <Role role='副卡' ref={roleRef_1} defaultSelectedIndex={1} />
+              <Button icon={<AimOutlined />} onClick={checkWindow(1)}>
+                检查窗口
+              </Button>
+              {mode === GameMode.IceCastle ? (
+                <Checkbox
+                  onChange={(e) => {
+                    setIceOnlySupport(e.target.checked);
+                  }}
+                >
+                  仅助战
+                </Checkbox>
+              ) : null}
+            </div>
+          </div>
+          <div>
+            <Checkbox
+              checked={autoBattle}
+              onChange={(e) => {
+                const val = e.target.checked;
+                setAutoBattle(val);
+                if (val) {
+                  setAutoTurnOff(false);
+                }
               }}
             >
-              仅助战
+              结束后开始对战(使用老马自动关机)
             </Checkbox>
-          ) : null}
+          </div>
+          <div>
+            <Checkbox
+              checked={autoTurnOff}
+              onChange={(e) => {
+                const val = e.target.checked;
+                setAutoTurnOff(val);
+                if (val) {
+                  setAutoBattle(false);
+                }
+              }}
+            >
+              结束后关机
+            </Checkbox>
+          </div>
         </div>
-      </div>
-      <div>
-        <Checkbox
-          checked={autoBattle}
-          onChange={(e) => {
-            const val = e.target.checked;
-            setAutoBattle(val);
-            if (val) {
-              setAutoTurnOff(false);
-            }
-          }}
-        >
-          结束后开始对战(使用老马自动关机)
-        </Checkbox>
-      </div>
-      <div>
-        <Checkbox
-          checked={autoTurnOff}
-          onChange={(e) => {
-            const val = e.target.checked;
-            setAutoTurnOff(val);
-            if (val) {
-              setAutoBattle(false);
-            }
-          }}
-        >
-          结束后关机
-        </Checkbox>
+        <div className={styles.rightPanel}>
+          <Button
+            type={active ? 'default' : 'primary'}
+            onClick={startGame}
+            danger={active}
+          >
+            {active ? '停止' : '开始'}
+          </Button>
+          <Button
+            onClick={continueGame}
+            color='orange'
+            variant='outlined'
+          >
+            继续
+          </Button>
+        </div>
       </div>
       <h2 className={styles.footerNote}>{`第 ${currentRound} 轮`}</h2>
     </div>
