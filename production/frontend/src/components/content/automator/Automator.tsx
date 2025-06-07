@@ -122,6 +122,7 @@ const Automator: React.FC = () => {
     if (!roleRef_0?.current ||!roleRef_1?.current) {
       return;
     }
+    setActive(true);
     inGameHeartbeat();
   };
   const checkWindow = (idx: 0 | 1) => () => {
@@ -257,6 +258,7 @@ const Automator: React.FC = () => {
             onClick={continueGame}
             color='orange'
             variant='outlined'
+            disabled={active}
           >
             继续
           </Button>
