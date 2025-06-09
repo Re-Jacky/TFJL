@@ -284,7 +284,7 @@ async def is_in_game(request: Request, config: dict):
             await event_service.broadcast_log("info", "游戏中...")
             return {"status": True}
         else :
-            await event_service.broadcast_log("warning", "已退出游戏...")
+            await event_service.broadcast_log("info", "已退出游戏...")
             return {"status": False}
     except Exception as e:
         logger.error(f"Error checking if in game: {str(e)}")
