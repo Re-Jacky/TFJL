@@ -157,7 +157,7 @@ class GameService:
             retry = 3
             while retry > 0 and (not GameService.is_in_ice_castle(mainWndPid) or not GameService.is_in_ice_castle(subWndPid)):
                 retry -= 1
-                time.sleep(5)
+                time.sleep(8)
                 logger.error(f"Detect ice castle page, retry: {3-retry}...")
             if (not GameService.is_in_ice_castle(mainWndPid) or not GameService.is_in_ice_castle(subWndPid)):
                 logger.error("Failed to start ice castle due to maximum retry waiting for the ice castle page")
@@ -204,7 +204,7 @@ class GameService:
             retry = 3
             while retry > 0 and (not GameService.is_in_moon_island(mainWndPid) or not GameService.is_in_moon_island(subWndPid)):
                 retry -= 1
-                time.sleep(5)
+                time.sleep(8)
                 logger.error(f"Detect moon island page, retry: {3-retry}...")
             if (not GameService.is_in_moon_island(mainWndPid) or not GameService.is_in_moon_island(subWndPid)):
                 logger.error("Failed to start moon island due to maximum retry waiting for the moon island page")
