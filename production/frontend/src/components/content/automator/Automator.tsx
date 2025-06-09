@@ -66,13 +66,14 @@ const Automator: React.FC = () => {
   };
 
   const inGameHeartbeat = () => {
+    const { main, sub } = getValidSelectedWindows();
     const interval = setInterval(() => {
-      const { main, sub } = getValidSelectedWindows();
+
       api.isInGame({ main: main.game, sub: sub.game }).then((res) => {
         if (!res.status) {
           // start a new game
           if (currentRoundRef.current < gameRounds) {
-            api.startAutoGame({ ...getValidSelectedWindows(), mode });
+            api.startAutoGame({ main, sub, mode, iceOnlySupport });
             setCurrentRound((pre) => pre + 1);
           } else {
             clearInterval(interval);
@@ -82,7 +83,7 @@ const Automator: React.FC = () => {
               api.turnOffPC();
             }
             if (autoBattle) {
-              api.startAutoBattle({ ...getValidSelectedWindows() });
+              api.startAutoBattle({ main, sub });
             }
           }
         }

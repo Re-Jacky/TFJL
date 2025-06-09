@@ -232,6 +232,7 @@ async def start_auto_game(request: Request, config: dict):
         main = config['main']
         sub = config['sub']
         mode = config['mode']
+        logger.info(f"Starting auto game with mode: {mode}. (0=collab, 1=ice, 2=moon)")
         info = ""
         if mode == 0:
             game_service.start_collab(main, sub)
@@ -240,7 +241,7 @@ async def start_auto_game(request: Request, config: dict):
             ice_only_support = False
             try:
                 ice_only_support = config['iceOnlySupport']
-            except e:
+            except Exception as e:
                 logger.error(f"Error getting iceOnlySupport: {str(e)}")
             game_service.start_ice_castle(main, sub, ice_only_support)
             info = "寒冰"
@@ -292,7 +293,6 @@ async def is_in_game(request: Request, config: dict):
             status_code=500,
             content={"detail": f"Error checking if in game: {str(e)}"}
         )
-    return {"status": False}
 
 
 
