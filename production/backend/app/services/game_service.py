@@ -119,13 +119,21 @@ class GameService:
             GameService.back_to_home(mainWndPid)
             GameService.back_to_home(subWndPid)
 
-            # main game window starts
-            GameService.click_collab(mainWndPid)
-
-            # start room
-            GameService.start_room(mainWndPid)
-            ## capture room number in pic
-            room = GameService.recognize_room_number_with_retry(mainWndPid)
+            redo = 3
+            while redo > 0:
+                try:
+                    # main game window starts
+                    GameService.click_collab(mainWndPid)
+                    # start room
+                    GameService.start_room(mainWndPid)
+                    ## capture room number in pic
+                    room = GameService.recognize_room_number_with_retry(mainWndPid)
+                    redo = 0
+                except Exception as e:
+                    logger.error(f'[GameService]: Failed to start room, retry {3-redo}...')
+                    GameService.click_in_window(mainWndPid, GamePositions.CLOSE_COLLAB.value)
+                    GameService.click_in_window(mainWndPid, GamePositions.CLOSE_ROOM.value)
+                    redo -= 1
 
             # sub game window starts
             GameService.click_collab(subWndPid)

@@ -44,6 +44,9 @@ class GamePositions(Enum):
     JOIN_ROOM = (615, 430)
     JOIN_ROOM_CONFIRM = (530, 430)
     ADS_REGION = (535, 430)  # 广告区域，用于检测广告是否出现
+
+    CLOSE_COLLAB = (817, 156)
+    CLOSE_ROOM = (708, 221)
     
     ## Ice Castle
     ICE_CASTLE = (850, 565)
