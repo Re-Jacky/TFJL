@@ -61,12 +61,12 @@ class ShortcutService:
         quick_refresh = general_shortcuts.get('quickRefresh', False)
         quick_sell = general_shortcuts.get('quickSell', False)
         enhanced_btn_press = general_shortcuts.get('enhancedBtnPress', False)
+        enhanced_btn_press_delay = general_shortcuts.get('enhancedBtnPressDelay', 0) / 1000
+
         auto_quick_match = battle_shortcuts.get('autoQuickMatch', False)
         mode = self.window_configs.get(pid, {}).get('mode', GameMode.SINGLE_PLAYER)
         # Dictionary to store the last time each key was pressed for debouncing
         last_key_press_time = {}
-        # Debounce delay in milliseconds (adjust as needed)
-        debounce_delay = 200
 
 
         def handle_quick_sell():
@@ -108,7 +108,7 @@ class ShortcutService:
             if enhanced_btn_press:
                 now = time.time() * 1000
                 last_time = last_key_press_time.get(key_str, 0)
-                if now - last_time < debounce_delay:
+                if now - last_time < enhanced_btn_press_delay:
                     return
                 last_key_press_time[key_str] = now
 

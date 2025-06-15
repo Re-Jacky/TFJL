@@ -32,6 +32,7 @@ const emptyShortcut: ShortcutModel = {
     [GeneralShortcut.QUICK_REFRESH]: false,
     [GeneralShortcut.QUICK_SELL_DELAY]: 0,
     [GeneralShortcut.ENHANCED_BTN_PRESS]: false,
+    [GeneralShortcut.ENHANCED_BTN_PRESS_DELAY]: 0,
   },
   battleShortcut: {
     [BattleShortcut.SURRENDER]: '',

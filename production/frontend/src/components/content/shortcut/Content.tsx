@@ -327,7 +327,7 @@ const Content: React.FC<ContentProps> = (props) => {
                       ] as boolean
                     }
                   >
-                    按键优化
+                    优化
                   </Checkbox>
                   <Popover placement='right' content={<EnhanceButtonDesc />}>
                     <Button
@@ -337,6 +337,24 @@ const Content: React.FC<ContentProps> = (props) => {
                       size='small'
                     ></Button>
                   </Popover>
+                  <InputNumber
+                    placeholder={'延时'}
+                    className={styles.enhancedBtnPressDelay}
+                    suffix={'ms'}
+                    value={
+                      shortcut.generalShortcut[
+                        GeneralShortcut.ENHANCED_BTN_PRESS_DELAY
+                      ] as number
+                    }
+                    onChange={(val) => {
+                      if (val !== null) {
+                        onGenerageInputChange(
+                          val as number,
+                          GeneralShortcut.ENHANCED_BTN_PRESS_DELAY
+                        );
+                      }
+                    }}
+                  />
                 </div>
               </div>
               {mode === ShortcutMode.SINGLE_PLAYER ? (

@@ -30,7 +30,8 @@
         "quickRefresh": true,
         "quickSellDelay": 10,
         "enhancedBtnPress": true,
-        "autoQuickMatch": true
+        "autoQuickMatch": true,
+        "enhancedBtnPressDelay": 100
     },
     "battleShortcut": {
         "surrender": "esc",
