@@ -41,6 +41,8 @@ const Automator: React.FC = () => {
   const [autoTurnOff, setAutoTurnOff] = useState<boolean>(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const currentRoundRef = useRef(currentRound);
+  const autoBattleRef = useRef(autoBattle);
+  const autoTurnOffRef = useRef(autoTurnOff);
   const roleRef_0 = useRef<RoleHandler | null>(null);
   const roleRef_1 = useRef<RoleHandler | null>(null);
 
@@ -68,7 +70,6 @@ const Automator: React.FC = () => {
   const inGameHeartbeat = () => {
     const { main, sub } = getValidSelectedWindows();
     const interval = setInterval(() => {
-
       api.isInGame({ main: main.game, sub: sub.game }).then((res) => {
         if (!res.status) {
           // start a new game
@@ -79,10 +80,10 @@ const Automator: React.FC = () => {
             clearInterval(interval);
             intervalRef.current = null;
             setActive(false);
-            if (autoTurnOff) {
+            if (autoTurnOffRef.current) {
               api.turnOffPC();
             }
-            if (autoBattle) {
+            if (autoBattleRef.current) {
               api.startAutoBattle({ main, sub });
             }
           }
@@ -120,7 +121,7 @@ const Automator: React.FC = () => {
   };
 
   const continueGame = () => {
-    if (!roleRef_0?.current ||!roleRef_1?.current) {
+    if (!roleRef_0?.current || !roleRef_1?.current) {
       return;
     }
     setActive(true);
@@ -154,6 +155,16 @@ const Automator: React.FC = () => {
     // update ref so the interval can get the latest value
     currentRoundRef.current = currentRound;
   }, [currentRound]);
+
+  useEffect(() => {
+    // update ref so the interval can get the latest value
+    autoBattleRef.current = autoBattle;
+  }, [autoBattle]);
+
+  useEffect(() => {
+    // update ref so the interval can get the latest value
+    autoTurnOffRef.current = autoTurnOff;
+  }, [autoTurnOff]);
 
   return (
     <div className={styles.automator}>
@@ -266,7 +277,19 @@ const Automator: React.FC = () => {
           </Button>
         </div>
       </div>
-      <h2 className={styles.footerNote}>{`第 ${currentRound} 轮`}</h2>
+      <h2 className={styles.footerNote}>
+        第
+        <Input
+          type='number'
+          value={currentRound}
+          className={styles.roundInput}
+          onChange={(e) => {
+            const newValue = e.target.value;
+            setCurrentRound(newValue ? parseInt(newValue) : 0);
+          }}
+        />
+        轮
+      </h2>
     </div>
   );
 };

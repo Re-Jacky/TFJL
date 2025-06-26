@@ -397,7 +397,7 @@ async def event_stream(request: Request):
         raise
 
 @app.post("/turn-off-pc")
-async def turn_off_pc(request: Request, config: dict):
+async def turn_off_pc():
     try:
         utility_service.turn_off_pc()
         return {"status": "success"}
