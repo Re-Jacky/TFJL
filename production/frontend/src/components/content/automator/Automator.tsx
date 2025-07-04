@@ -9,6 +9,8 @@ import { useAppDispatch } from '@src/store/store';
 import { getToolWindows } from '@src/store/thunks';
 import { api } from '@src/services/api';
 import { GameMode } from '@src/types';
+import { updateLogRecords } from '@src/store/actions';
+import { LogRecord } from '@src/store/slices/uiSlice';
 
 const getDefaultGameRounds = (gameMode: GameMode) => {
   switch (gameMode) {
@@ -67,16 +69,51 @@ const Automator: React.FC = () => {
     };
   };
 
+  const formatDate = (date: Date) => {
+    // toISOString() returns format like: "2025-07-04T18:01:48.000Z"
+    // So we need to replace the 'T' with space and remove milliseconds and 'Z'
+    return date.toISOString().replace('T', ' ').split('.')[0];
+  };
+
+  const addLog = (msg: string, level?: LogRecord['level']) => {
+    dispatch(
+      updateLogRecords({
+        level: level ?? 'info',
+        message: msg,
+        timestamp: formatDate(new Date()),
+      })
+    );
+  };
+
   const inGameHeartbeat = () => {
     const { main, sub } = getValidSelectedWindows();
+    // if inGame check failed in the first heartbeat, it means the game hasn't start yet, could be due to the wrong root number.
+    // in this case we need to start new game while not increase the game round.
+    let heartbeatIdx = 1;
     const interval = setInterval(() => {
       api.isInGame({ main: main.game, sub: sub.game }).then((res) => {
-        if (!res.status) {
+        if (res.status) {
+          if (heartbeatIdx === 1) {
+            addLog('已进入游戏...');
+          } else {
+            addLog('游戏中...');
+          }
+          heartbeatIdx++;
+        } else {
           // start a new game
           if (currentRoundRef.current < gameRounds) {
             api.startAutoGame({ main, sub, mode, iceOnlySupport });
-            setCurrentRound((pre) => pre + 1);
+            // only increate the round count if it's not the first heartbeat
+            if (heartbeatIdx === 1) {
+              addLog('进入游戏失败, 重试...', 'warn');
+            } else {
+              addLog('已退出游戏, 开始下一局...');
+              setCurrentRound((pre) => pre + 1);
+            }
+            // when start a new game, reset this flag
+            heartbeatIdx = 1;
           } else {
+            addLog('任务结束');
             clearInterval(interval);
             intervalRef.current = null;
             setActive(false);
@@ -91,7 +128,7 @@ const Automator: React.FC = () => {
       });
     }, 10000);
     intervalRef.current = interval;
-  }
+  };
   const startGame = async () => {
     const start = !active;
 
