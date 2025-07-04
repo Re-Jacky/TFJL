@@ -41,6 +41,8 @@ const generateVehicleInfo = () => {
   return info;
 };
 
+const MAX_LOG_RECORDS = 100;
+
 const initialState: UIState = {
   isInitializing: true,
   activeWindow: null,
@@ -75,13 +77,14 @@ const uiSlice = createSlice({
       state.activeWindow = action.payload;
     },
     setLogRecords: (state, action: PayloadAction<Array<LogRecord>>) => {
-      state.logRecords = action.payload;
+      state.logRecords = action.payload.slice(-MAX_LOG_RECORDS);
     },
     clearLogRecords: (state) => {
       state.logRecords = [];
     },
     updateLogRecords: (state, action: PayloadAction<LogRecord>) => {
       state.logRecords.push(action.payload);
+      state.logRecords = state.logRecords.slice(-MAX_LOG_RECORDS);
     },
     setVehicle: (state, action: PayloadAction<Vehicle>) => {
       state.vehicle = action.payload;

@@ -281,10 +281,8 @@ async def is_in_game(request: Request, config: dict):
         main_result = image_service.find_image(main, '笑脸')
         sub_result = image_service.find_image(sub, '笑脸')
         if main_result['found'] == True and sub_result['found'] == True:
-            await event_service.broadcast_log("info", "游戏中...")
             return {"status": True}
         else :
-            await event_service.broadcast_log("info", "已退出游戏...")
             return {"status": False}
     except Exception as e:
         logger.error(f"Error checking if in game: {str(e)}")
