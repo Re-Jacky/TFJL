@@ -16,7 +16,7 @@ class GamePositions(Enum):
     UPGRADE_VEHICLE = (320, 570)   # 升级车辆
     REFRESH_CARD = (720, 570)   # 刷新卡片
     ENEMY_STATUS = (920, 130)   # 敌人状态
-    SELL_CARD = (330, 460)   # 出售卡片
+    SELL_CARD = (330, 445)   # 出售卡片
     CLOST_CARD = (810, 128)   # 关闭卡片信息
     
     CARD_0 = (440, 560)   # 卡片0
