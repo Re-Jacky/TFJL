@@ -11,6 +11,17 @@ from app.services.shortcut_service import ShortcutService
 from urllib.parse import unquote
 from app.utils.logger import logger
 from app.schema.schemas import FileModel, WithContentFileModel
+from app.models.script_models import (
+    ParseScriptRequest, ParseScriptResponse,
+    ValidateScriptRequest, ValidateScriptResponse,
+    ScriptExecutionRequest, ScriptExecutionResponse,
+    ScriptExecutionStatus, ExecutionState,
+    TestScriptRequest, TestScriptResponse
+)
+from app.services.script_parser import ScriptParserService
+from app.services.script_validator import ScriptValidatorService
+from app.services.script_executor import ScriptExecutorService
+from app.services.script_simulator import ScriptSimulatorService
 import pygetwindow
 
 app = FastAPI()
@@ -21,6 +32,8 @@ image_service = ImageService()
 shortcut_service = ShortcutService()
 window_service = WindowControlService()
 game_service = GameService()
+# Script services use static methods - no instance needed
+# Script executor instances are per-window, managed via get_instance()
 
 
 @app.middleware("http")
@@ -407,6 +420,204 @@ async def turn_off_pc():
             status_code=500,
             content={"detail": f"Error turning off PC: {str(e)}"}
         )
+
+# ============================================================================
+# SCRIPT AUTOMATION ENDPOINTS
+# ============================================================================
+
+@app.post("/script/parse")
+async def parse_script(request_data: ParseScriptRequest):
+    """Parse raw script content into structured Script model."""
+    try:
+        script, errors, warnings = ScriptParserService.parse_script(
+            content=request_data.content,
+            name=request_data.name,
+            script_type=request_data.script_type
+        )
+        return ParseScriptResponse(
+            success=script is not None,
+            script=script,
+            errors=errors,
+            warnings=warnings
+        )
+    except Exception as e:
+        logger.error(f"Error parsing script: {str(e)}")
+        return ParseScriptResponse(
+            success=False,
+            errors=[f"Parse error: {str(e)}"]
+        )
+
+
+@app.post("/script/validate")
+async def validate_script(request_data: ValidateScriptRequest):
+    """Validate script content for errors and warnings."""
+    try:
+        # First parse the script
+        script, parse_errors, parse_warnings = ScriptParserService.parse_script(content=request_data.content)
+        if script is None:
+            return ValidateScriptResponse(
+                valid=False,
+                errors=parse_errors,
+                warnings=parse_warnings
+            )
+        
+        # Then validate the parsed script
+        validation_result = ScriptValidatorService.validate(script)
+        return ValidateScriptResponse(
+            valid=validation_result.is_valid,
+            errors=validation_result.errors,
+            warnings=validation_result.warnings
+        )
+    except Exception as e:
+        logger.error(f"Error validating script: {str(e)}")
+        return ValidateScriptResponse(
+            valid=False,
+            errors=[f"Validation error: {str(e)}"]
+        )
+
+
+@app.post("/script/test")
+async def test_script(request_data: TestScriptRequest):
+    """Test/simulate script execution without a game window (dry-run)."""
+    try:
+        result = ScriptSimulatorService.simulate_script(
+            content=request_data.content,
+            name=request_data.name,
+            script_type=request_data.script_type
+        )
+        return TestScriptResponse(**result)
+    except Exception as e:
+        logger.error(f"Error testing script: {str(e)}")
+        return TestScriptResponse(
+            success=False,
+            errors=[f"Test error: {str(e)}"]
+        )
+
+
+
+@app.get("/script/list/{script_type}")
+async def list_scripts(script_type: str):
+    """List available scripts by type (collab or activity)."""
+    if script_type not in ['collab', 'activity']:
+        return JSONResponse(
+            status_code=400,
+            content={"detail": "Invalid script type. Must be 'collab' or 'activity'."}
+        )
+    try:
+        files = utility_service.get_files(script_type)
+        return {"scripts": files, "type": script_type}
+    except Exception as e:
+        logger.error(f"Error listing scripts: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"detail": f"Error listing scripts: {str(e)}"}
+        )
+
+
+@app.post("/script/execute")
+async def control_script_execution(request: Request, exec_request: ScriptExecutionRequest):
+    """Control script execution: start, pause, resume, or stop."""
+    try:
+        pid = exec_request.window_pid
+        action = exec_request.action
+        
+        # Get or create executor instance for this window
+        executor = ScriptExecutorService.get_instance(pid)
+        
+        if action == 'start':
+            # Load and start the script
+            script_content = utility_service.read_file(
+                exec_request.script_name,
+                exec_request.script_type
+            )
+            script, parse_errors, _ = ScriptParserService.parse_script(
+                content=script_content,
+                name=exec_request.script_name,
+                script_type=exec_request.script_type
+            )
+            
+            if script is None:
+                return ScriptExecutionResponse(
+                    success=False,
+                    message=f"Failed to parse script: {'; '.join(parse_errors)}"
+                )
+            
+            # Validate before execution
+            validation = ScriptValidatorService.validate(script)
+            if not validation.is_valid:
+                return ScriptExecutionResponse(
+                    success=False,
+                    message=f"Script validation failed: {'; '.join(validation.errors)}"
+                )
+            
+            executor.load_script(script)
+            executor.start()
+            await event_service.broadcast_log("info", f"脚本开始执行: {exec_request.script_name}", [str(pid)])
+            
+            return ScriptExecutionResponse(
+                success=True,
+                message="Script started",
+                status=executor.get_status()
+            )
+        
+        elif action == 'pause':
+            executor.pause()
+            await event_service.broadcast_log("info", "脚本已暂停", [str(pid)])
+            return ScriptExecutionResponse(
+                success=True,
+                message="Script paused",
+                status=executor.get_status()
+            )
+        
+        elif action == 'resume':
+            executor.resume()
+            await event_service.broadcast_log("info", "脚本继续执行", [str(pid)])
+            return ScriptExecutionResponse(
+                success=True,
+                message="Script resumed",
+                status=executor.get_status()
+            )
+        
+        elif action == 'stop':
+            executor.stop()
+            await event_service.broadcast_log("info", "脚本已停止", [str(pid)])
+            return ScriptExecutionResponse(
+                success=True,
+                message="Script stopped",
+                status=executor.get_status()
+            )
+        
+        else:
+            return ScriptExecutionResponse(
+                success=False,
+                message=f"Unknown action: {action}"
+            )
+    
+    except Exception as e:
+        logger.error(f"Error controlling script execution: {str(e)}")
+        return ScriptExecutionResponse(
+            success=False,
+            message=f"Execution error: {str(e)}"
+        )
+
+
+@app.get("/script/status/{window_pid}")
+async def get_script_status(window_pid: int):
+    """Get current script execution status for a window."""
+    try:
+        executor = ScriptExecutorService.get_instance(window_pid)
+        status = executor.get_status()
+        return {
+            "success": True,
+            "status": status.model_dump()
+        }
+    except Exception as e:
+        logger.error(f"Error getting script status: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"detail": f"Error getting script status: {str(e)}"}
+        )
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

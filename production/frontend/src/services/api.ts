@@ -1,5 +1,15 @@
 import proxy from './proxy';
-import type { GameMode, ShortcutMode, Wnd } from '../types';
+import type { 
+  GameMode, 
+  ShortcutMode, 
+  Wnd,
+  ScriptExecutionStatus,
+  ScriptExecutionRequest,
+  ScriptExecutionResponse,
+  ParseScriptResponse,
+  ValidateScriptResponse,
+  TestScriptResponse
+} from '../types';
 import { type ShortcutModel } from '@src/components/content/shortcut/Content';
 
 type ScriptType = 'collab' | 'activity';
@@ -50,6 +60,11 @@ export interface API {
   locateAutoWindow: (config: {game: number; tool: number; idx: 0 | 1}) => Promise<{ status: string }>;
   turnOffPC: () => Promise<{ status: string }>;
   test: () => Promise<{ status: string }>;
+  parseScript: (content: string, name?: string, scriptType?: ScriptType) => Promise<ParseScriptResponse>;
+  validateScript: (content: string) => Promise<ValidateScriptResponse>;
+  testScript: (content: string, name?: string, scriptType?: ScriptType) => Promise<TestScriptResponse>;
+  executeScript: (request: ScriptExecutionRequest) => Promise<ScriptExecutionResponse>;
+  getScriptStatus: (windowPid: number) => Promise<{ success: boolean; status: ScriptExecutionStatus }>;
 }
 
 export const api: API = {
@@ -114,5 +129,20 @@ export const api: API = {
   },
   test: async () => {
     return await proxy.get('test-api');
-  }
+  },
+  parseScript: async (content: string, name?: string, scriptType?: ScriptType) => {
+    return await proxy.post('script/parse', { content, name, script_type: scriptType });
+  },
+  validateScript: async (content: string) => {
+    return await proxy.post('script/validate', { content });
+  },
+  testScript: async (content: string, name?: string, scriptType?: ScriptType) => {
+    return await proxy.post('script/test', { content, name, script_type: scriptType });
+  },
+  executeScript: async (request: ScriptExecutionRequest) => {
+    return await proxy.post('script/execute', request);
+  },
+  getScriptStatus: async (windowPid: number) => {
+    return await proxy.get(`script/status/${windowPid}`);
+  },
 };

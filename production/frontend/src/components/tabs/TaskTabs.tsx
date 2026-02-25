@@ -4,7 +4,9 @@ import styles from './TaskTabs.module.scss';
 import {
   Automator,
   ShortcutContent,
+  ScriptEditorContent,
 } from '../content';
+
 
 const items: TabsProps['items'] = [
   {
@@ -17,6 +19,12 @@ const items: TabsProps['items'] = [
     label: '自动连打',
     children: <Automator />,
   },
+  {
+    key: 'script-editor',
+    label: '脚本编辑器',
+    children: <ScriptEditorContent />,
+  },
+
 ];
 const TaskTabs: React.FC = () => {
   return (
