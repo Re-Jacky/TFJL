@@ -58,7 +58,22 @@ export interface TestScriptSummary {
 export interface TestScriptResponse {
   success: boolean;
   action_log: SimulatedActionLog[];
+  vehicle_history: VehicleHistoryEntry[];  // For dry-run mode
   errors: string[];
   warnings: string[];
   summary: TestScriptSummary | null;
+}
+
+export interface VehicleHistoryEntry {
+  event: 'level_change' | 'action';
+  level: number;
+  action?: SimulatedActionLog;
+  state: VehicleState;
+}
+
+export interface VehicleState {
+  side: 'left' | 'right';
+  equipment: string | null;
+  level: number;
+  info: Record<number, { card: string | null; level: number | null }>;
 }

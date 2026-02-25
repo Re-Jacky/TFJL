@@ -21,7 +21,7 @@ from app.models.script_models import (
 from app.services.script_parser import ScriptParserService
 from app.services.script_validator import ScriptValidatorService
 from app.services.script_executor import ScriptExecutorService
-from app.services.script_simulator import ScriptSimulatorService
+from app.services.script_simulator import ScriptSimulatorService, DryRunSimulator
 import pygetwindow
 
 app = FastAPI()
@@ -34,7 +34,9 @@ window_service = WindowControlService()
 game_service = GameService()
 # Script services use static methods - no instance needed
 # Script executor instances are per-window, managed via get_instance()
-
+# Initialize executor with event service for SSE broadcasting
+ScriptExecutorService.set_event_service(event_service)
+DryRunSimulator.set_event_service(event_service)
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
@@ -478,13 +480,33 @@ async def validate_script(request_data: ValidateScriptRequest):
 
 @app.post("/script/test")
 async def test_script(request_data: TestScriptRequest):
-    """Test/simulate script execution without a game window (dry-run)."""
+    """Test/simulate script execution without a game window (dry-run).
+    
+    If dry_run=True, uses live simulation with VehicleState tracking
+    and SSE broadcasting for real-time UI updates.
+    If dry_run=False (default), uses static simulation returning action log.
+    """
     try:
-        result = ScriptSimulatorService.simulate_script(
-            content=request_data.content,
-            name=request_data.name,
-            script_type=request_data.script_type
-        )
+        if request_data.dry_run:
+            # Live dry-run with SSE broadcasting
+            result = await DryRunSimulator.run_dry_run(
+                content=request_data.content,
+                name=request_data.name,
+                script_type=request_data.script_type,
+                session_id=request_data.session_id,
+                action_delay_ms=request_data.action_delay_ms,
+                level_delay_ms=request_data.level_delay_ms
+            )
+        else:
+            # Static simulation (no SSE)
+            result = ScriptSimulatorService.simulate_script(
+                content=request_data.content,
+                name=request_data.name,
+                script_type=request_data.script_type
+            )
+            # Add empty vehicle_history for consistency
+            result["vehicle_history"] = []
+        
         return TestScriptResponse(**result)
     except Exception as e:
         logger.error(f"Error testing script: {str(e)}")

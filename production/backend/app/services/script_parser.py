@@ -34,7 +34,8 @@ class ScriptParserService:
 
     # Punctuation normalization map (Chinese to ASCII)
     PUNCTUATION_MAP = {
-        '，': ',',
+        '，': ',',  # Chinese comma
+        '、': ',',  # Chinese enumeration comma
         '：': ':',
         '；': ';',
         '。': '.',

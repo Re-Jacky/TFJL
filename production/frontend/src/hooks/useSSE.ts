@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { useAppDispatch } from '../store/store';
-import { setSSEConnected, setSSELastEvent, setVehicle, updateLogRecords } from '@src/store/actions';
+import { setSSEConnected, setSSELastEvent, setVehicle, updateLogRecords, setSseSessionId } from '@src/store/actions';
 import { API_BASE_URL } from '@src/services/proxy';
 
 export const useSSE = () => {
@@ -12,6 +12,8 @@ export const useSSE = () => {
     if (eventSourceRef.current) {
       return;
     }
+    // Store session ID in Redux for other components to use
+    dispatch(setSseSessionId(pid));
     const eventSource = new EventSource(`${url}?pid=${pid}`);
 
     eventSource.onopen = () => {
@@ -20,7 +22,7 @@ export const useSSE = () => {
 
     eventSource.onmessage = (event) => {
       try {
-        const action = JSON.parse(event.data.replace(/'/g, '"'));
+        const action = JSON.parse(event.data);
         dispatch(setSSELastEvent(action));
         switch (action.type) {
           case 'vehicle':
@@ -49,9 +51,10 @@ export const useSSE = () => {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
       dispatch(setSSEConnected(false));
+      dispatch(setSseSessionId(null));
       window.localStorage.clear();
     }
-};
+  };
 
   return {
     connect,

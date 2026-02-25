@@ -24,6 +24,7 @@ export interface Vehicle {
 export interface UIState {
   isInitializing: boolean;
   activeWindow: string | null;
+  sseSessionId: string | null;
   gameWindows: Array<Wnd>;
   toolWindows: Array<Wnd>;
   logRecords: Array<LogRecord>;
@@ -44,6 +45,7 @@ const generateVehicleInfo = () => {
 const initialState: UIState = {
   isInitializing: true,
   activeWindow: null,
+  sseSessionId: null,
   gameWindows: [],
   toolWindows: [],
   logRecords: [],
@@ -61,6 +63,7 @@ const uiSlice = createSlice({
   initialState,
   selectors: {
     selectActiveWindow: (state) => state.activeWindow,
+    selectSseSessionId: (state) => state.sseSessionId,
     selectLogRecords: (state) => state.logRecords,
     selectVehicle: (state) => state.vehicle,
     selectGameWindows: (state) => state.gameWindows,
@@ -73,6 +76,9 @@ const uiSlice = createSlice({
     },
     setActiveWindow: (state, action: PayloadAction<string | null>) => {
       state.activeWindow = action.payload;
+    },
+    setSseSessionId: (state, action: PayloadAction<string | null>) => {
+      state.sseSessionId = action.payload;
     },
     setLogRecords: (state, action: PayloadAction<Array<LogRecord>>) => {
       state.logRecords = action.payload;

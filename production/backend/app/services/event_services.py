@@ -1,3 +1,4 @@
+import json
 from typing import Dict, Any, Optional
 from asyncio import Queue
 from app.utils.logger import logger
@@ -78,7 +79,7 @@ class EventService:
 
     async def format_sse(self, data: Dict) -> str:
         """Format the data as a Server-Sent Event message."""
-        return f"data: {str(data)}\n\n"
+        return f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
 
     def get_event_types(self) -> Dict[str, str]:
         """Get all available event types."""

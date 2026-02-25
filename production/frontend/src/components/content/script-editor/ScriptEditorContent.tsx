@@ -16,7 +16,7 @@ import CodeEditor, {
 import CreateFileButton from '../components/CreateFileButton';
 import DeleteFileButton from '../components/DeleteFileButton';
 import { useSelector } from 'react-redux';
-import { selectActiveWindow, selectInitializing } from '@src/store/selectors';
+import { selectActiveWindow, selectInitializing, selectSseSessionId } from '@src/store/selectors';
 import type { ScriptExecutionStatus, ScriptExecutionRequest, ParseScriptResponse, ValidateScriptResponse, TestScriptResponse } from '@src/types';
 
 type ScriptType = 'collab' | 'activity';
@@ -41,9 +41,11 @@ export const ScriptEditorContent: React.FC = () => {
   const [execTestModalVisible, setExecTestModalVisible] = useState<boolean>(false);
   const [execTestResult, setExecTestResult] = useState<TestScriptResponse | null>(null);
   const [execTesting, setExecTesting] = useState<boolean>(false);
+  const [dryRunning, setDryRunning] = useState<boolean>(false);
 
   const editorRef = useRef<EditorHandler | null>(null);
   const activeWindow = useSelector(selectActiveWindow);
+  const sseSessionId = useSelector(selectSseSessionId);
   const initializing = useSelector(selectInitializing);
   const pollingTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -228,6 +230,37 @@ export const ScriptEditorContent: React.FC = () => {
     }
   };
 
+  const handleDryRun = async () => {
+    const content = editorRef.current?.getContent() || '';
+    if (!content.trim()) {
+      message.warning('Please enter script content to test');
+      return;
+    }
+
+    if (!sseSessionId) {
+      message.warning('SSE not connected. Please wait for connection.');
+      return;
+    }
+
+    setDryRunning(true);
+    try {
+      // Use actual SSE session ID to ensure events reach the connected client
+      const result = await api.testScript(content, selectedFile || 'test.txt', scriptType, {
+        dryRun: true,
+        sessionId: sseSessionId,
+        actionDelayMs: 300,
+        levelDelayMs: 500
+      });
+      setExecTestResult(result);
+      setExecTestModalVisible(true);
+    } catch (error) {
+      console.error(error);
+      message.error('Dry run failed');
+    } finally {
+      setDryRunning(false);
+    }
+  };
+
 
   const executeAction = async (action: 'start' | 'pause' | 'resume' | 'stop') => {
     if (!selectedFile || !activeWindow) {
@@ -337,6 +370,14 @@ export const ScriptEditorContent: React.FC = () => {
                 loading={execTesting}
             >
                 Test
+            </Button>
+            <Button
+                icon={<BugOutlined />}
+                onClick={handleDryRun}
+                loading={dryRunning}
+                type="dashed"
+            >
+                Dry Run
             </Button>
             <Button 
                 type="primary" 

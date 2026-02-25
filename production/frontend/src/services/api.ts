@@ -62,7 +62,7 @@ export interface API {
   test: () => Promise<{ status: string }>;
   parseScript: (content: string, name?: string, scriptType?: ScriptType) => Promise<ParseScriptResponse>;
   validateScript: (content: string) => Promise<ValidateScriptResponse>;
-  testScript: (content: string, name?: string, scriptType?: ScriptType) => Promise<TestScriptResponse>;
+  testScript: (content: string, name?: string, scriptType?: ScriptType, dryRunOptions?: { dryRun?: boolean; sessionId?: string; actionDelayMs?: number; levelDelayMs?: number }) => Promise<TestScriptResponse>;
   executeScript: (request: ScriptExecutionRequest) => Promise<ScriptExecutionResponse>;
   getScriptStatus: (windowPid: number) => Promise<{ success: boolean; status: ScriptExecutionStatus }>;
 }
@@ -136,8 +136,16 @@ export const api: API = {
   validateScript: async (content: string) => {
     return await proxy.post('script/validate', { content });
   },
-  testScript: async (content: string, name?: string, scriptType?: ScriptType) => {
-    return await proxy.post('script/test', { content, name, script_type: scriptType });
+  testScript: async (content: string, name?: string, scriptType?: ScriptType, dryRunOptions?: { dryRun?: boolean; sessionId?: string; actionDelayMs?: number; levelDelayMs?: number }) => {
+    return await proxy.post('script/test', {
+      content,
+      name,
+      script_type: scriptType,
+      dry_run: dryRunOptions?.dryRun ?? false,
+      session_id: dryRunOptions?.sessionId ?? 'dry-run',
+      action_delay_ms: dryRunOptions?.actionDelayMs ?? 300,
+      level_delay_ms: dryRunOptions?.levelDelayMs ?? 500
+    });
   },
   executeScript: async (request: ScriptExecutionRequest) => {
     return await proxy.post('script/execute', request);

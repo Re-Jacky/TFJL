@@ -346,7 +346,10 @@ class TestScriptRequest(BaseModel):
     content: str
     name: str = "test.txt"
     script_type: Literal['collab', 'activity'] = 'collab'
-
+    dry_run: bool = False  # If True, use live dry-run with SSE broadcasting
+    session_id: str = "dry-run"  # SSE session ID for dry-run mode
+    action_delay_ms: int = 300  # Delay between actions (ms)
+    level_delay_ms: int = 500  # Delay between levels (ms)
 
 class SimulatedActionLog(BaseModel):
     """A single simulated action entry."""
@@ -374,6 +377,7 @@ class TestScriptResponse(BaseModel):
     """Response from script test/simulation."""
     success: bool
     action_log: List[SimulatedActionLog] = Field(default_factory=list)
+    vehicle_history: List[Dict[str, Any]] = Field(default_factory=list)  # For dry-run mode
     errors: List[str] = Field(default_factory=list)
     warnings: List[str] = Field(default_factory=list)
     summary: Optional[TestScriptSummary] = None
