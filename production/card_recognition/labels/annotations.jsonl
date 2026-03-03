@@ -1,4 +1,0 @@
-{"id": "batch_sample7_slot1", "image_path": "dataset/labeled/光精灵/batch_sample7_slot1.png", "label": "光精灵", "slot_idx": 1, "bbox": [0, 0, 70, 90], "timestamp": "2026-03-03T18:39:07.738616"}
-{"id": "batch_sample7_slot1", "image_path": "dataset/labeled/光精灵/batch_sample7_slot1.png", "label": "光精灵", "slot_idx": 1, "bbox": [0, 0, 70, 90], "timestamp": "2026-03-03T18:42:46.240726"}
-{"id": "batch_sample7_slot0", "image_path": "dataset/labeled/萌萌/batch_sample7_slot0.png", "label": "萌萌", "slot_idx": 0, "bbox": [0, 0, 70, 90], "timestamp": "2026-03-03T18:43:04.331626"}
-{"id": "batch_sample6_slot2", "image_path": "dataset/labeled/魔精灵/batch_sample6_slot2.png", "label": "魔精灵", "slot_idx": 2, "bbox": [0, 0, 70, 90], "timestamp": "2026-03-03T18:43:12.356430"}

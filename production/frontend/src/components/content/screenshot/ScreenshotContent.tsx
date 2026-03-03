@@ -326,7 +326,7 @@ const ScreenshotContent: React.FC = () => {
         <div className={styles.cardDetection}>
           <div className={styles.header}>
             <div className={styles.info}>
-              <span className={styles.infoText}>卡牌识别与标注</span>
+              <span className={styles.infoText}>卡牌</span>
               {modelStatus && (
                 <span className={styles.infoText}>
                   | 模型: {modelStatus.model_version || '未训练'} | 
