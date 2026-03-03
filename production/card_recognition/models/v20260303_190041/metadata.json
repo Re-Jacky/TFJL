@@ -1,0 +1,11 @@
+{
+  "train_samples": {
+    "光精灵": 1,
+    "萌萌": 1,
+    "魔精灵": 1,
+    "冰法": 1,
+    "火炮": 1
+  },
+  "last_updated": "2026-03-03T19:00:41.817365",
+  "training_method": "incremental"
+}
