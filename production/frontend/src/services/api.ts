@@ -66,6 +66,15 @@ export interface API {
   testScript: (content: string, name?: string, scriptType?: ScriptType, dryRunOptions?: { dryRun?: boolean; sessionId?: string; actionDelayMs?: number; levelDelayMs?: number }) => Promise<TestScriptResponse>;
   executeScript: (request: ScriptExecutionRequest) => Promise<ScriptExecutionResponse>;
   getScriptStatus: (windowPid: number) => Promise<{ success: boolean; status: ScriptExecutionStatus }>;
+  getModelStatus: () => Promise<{ model_version: string | null; trained_cards: string[]; total_samples: number; last_updated?: string }>;
+  trainModel: () => Promise<{ success: boolean; model_version: string; train_samples: number }>;
+  labelCrop: (cropId: string, cardName: string, cropMargins?: { top: number; bottom: number; left: number; right: number }) => Promise<{ success: boolean; message: string; new_model_version: string; dataset_stats: { labeled_count: number; unlabeled_count: number; per_card_counts: Record<string, number> } }>;
+  getUnlabeledCrops: (limit?: number) => Promise<{ crops: Array<{ crop_id: string; image_base64: string; slot_idx: number; top_guesses: string[] }>; total_unlabeled: number }>;
+  detectCards: (pid: number) => Promise<{ success: boolean; slots: Array<{ slot_idx: number; card: string; confidence: number; bbox: [number, number, number, number]; crop_id?: string; top_k_guesses?: string[] }>; model_version: string | null }>;
+  batchTrainFromScreenshots: () => Promise<{ processed_count: number; cards_extracted: number; new_model_version: string; message: string }>;
+  exportModel: (exportPath: string) => Promise<{ success: boolean; export_path: string; model_version: string }>;
+  importModel: (importPath: string) => Promise<{ success: boolean; model_version: string; trained_cards: string[]; total_samples: number }>;
+  getCardNames: () => Promise<{ cards: string[]; count: number }>;
 }
 
 export const api: API = {
@@ -156,5 +165,32 @@ export const api: API = {
   },
   getScriptStatus: async (windowPid: number) => {
     return await proxy.get(`script/status/${windowPid}`);
+  },
+  detectCards: async (pid: number) => {
+    return await proxy.post('cards/detect', { window_pid: pid });
+  },
+  getUnlabeledCrops: async (limit: number = 10) => {
+    return await proxy.get(`cards/unlabeled?limit=${limit}`);
+  },
+  labelCrop: async (cropId: string, cardName: string, cropMargins?: { top: number; bottom: number; left: number; right: number }) => {
+    return await proxy.post('cards/label', { crop_id: cropId, card_name: cardName, crop_margins: cropMargins });
+  },
+  trainModel: async () => {
+    return await proxy.post('cards/train');
+  },
+  getModelStatus: async () => {
+    return await proxy.get('cards/model/status');
+  },
+  batchTrainFromScreenshots: async () => {
+    return await proxy.post('cards/batch_train');
+  },
+  exportModel: async (exportPath: string) => {
+    return await proxy.post('cards/export', { export_path: exportPath });
+  },
+  importModel: async (importPath: string) => {
+    return await proxy.post('cards/import', { import_path: importPath });
+  },
+  getCardNames: async () => {
+    return await proxy.get('cards/names');
   },
 };

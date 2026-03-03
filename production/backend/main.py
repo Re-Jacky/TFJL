@@ -24,6 +24,9 @@ from app.services.script_validator import ScriptValidatorService
 from app.services.script_executor import ScriptExecutorService
 from app.services.script_simulator import ScriptSimulatorService, DryRunSimulator
 import pygetwindow
+from app.services.card_recognition_service import CardRecognitionService
+from app.services.card_dataset_service import CardDatasetService
+from app.services.card_model_service import CardModelService
 
 app = FastAPI()
 
@@ -38,6 +41,8 @@ game_service = GameService()
 # Initialize executor with event service for SSE broadcasting
 ScriptExecutorService.set_event_service(event_service)
 DryRunSimulator.set_event_service(event_service)
+# Initialize card dataset folders
+CardDatasetService.initialize()
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
@@ -668,6 +673,104 @@ async def get_script_status(window_pid: int):
             status_code=500,
             content={"detail": f"Error getting script status: {str(e)}"}
         )
+
+
+
+@app.post("/cards/detect")
+async def detect_cards(request: Request):
+    """Detect cards in 3 slots from active window"""
+    pid = request.headers.get("x-pid")
+    if not pid:
+        body = await request.json()
+        pid = body.get("window_pid")
+    if not pid:
+        raise HTTPException(status_code=400, detail="Missing window_pid")
+    
+    result = CardRecognitionService.detect_cards(int(pid))
+    return result
+
+
+@app.get("/cards/unlabeled")
+async def get_unlabeled_crops(limit: int = 10):
+    """Get unlabeled crops for labeling UI"""
+    crops = CardDatasetService.get_unlabeled_crops(limit)
+    stats = CardDatasetService.get_dataset_stats()
+    return {"crops": crops, "total_unlabeled": stats["unlabeled_count"]}
+
+
+@app.post("/cards/label")
+async def label_crop(request: Request):
+    """Apply label to crop, trigger incremental training"""
+    body = await request.json()
+    crop_id = body.get("crop_id")
+    card_name = body.get("card_name")
+    crop_margins = body.get("crop_margins")  # Optional: {top, bottom, left, right}
+    
+    if not crop_id or not card_name:
+        raise HTTPException(status_code=400, detail="Missing crop_id or card_name")
+    
+    result = CardDatasetService.apply_label(crop_id, card_name, crop_margins)
+    stats = CardDatasetService.get_dataset_stats()
+    result["dataset_stats"] = stats
+    return result
+
+
+@app.post("/cards/train")
+async def train_model():
+    """Trigger full model rebuild"""
+    result = CardModelService.train_full_rebuild()
+    return result
+
+
+@app.get("/cards/model/status")
+async def get_model_status():
+    """Get current model info"""
+    try:
+        info = CardModelService.get_model_info()
+        return info
+    except Exception as e:
+        return {"model_version": None, "trained_cards": [], "total_samples": 0, "message": "No model trained yet"}
+
+@app.post("/cards/batch_train")
+async def batch_train_from_screenshots():
+    """Read screenshots from folder and extract cards for training"""
+    result = CardDatasetService.batch_train_from_screenshots()
+    return result
+
+
+@app.post("/cards/export")
+async def export_model(request: Request):
+    """Export trained model to ZIP file"""
+    body = await request.json()
+    export_path = body.get("export_path")
+    
+    if not export_path:
+        raise HTTPException(status_code=400, detail="Missing export_path")
+    
+    result = CardModelService.export_model(export_path)
+    return result
+
+
+@app.post("/cards/import")
+async def import_model(request: Request):
+    """Import trained model from ZIP file"""
+    body = await request.json()
+    import_path = body.get("import_path")
+    
+    if not import_path:
+        raise HTTPException(status_code=400, detail="Missing import_path")
+    
+    result = CardModelService.import_model(import_path)
+    return result
+
+@app.get("/cards/names")
+async def get_card_names():
+    """Get all available card names from configuration"""
+    from app.enums.script_commands import COMMON_CARDS
+    return {
+        "cards": sorted(list(COMMON_CARDS)),
+        "count": len(COMMON_CARDS)
+    }
 
 if __name__ == "__main__":
     import uvicorn

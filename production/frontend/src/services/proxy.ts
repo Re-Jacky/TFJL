@@ -10,13 +10,13 @@ const proxy: Proxy = {
     const pid = window.localStorage.getItem('pid');
     const response = await fetch(`${API_BASE_URL}/${endpoint}`, {
       headers: {
-        'x-pid': pid || ''
-      }
+        'x-pid': pid || '',
+      },
     });
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return await response.json() as T;
+    return (await response.json()) as T;
   },
   post: async <T>(endpoint: string, data?: any) => {
     const pid = window.localStorage.getItem('pid');
@@ -24,15 +24,21 @@ const proxy: Proxy = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-pid': pid || ''
+        'x-pid': pid || '',
       },
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
     });
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      // try read response.body
+      let errMsg = '';
+      try {
+        errMsg = (await response.json()).detail;
+      } catch (e) {}
+
+      throw new Error(`HTTP error! status: ${response.status} ${errMsg}`);
     }
-    return await response.json() as T;
-  }
+    return (await response.json()) as T;
+  },
 };
 
 export default proxy;

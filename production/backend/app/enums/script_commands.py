@@ -10,6 +10,8 @@ This module defines:
 
 from enum import Enum
 from typing import Dict, List, Set
+import json
+from pathlib import Path
 
 
 class CommandPattern(Enum):
@@ -270,21 +272,26 @@ def get_events_for_mode(mode: GameMode) -> Set[str]:
 # CARD NAMES - Common cards referenced in scripts
 # ============================================================================
 
-COMMON_CARDS: Set[str] = {
-    # 精灵类
-    "火灵", "水灵", "土灵", "风灵", "冰精灵", "光精灵", 
-    "魔精灵", "幻精灵", "雷精灵", "魂精灵",
+def _load_card_names() -> Set[str]:
+    """
+    Load card names from public/card_names.json.
+    Raises FileNotFoundError if file not found or JSONDecodeError if invalid.
+    """
+    # Try to find public folder (works from backend/ or production/)
+    public_path = Path(__file__).parent.parent.parent.parent / 'public' / 'card_names.json'
+    if not public_path.exists():
+        # Try alternative path
+        public_path = Path(__file__).parent.parent.parent / 'public' / 'card_names.json'
     
-    # 战士类
-    "蛇女", "骨弓", "死神", "酋长", "萌萌", "小野",
-    "咕咕", "天使", "鱼人", "圣骑", "冰骑", "亡将",
-    
-    # 法师类
-    "电法", "冰法", "火炮", "射线", "海妖", "潜艇",
-    
-    # 特殊
-    "宝库", "地精", "巫医",
-}
+    # Load JSON - will raise FileNotFoundError if missing
+    with open(public_path, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+        # Read flat array structure
+        return set(data['cards'])
+
+
+# Load card names dynamically from JSON file
+COMMON_CARDS: Set[str] = _load_card_names()
 
 
 # ============================================================================
@@ -309,5 +316,5 @@ LEVEL_PATTERNS: Dict[str, str] = {
 def parse_level(level_str: str) -> str:
     """Parse level string to standardized format."""
     if not level_str:
-        return None
+        return ""
     return LEVEL_PATTERNS.get(level_str, level_str)

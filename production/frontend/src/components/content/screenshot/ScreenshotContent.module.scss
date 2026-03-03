@@ -38,4 +38,141 @@
       border-color: #1890ff;
     }
   }
+
+  .cardDetection {
+    margin-top: 10px;
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .info {
+      margin-bottom: 5px;
+      color: rgba(2, 2, 2, 0.26);
+      font-size: 12px;
+
+      .infoText {
+        margin-left: 5px;
+      }
+    }
+
+    .slotsGrid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+
+      .slotCard {
+        border: 1px dashed #d9d9d9;
+        border-radius: 4px;
+        padding: 8px;
+        text-align: center;
+        background: #fafafa;
+
+        .slotLabel {
+          font-size: 11px;
+          color: #8c8c8c;
+          margin-bottom: 6px;
+        }
+
+        .unknownCard {
+          .unknownText {
+            font-size: 13px;
+            color: #ff4d4f;
+            margin-bottom: 6px;
+            font-weight: 500;
+          }
+
+          .topGuesses {
+            font-size: 11px;
+            color: #8c8c8c;
+            text-align: left;
+            margin-bottom: 6px;
+            line-height: 1.4;
+          }
+        }
+
+        .knownCard {
+          .cardName {
+            font-size: 15px;
+            font-weight: 500;
+            color: #52c41a;
+            margin-bottom: 4px;
+          }
+
+          .confidence {
+            font-size: 11px;
+            color: #8c8c8c;
+          }
+        }
+      }
+    }
+  }
+
+  .unlabeledSection {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #f0f0f0;
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+
+      .infoText {
+        font-size: 13px;
+        font-weight: 500;
+        color: #1890ff;
+      }
+    }
+
+    .unlabeledGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px;
+
+      .unlabeledCard {
+        border: 1px solid #d9d9d9;
+        border-radius: 4px;
+        padding: 8px;
+        background: #fff;
+        transition: all 0.3s;
+
+        &:hover {
+          border-color: #1890ff;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .cropImage {
+          width: 100%;
+          height: 90px;
+          object-fit: contain;
+          background: #fafafa;
+          border-radius: 2px;
+        }
+
+        .cropInfo {
+          margin-top: 6px;
+          font-size: 11px;
+          color: #8c8c8c;
+
+          .cropId {
+            font-weight: 500;
+            margin-bottom: 2px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+
+          .cropSource {
+            font-size: 10px;
+            color: #bfbfbf;
+          }
+        }
+      }
+    }
+  }
 }
