@@ -1,0 +1,41 @@
+.screenshot {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+
+  .header {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-bottom: 10px;
+    padding: 0 4px;
+  }
+
+
+  .content {
+    flex: 1;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    padding: 4px;
+  }
+
+  .imagePreview {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px dashed #d9d9d9;
+    border-radius: 8px;
+    background: #fafafa;
+    min-height: 250px;
+    padding: 16px;
+    transition: all 0.3s;
+    overflow: hidden;
+
+    &:hover {
+      border-color: #1890ff;
+    }
+  }
+}

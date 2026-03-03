@@ -6,6 +6,7 @@ from app.services.utility_services import UtilityService
 from app.services.event_services import EventService
 from app.services.image_services import ImageService
 from app.services.window_control_services import WindowControlService
+from app.services.screenshot_service import ScreenshotService
 from app.services.game_service import GameService
 from app.services.shortcut_service import ShortcutService
 from urllib.parse import unquote
@@ -421,6 +422,34 @@ async def turn_off_pc():
         return JSONResponse(
             status_code=500,
             content={"detail": f"Error turning off PC: {str(e)}"}
+        )
+
+@app.post("/screenshot")
+async def capture_screenshot(request: Request):
+    """Capture screenshot of the specified window."""
+    try:
+        pid = get_req_pid(request)
+        
+        if not pid:
+            try:
+                body = await request.json()
+                if isinstance(body, dict):
+                    pid = body.get("pid")
+            except:
+                pass
+
+        if not pid:
+            raise HTTPException(status_code=400, detail="Window PID is required")
+            
+        result = ScreenshotService.capture_screenshot(int(pid))
+        return result
+    except ValueError:
+        return JSONResponse(status_code=400, content={"detail": "Invalid PID format"})
+    except Exception as e:
+        logger.error(f"Error capturing screenshot: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"detail": f"Error capturing screenshot: {str(e)}"}
         )
 
 # ============================================================================

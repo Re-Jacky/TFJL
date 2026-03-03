@@ -59,6 +59,7 @@ export interface API {
   }) => Promise<{ status: boolean }>;
   locateAutoWindow: (config: {game: number; tool: number; idx: 0 | 1}) => Promise<{ status: string }>;
   turnOffPC: () => Promise<{ status: string }>;
+  captureScreenshot: (pid: number) => Promise<{ success: boolean; image: string; file_path: string; filename: string; message: string }>;
   test: () => Promise<{ status: string }>;
   parseScript: (content: string, name?: string, scriptType?: ScriptType) => Promise<ParseScriptResponse>;
   validateScript: (content: string) => Promise<ValidateScriptResponse>;
@@ -126,6 +127,9 @@ export const api: API = {
   },
   turnOffPC: async () => {
     return await proxy.post('turn-off-pc');
+  },
+  captureScreenshot: async (pid: number) => {
+    return await proxy.post('screenshot', { pid });
   },
   test: async () => {
     return await proxy.get('test-api');
