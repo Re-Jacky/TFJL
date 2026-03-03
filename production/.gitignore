@@ -56,3 +56,6 @@ yarn-error.log*
 .env.production.local
 
 screenshot/
+
+# Card recognition runtime data
+card_recognition/
