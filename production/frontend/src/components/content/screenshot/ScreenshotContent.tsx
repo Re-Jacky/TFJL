@@ -528,6 +528,11 @@ const ScreenshotContent: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    // handle recognize image
+    handleDetectCards();
+  }, [currentImageUrl, screenshotFiles]);
+
   return (
     <div className={styles.screenshot}>
       <div className={styles.header}>
@@ -617,11 +622,9 @@ const ScreenshotContent: React.FC = () => {
         <div className={styles.cardDetection}>
           <div className={styles.header}>
             <div className={styles.info}>
-              <span className={styles.infoText}>卡牌</span>
               {modelStatus && (
                 <span className={styles.infoText}>
-                  | 模型: {modelStatus.model_version || '未训练'} | 已训练:{' '}
-                  {modelStatus.trained_cards?.length || 0}张 | 样本:{' '}
+                  模型已训练: {modelStatus.trained_cards?.length || 0}张 | 样本:{' '}
                   {modelStatus.total_samples || 0}个
                 </span>
               )}

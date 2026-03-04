@@ -116,6 +116,10 @@
             font-weight: 500;
             color: #52c41a;
             margin-bottom: 4px;
+            word-wrap: break-word;
+            word-break: break-all;
+            overflow-wrap: break-word;
+            max-width: 100%;
           }
 
           .confidence {
