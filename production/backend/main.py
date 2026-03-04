@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 import time
+from pathlib import Path
 from app.services.utility_services import UtilityService
 from app.services.event_services import EventService
 from app.services.image_services import ImageService
@@ -456,6 +457,23 @@ async def capture_screenshot(request: Request):
             status_code=500,
             content={"detail": f"Error capturing screenshot: {str(e)}"}
         )
+@app.get("/screenshots/list")
+def list_screenshots():
+    """List all PNG files in production/screenshot/ folder"""
+    try:
+        screenshot_dir = Path("../screenshot")
+        if not screenshot_dir.exists():
+            return {"success": True, "files": [], "count": 0}
+        
+        files = sorted(
+            [f.name for f in screenshot_dir.glob("*.png") if f.is_file()],
+            reverse=True  # Newest first (timestamp in filename)
+        )
+        return {"success": True, "files": files, "count": len(files)}
+    except Exception as e:
+        logger.error(f"Error listing screenshots: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 # ============================================================================
 # SCRIPT AUTOMATION ENDPOINTS
