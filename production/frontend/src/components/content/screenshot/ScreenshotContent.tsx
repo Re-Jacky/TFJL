@@ -108,6 +108,26 @@ const ScreenshotContent: React.FC = () => {
     }
   };
 
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle if in browse mode and not typing in input
+      if (cropMode !== 'browse') return;
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        handlePrevious();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        handleNext();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [cropMode, selectedFileIndex, screenshotFiles]);
+
   const handleSelectFile = async (index: number) => {
     setSelectedFileIndex(index);
     await loadScreenshotImage(screenshotFiles[index]);
