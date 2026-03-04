@@ -56,3 +56,4 @@ yarn-error.log*
 .env.production.local
 
 /screenshot/
+card_recognition/
