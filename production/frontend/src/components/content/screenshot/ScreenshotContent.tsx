@@ -4,8 +4,10 @@ import { useAppSelector } from '@src/store/store';
 import { selectActiveWindow } from '@src/store/selectors';
 import { api } from '@src/services/api';
 import styles from './ScreenshotContent.module.scss';
-
-
+import ImageBrowser from './components/ImageBrowser';
+import CropEditor from './components/CropEditor';
+import CropLabeler from './components/CropLabeler';
+import type { CropBox } from '@src/services/api';
 
 const ScreenshotContent: React.FC = () => {
   const activeWindow = useAppSelector(selectActiveWindow);
@@ -25,6 +27,23 @@ const ScreenshotContent: React.FC = () => {
     dragging: 'top' | 'bottom' | 'left' | 'right' | null;
     dragStart: { x: number; y: number } | null;
   } | null>(null);
+
+  // Screenshot folder browsing
+  const [screenshotFiles, setScreenshotFiles] = useState<string[]>([]);
+  const [selectedFileIndex, setSelectedFileIndex] = useState<number>(0);
+  const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
+  const [imageSize, setImageSize] = useState<{ width: number; height: number } | null>(null);
+
+  // Cropping workflow
+  const [cropMode, setCropMode] = useState<'browse' | 'cropping' | 'labeling'>('browse');
+  const [cropBoxes, setCropBoxes] = useState<CropBox[]>([
+    { x: 440, y: 560, w: 70, h: 90 },
+    { x: 525, y: 560, w: 70, h: 90 },
+    { x: 610, y: 560, w: 70, h: 90 }
+  ]);
+  const [extractedCrops, setExtractedCrops] = useState<string[]>([]);
+  const [cropLabels, setCropLabels] = useState<string[]>(['', '', '']);
+  const [savingLabels, setSavingLabels] = useState(false);
 
   // Load card names on mount
   useEffect(() => {
@@ -53,6 +72,39 @@ const ScreenshotContent: React.FC = () => {
     loadModelStatus();
   }, []);
 
+  // Load screenshot files on mount
+  useEffect(() => {
+    loadScreenshotFiles();
+  }, []);
+
+  const loadScreenshotFiles = async () => {
+    try {
+      const result = await api.listScreenshots();
+      setScreenshotFiles(result.files);
+      if (result.files.length > 0) {
+        setSelectedFileIndex(0);
+        await loadScreenshotImage(result.files[0]);
+      }
+    } catch (error) {
+      console.error('Failed to load screenshot files:', error);
+      message.error('加载截图列表失败');
+    }
+  };
+
+  const loadScreenshotImage = async (filename: string) => {
+    try {
+      setLoading(true);
+      const result = await api.getScreenshotFile(filename);
+      setCurrentImageUrl(result.image);
+      setImageSize(result.size);
+    } catch (error) {
+      console.error('Failed to load screenshot:', error);
+      message.error('加载截图失败: ' + error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleCapture = async () => {
     if (!activeWindow) {
       message.error('请先选择一个游戏窗口');
@@ -61,8 +113,8 @@ const ScreenshotContent: React.FC = () => {
 
     setLoading(true);
     try {
-    const pid = parseInt(activeWindow, 10);
-    const result = await api.captureScreenshot(pid);
+      const pid = parseInt(activeWindow, 10);
+      const result = await api.captureScreenshot(pid);
       if (result.success && result.image) {
         setImageUrl(result.image);
         message.success('截图成功');
@@ -82,7 +134,7 @@ const ScreenshotContent: React.FC = () => {
       message.error('请先选择活动窗口');
       return;
     }
-    
+
     setDetectingCards(true);
     try {
       const result = await api.detectCards(parseInt(activeWindow));
@@ -140,9 +192,9 @@ const ScreenshotContent: React.FC = () => {
     try {
       const result = await api.getUnlabeledCrops();
       // Convert base64 to data URLs for display
-      const cropsWithUrls = (result.crops || []).map(crop => ({
+      const cropsWithUrls = (result.crops || []).map((crop) => ({
         ...crop,
-        image_url: `data:image/png;base64,${crop.image_base64}`
+        image_url: `data:image/png;base64,${crop.image_base64}`,
       }));
       setUnlabeledCrops(cropsWithUrls);
       setShowUnlabeled(true);
@@ -157,13 +209,15 @@ const ScreenshotContent: React.FC = () => {
   const handleLabelUnlabeledCard = async (cropId: string, cardName: string) => {
     try {
       // Get crop from state to check if it has margins
-      const crop = unlabeledCrops.find(c => c.crop_id === cropId);
+      const crop = unlabeledCrops.find((c) => c.crop_id === cropId);
       const cropMargins = crop?.crop_margins;
-      
+
       const result = await api.labelCrop(cropId, cardName, cropMargins);
       message.success(result.message);
       // Remove from unlabeled list
-      setUnlabeledCrops(prev => prev.filter(crop => crop.crop_id !== cropId));
+      setUnlabeledCrops((prev) =>
+        prev.filter((crop) => crop.crop_id !== cropId)
+      );
       // Refresh model status
       const status = await api.getModelStatus();
       setModelStatus(status);
@@ -182,19 +236,22 @@ const ScreenshotContent: React.FC = () => {
         margins: { top: 0, bottom: 0, left: 0, right: 0 },
         imageSize: { width: img.width, height: img.height },
         dragging: null,
-        dragStart: null
+        dragStart: null,
       });
     };
     img.src = crop.image_url;
   };
 
-  const handleBorderMouseDown = (edge: 'top' | 'bottom' | 'left' | 'right', e: React.MouseEvent) => {
+  const handleBorderMouseDown = (
+    edge: 'top' | 'bottom' | 'left' | 'right',
+    e: React.MouseEvent
+  ) => {
     e.preventDefault();
     if (!cropEditor) return;
     setCropEditor({
       ...cropEditor,
       dragging: edge,
-      dragStart: { x: e.clientX, y: e.clientY }
+      dragStart: { x: e.clientX, y: e.clientY },
     });
   };
 
@@ -205,7 +262,9 @@ const ScreenshotContent: React.FC = () => {
     const deltaY = e.clientY - cropEditor.dragStart.y;
 
     // Get the displayed image element to calculate scale factor
-    const imgElement = document.querySelector('#cropEditorImage') as HTMLImageElement;
+    const imgElement = document.querySelector(
+      '#cropEditorImage'
+    ) as HTMLImageElement;
     if (!imgElement) return;
 
     const displayWidth = imgElement.width;
@@ -217,23 +276,47 @@ const ScreenshotContent: React.FC = () => {
 
     switch (cropEditor.dragging) {
       case 'top':
-        newMargins.top = Math.max(0, Math.min(cropEditor.imageSize.height - cropEditor.margins.bottom - 10, cropEditor.margins.top + Math.round(deltaY * scaleY)));
+        newMargins.top = Math.max(
+          0,
+          Math.min(
+            cropEditor.imageSize.height - cropEditor.margins.bottom - 10,
+            cropEditor.margins.top + Math.round(deltaY * scaleY)
+          )
+        );
         break;
       case 'bottom':
-        newMargins.bottom = Math.max(0, Math.min(cropEditor.imageSize.height - cropEditor.margins.top - 10, cropEditor.margins.bottom - Math.round(deltaY * scaleY)));
+        newMargins.bottom = Math.max(
+          0,
+          Math.min(
+            cropEditor.imageSize.height - cropEditor.margins.top - 10,
+            cropEditor.margins.bottom - Math.round(deltaY * scaleY)
+          )
+        );
         break;
       case 'left':
-        newMargins.left = Math.max(0, Math.min(cropEditor.imageSize.width - cropEditor.margins.right - 10, cropEditor.margins.left + Math.round(deltaX * scaleX)));
+        newMargins.left = Math.max(
+          0,
+          Math.min(
+            cropEditor.imageSize.width - cropEditor.margins.right - 10,
+            cropEditor.margins.left + Math.round(deltaX * scaleX)
+          )
+        );
         break;
       case 'right':
-        newMargins.right = Math.max(0, Math.min(cropEditor.imageSize.width - cropEditor.margins.left - 10, cropEditor.margins.right - Math.round(deltaX * scaleX)));
+        newMargins.right = Math.max(
+          0,
+          Math.min(
+            cropEditor.imageSize.width - cropEditor.margins.left - 10,
+            cropEditor.margins.right - Math.round(deltaX * scaleX)
+          )
+        );
         break;
     }
 
     setCropEditor({
       ...cropEditor,
       margins: newMargins,
-      dragStart: { x: e.clientX, y: e.clientY }
+      dragStart: { x: e.clientX, y: e.clientY },
     });
   };
 
@@ -242,25 +325,25 @@ const ScreenshotContent: React.FC = () => {
     setCropEditor({
       ...cropEditor,
       dragging: null,
-      dragStart: null
+      dragStart: null,
     });
   };
 
   const handleApplyCrop = () => {
     if (!cropEditor) return;
-    
+
     // Update the crop in state with adjusted margins
     const { crop, margins } = cropEditor;
     const updatedCrop = {
       ...crop,
       crop_margins: margins,
-      needs_recrop: true
+      needs_recrop: true,
     };
-    
-    setUnlabeledCrops(prev => 
-      prev.map(c => c.crop_id === crop.crop_id ? updatedCrop : c)
+
+    setUnlabeledCrops((prev) =>
+      prev.map((c) => (c.crop_id === crop.crop_id ? updatedCrop : c))
     );
-    
+
     message.success('裁切调整已保存，标注时将应用调整');
     setCropEditor(null);
   };
@@ -282,7 +365,7 @@ const ScreenshotContent: React.FC = () => {
     try {
       const importPath = prompt('请输入模型文件路径 (ZIP):');
       if (!importPath) return;
-      
+
       const result = await api.importModel(importPath);
       message.success(`模型已导入: ${result.trained_cards.length} 张卡牌`);
       // Refresh model status
@@ -293,13 +376,12 @@ const ScreenshotContent: React.FC = () => {
     }
   };
 
-
   return (
     <div className={styles.screenshot}>
       <div className={styles.header}>
-        <Button 
-          type="primary" 
-          onClick={handleCapture} 
+        <Button
+          type='primary'
+          onClick={handleCapture}
           loading={loading}
           disabled={!activeWindow}
         >
@@ -310,15 +392,19 @@ const ScreenshotContent: React.FC = () => {
       <div className={styles.content}>
         <div className={styles.imagePreview}>
           {loading ? (
-            <Spin tip="正在捕获..." />
+            <Spin tip='正在捕获...' />
           ) : imageUrl ? (
             <Image
               src={imageUrl}
-              alt="Window Screenshot"
-              style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+              alt='Window Screenshot'
+              style={{
+                maxWidth: '100%',
+                maxHeight: '100%',
+                objectFit: 'contain',
+              }}
             />
           ) : (
-            <Empty description="暂无截图" />
+            <Empty description='暂无截图' />
           )}
         </div>
 
@@ -329,14 +415,14 @@ const ScreenshotContent: React.FC = () => {
               <span className={styles.infoText}>卡牌</span>
               {modelStatus && (
                 <span className={styles.infoText}>
-                  | 模型: {modelStatus.model_version || '未训练'} | 
-                  已训练: {modelStatus.trained_cards?.length || 0}张 | 
-                  样本: {modelStatus.total_samples || 0}个
+                  | 模型: {modelStatus.model_version || '未训练'} | 已训练:{' '}
+                  {modelStatus.trained_cards?.length || 0}张 | 样本:{' '}
+                  {modelStatus.total_samples || 0}个
                 </span>
               )}
             </div>
             <div>
-              <Button 
+              <Button
                 onClick={handleBatchTrain}
                 size='small'
                 style={{ marginRight: '8px' }}
@@ -344,7 +430,7 @@ const ScreenshotContent: React.FC = () => {
               >
                 批量训练
               </Button>
-              <Button 
+              <Button
                 onClick={handleFetchUnlabeled}
                 size='small'
                 style={{ marginRight: '8px' }}
@@ -352,29 +438,29 @@ const ScreenshotContent: React.FC = () => {
               >
                 查看未标注
               </Button>
-              <Button 
+              <Button
                 onClick={handleExportModel}
                 size='small'
                 style={{ marginRight: '8px' }}
               >
                 导出模型
               </Button>
-              <Button 
+              <Button
                 onClick={handleImportModel}
                 size='small'
                 style={{ marginRight: '8px' }}
               >
                 导入模型
               </Button>
-              <Button 
+              <Button
                 onClick={handleTrainModel}
                 size='small'
                 style={{ marginRight: '8px' }}
               >
                 重训
               </Button>
-              <Button 
-                type='primary' 
+              <Button
+                type='primary'
                 onClick={handleDetectCards}
                 loading={detectingCards}
                 disabled={!activeWindow}
@@ -384,7 +470,7 @@ const ScreenshotContent: React.FC = () => {
               </Button>
             </div>
           </div>
-          
+
           {detectionResult && (
             <div className={styles.slotsGrid}>
               {detectionResult.slots.map((slot: any) => (
@@ -394,19 +480,27 @@ const ScreenshotContent: React.FC = () => {
                     <div className={styles.unknownCard}>
                       <div className={styles.unknownText}>未知</div>
                       <div className={styles.topGuesses}>
-                        {slot.top_k_guesses?.slice(0, 3).map((guess: string, i: number) => (
-                          <div key={i}>{i + 1}. {guess}</div>
-                        ))}
+                        {slot.top_k_guesses
+                          ?.slice(0, 3)
+                          .map((guess: string, i: number) => (
+                            <div key={i}>
+                              {i + 1}. {guess}
+                            </div>
+                          ))}
                       </div>
                       <Select
                         size='small'
                         style={{ width: '100%' }}
                         placeholder='选择卡牌'
-                        onChange={(value) => handleLabelCard(slot.crop_id, value)}
+                        onChange={(value) =>
+                          handleLabelCard(slot.crop_id, value)
+                        }
                         showSearch
                       >
                         {cardNames.map((card: string) => (
-                          <Select.Option key={card} value={card}>{card}</Select.Option>
+                          <Select.Option key={card} value={card}>
+                            {card}
+                          </Select.Option>
                         ))}
                       </Select>
                     </div>
@@ -430,25 +524,24 @@ const ScreenshotContent: React.FC = () => {
               <span className={styles.infoText}>
                 未标注卡牌 ({unlabeledCrops.length} 个)
               </span>
-              <Button 
-                size='small' 
-                onClick={() => setShowUnlabeled(false)}
-              >
+              <Button size='small' onClick={() => setShowUnlabeled(false)}>
                 隐藏
               </Button>
             </div>
             <div className={styles.unlabeledGrid}>
               {unlabeledCrops.map((crop: any) => (
                 <div key={crop.crop_id} className={styles.unlabeledCard}>
-                  <img 
-                    src={crop.image_url} 
+                  <img
+                    src={crop.image_url}
                     alt={crop.crop_id}
                     className={styles.cropImage}
                   />
                   <div className={styles.cropInfo}>
                     <div className={styles.cropId}>{crop.crop_id}</div>
                     {crop.source && (
-                      <div className={styles.cropSource}>来源: {crop.source}</div>
+                      <div className={styles.cropSource}>
+                        来源: {crop.source}
+                      </div>
                     )}
                   </div>
                   <div className={styles.cropActions}>
@@ -463,15 +556,19 @@ const ScreenshotContent: React.FC = () => {
                       size='small'
                       style={{ width: '100%', marginTop: '8px' }}
                       placeholder='选择卡牌'
-                      onChange={(value) => handleLabelUnlabeledCard(crop.crop_id, value)}
+                      onChange={(value) =>
+                        handleLabelUnlabeledCard(crop.crop_id, value)
+                      }
                       showSearch
                     >
                       {cardNames.map((card: string) => (
-                        <Select.Option key={card} value={card}>{card}</Select.Option>
+                        <Select.Option key={card} value={card}>
+                          {card}
+                        </Select.Option>
                       ))}
                     </Select>
+                  </div>
                 </div>
-              </div>
               ))}
             </div>
           </div>
@@ -490,26 +587,26 @@ const ScreenshotContent: React.FC = () => {
               <p style={{ marginBottom: '10px', color: '#666' }}>
                 拖动红色边框调整裁切区域
               </p>
-              <div 
-                style={{ 
+              <div
+                style={{
                   position: 'relative',
                   display: 'inline-block',
-                  cursor: cropEditor.dragging ? 'grabbing' : 'default'
+                  cursor: cropEditor.dragging ? 'grabbing' : 'default',
                 }}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
               >
                 {/* Background dimmed image */}
-                <img 
+                <img
                   id='cropEditorImage'
                   src={cropEditor.crop.image_url}
                   alt='crop preview'
-                  style={{ 
+                  style={{
                     maxWidth: '600px',
                     maxHeight: '400px',
                     display: 'block',
-                    opacity: 0.3
+                    opacity: 0.3,
                   }}
                 />
                 {/* Cropped region overlay */}
@@ -521,22 +618,22 @@ const ScreenshotContent: React.FC = () => {
                     width: '100%',
                     height: '100%',
                     overflow: 'hidden',
-                    pointerEvents: 'none'
+                    pointerEvents: 'none',
                   }}
                 >
-                  <img 
+                  <img
                     src={cropEditor.crop.image_url}
                     alt='cropped'
-                    style={{ 
+                    style={{
                       maxWidth: '600px',
                       maxHeight: '400px',
                       display: 'block',
                       clipPath: `inset(
-                        ${cropEditor.margins.top / cropEditor.imageSize.height * 100}% 
-                        ${cropEditor.margins.right / cropEditor.imageSize.width * 100}% 
-                        ${cropEditor.margins.bottom / cropEditor.imageSize.height * 100}% 
-                        ${cropEditor.margins.left / cropEditor.imageSize.width * 100}%
-                      )`
+                        ${(cropEditor.margins.top / cropEditor.imageSize.height) * 100}% 
+                        ${(cropEditor.margins.right / cropEditor.imageSize.width) * 100}% 
+                        ${(cropEditor.margins.bottom / cropEditor.imageSize.height) * 100}% 
+                        ${(cropEditor.margins.left / cropEditor.imageSize.width) * 100}%
+                      )`,
                     }}
                   />
                 </div>
@@ -545,14 +642,14 @@ const ScreenshotContent: React.FC = () => {
                   onMouseDown={(e) => handleBorderMouseDown('top', e)}
                   style={{
                     position: 'absolute',
-                    top: `${cropEditor.margins.top / cropEditor.imageSize.height * 100}%`,
-                    left: `${cropEditor.margins.left / cropEditor.imageSize.width * 100}%`,
-                    right: `${cropEditor.margins.right / cropEditor.imageSize.width * 100}%`,
+                    top: `${(cropEditor.margins.top / cropEditor.imageSize.height) * 100}%`,
+                    left: `${(cropEditor.margins.left / cropEditor.imageSize.width) * 100}%`,
+                    right: `${(cropEditor.margins.right / cropEditor.imageSize.width) * 100}%`,
                     height: '3px',
                     backgroundColor: '#ff4d4f',
                     cursor: 'ns-resize',
                     pointerEvents: 'all',
-                    zIndex: 10
+                    zIndex: 10,
                   }}
                 />
                 {/* Bottom border */}
@@ -560,14 +657,14 @@ const ScreenshotContent: React.FC = () => {
                   onMouseDown={(e) => handleBorderMouseDown('bottom', e)}
                   style={{
                     position: 'absolute',
-                    bottom: `${cropEditor.margins.bottom / cropEditor.imageSize.height * 100}%`,
-                    left: `${cropEditor.margins.left / cropEditor.imageSize.width * 100}%`,
-                    right: `${cropEditor.margins.right / cropEditor.imageSize.width * 100}%`,
+                    bottom: `${(cropEditor.margins.bottom / cropEditor.imageSize.height) * 100}%`,
+                    left: `${(cropEditor.margins.left / cropEditor.imageSize.width) * 100}%`,
+                    right: `${(cropEditor.margins.right / cropEditor.imageSize.width) * 100}%`,
                     height: '3px',
                     backgroundColor: '#ff4d4f',
                     cursor: 'ns-resize',
                     pointerEvents: 'all',
-                    zIndex: 10
+                    zIndex: 10,
                   }}
                 />
                 {/* Left border */}
@@ -575,14 +672,14 @@ const ScreenshotContent: React.FC = () => {
                   onMouseDown={(e) => handleBorderMouseDown('left', e)}
                   style={{
                     position: 'absolute',
-                    top: `${cropEditor.margins.top / cropEditor.imageSize.height * 100}%`,
-                    bottom: `${cropEditor.margins.bottom / cropEditor.imageSize.height * 100}%`,
-                    left: `${cropEditor.margins.left / cropEditor.imageSize.width * 100}%`,
+                    top: `${(cropEditor.margins.top / cropEditor.imageSize.height) * 100}%`,
+                    bottom: `${(cropEditor.margins.bottom / cropEditor.imageSize.height) * 100}%`,
+                    left: `${(cropEditor.margins.left / cropEditor.imageSize.width) * 100}%`,
                     width: '3px',
                     backgroundColor: '#ff4d4f',
                     cursor: 'ew-resize',
                     pointerEvents: 'all',
-                    zIndex: 10
+                    zIndex: 10,
                   }}
                 />
                 {/* Right border */}
@@ -590,19 +687,23 @@ const ScreenshotContent: React.FC = () => {
                   onMouseDown={(e) => handleBorderMouseDown('right', e)}
                   style={{
                     position: 'absolute',
-                    top: `${cropEditor.margins.top / cropEditor.imageSize.height * 100}%`,
-                    bottom: `${cropEditor.margins.bottom / cropEditor.imageSize.height * 100}%`,
-                    right: `${cropEditor.margins.right / cropEditor.imageSize.width * 100}%`,
+                    top: `${(cropEditor.margins.top / cropEditor.imageSize.height) * 100}%`,
+                    bottom: `${(cropEditor.margins.bottom / cropEditor.imageSize.height) * 100}%`,
+                    right: `${(cropEditor.margins.right / cropEditor.imageSize.width) * 100}%`,
                     width: '3px',
                     backgroundColor: '#ff4d4f',
                     cursor: 'ew-resize',
                     pointerEvents: 'all',
-                    zIndex: 10
+                    zIndex: 10,
                   }}
                 />
               </div>
-              <div style={{ marginTop: '16px', fontSize: '12px', color: '#999' }}>
-                裁切边距: 上={cropEditor.margins.top}px, 下={cropEditor.margins.bottom}px, 左={cropEditor.margins.left}px, 右={cropEditor.margins.right}px
+              <div
+                style={{ marginTop: '16px', fontSize: '12px', color: '#999' }}
+              >
+                裁切边距: 上={cropEditor.margins.top}px, 下=
+                {cropEditor.margins.bottom}px, 左={cropEditor.margins.left}px,
+                右={cropEditor.margins.right}px
               </div>
             </div>
           </Modal>
