@@ -32,14 +32,17 @@ const ScreenshotContent: React.FC = () => {
   const [screenshotFiles, setScreenshotFiles] = useState<string[]>([]);
   const [selectedFileIndex, setSelectedFileIndex] = useState<number>(0);
   const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
-  const [imageSize, setImageSize] = useState<{ width: number; height: number } | null>(null);
+  const [imageSize, setImageSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
 
   // Cropping workflow
   const [cropMode, setCropMode] = useState<'browse' | 'cropping' | 'labeling'>('browse');
   const [cropBoxes, setCropBoxes] = useState<CropBox[]>([
     { x: 440, y: 560, w: 70, h: 90 },
     { x: 525, y: 560, w: 70, h: 90 },
-    { x: 610, y: 560, w: 70, h: 90 }
+    { x: 610, y: 560, w: 70, h: 90 },
   ]);
   const [extractedCrops, setExtractedCrops] = useState<string[]>([]);
   const [cropLabels, setCropLabels] = useState<string[]>(['', '', '']);
@@ -105,6 +108,110 @@ const ScreenshotContent: React.FC = () => {
     }
   };
 
+  const handleSelectFile = async (index: number) => {
+    setSelectedFileIndex(index);
+    await loadScreenshotImage(screenshotFiles[index]);
+    // Reset crop mode when switching images
+    setCropMode('browse');
+    setExtractedCrops([]);
+    setCropLabels(['', '', '']);
+  };
+
+  const handlePrevious = () => {
+    if (selectedFileIndex > 0) {
+      handleSelectFile(selectedFileIndex - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (selectedFileIndex < screenshotFiles.length - 1) {
+      handleSelectFile(selectedFileIndex + 1);
+    }
+  };
+
+  const handleStartLabeling = () => {
+    setCropMode('cropping');
+    // Reset boxes to default positions
+    setCropBoxes([
+      { x: 440, y: 560, w: 70, h: 90 },
+      { x: 525, y: 560, w: 70, h: 90 },
+      { x: 610, y: 560, w: 70, h: 90 },
+    ]);
+  };
+
+  const handleFinishCropping = async () => {
+    if (!screenshotFiles[selectedFileIndex]) {
+      message.error('未选择截图');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const result = await api.extractCrops(screenshotFiles[selectedFileIndex], cropBoxes);
+      setExtractedCrops(result.crops);
+      setCropLabels(['', '', '']);
+      setCropMode('labeling');
+      message.success('裁切完成，请标注卡牌');
+    } catch (error) {
+      console.error('Failed to extract crops:', error);
+      message.error('裁切失败: ' + error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveLabels = async () => {
+    if (!screenshotFiles[selectedFileIndex]) {
+      message.error('未选择截图');
+      return;
+    }
+
+    if (cropLabels.some((label) => !label.trim())) {
+      message.warning('请为所有卡牌选择标签');
+      return;
+    }
+
+    try {
+      setSavingLabels(true);
+      const cropsWithLabels = cropBoxes.map((box, idx) => ({
+        ...box,
+        label: cropLabels[idx],
+      }));
+
+      const result = await api.saveLabeledCrops({
+        filename: screenshotFiles[selectedFileIndex],
+        crops: cropsWithLabels,
+      });
+
+      message.success(result.message);
+
+      // Refresh model status
+      const status = await api.getModelStatus();
+      setModelStatus(status);
+
+      // Reset to browse mode
+      setCropMode('browse');
+      setExtractedCrops([]);
+      setCropLabels(['', '', '']);
+    } catch (error) {
+      console.error('Failed to save labels:', error);
+      message.error('保存标注失败: ' + error);
+    } finally {
+      setSavingLabels(false);
+    }
+  };
+
+  const handleCancelLabeling = () => {
+    setCropMode('browse');
+    setExtractedCrops([]);
+    setCropLabels(['', '', '']);
+  };
+
+  const handleRecrop = () => {
+    setCropMode('cropping');
+    setExtractedCrops([]);
+  };
+
   const handleCapture = async () => {
     if (!activeWindow) {
       message.error('请先选择一个游戏窗口');
@@ -115,9 +222,22 @@ const ScreenshotContent: React.FC = () => {
     try {
       const pid = parseInt(activeWindow, 10);
       const result = await api.captureScreenshot(pid);
-      if (result.success && result.image) {
-        setImageUrl(result.image);
-        message.success('截图成功');
+      if (result.success) {
+        message.success('截图已保存到文件夹');
+
+        // Reload file list
+        await loadScreenshotFiles();
+
+        // Auto-select the newly captured file
+        const newIndex = screenshotFiles.findIndex(
+          (f) => f === result.filename
+        );
+        if (newIndex !== -1) {
+          await handleSelectFile(newIndex);
+        } else {
+          // If not found, it's the newest (index 0)
+          await handleSelectFile(0);
+        }
       } else {
         message.error(result.message || '截图失败');
       }
