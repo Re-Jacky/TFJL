@@ -20,6 +20,7 @@ Business logic layer. All services use static methods.
 | `script_simulator.py` | Dry-run simulation for testing scripts |
 | `script_executor.py` | Real-time script execution with game window |
 | `event_detector.py` | Image template matching for game events |
+| `screenshot_service.py` | Screenshot capture, folder browsing, crop extraction |
 
 ## Pattern
 
@@ -48,6 +49,7 @@ class ServiceName:
 - `shortcut_service` → `window_control_services`
 - `event_services` → All (for SSE logging)
 - `script_parser` → `script_validator` → `script_executor` (see below)
+- `screenshot_service` → `card_dataset_service` (crop extraction + labeling)
 
 ## Script Automation System
 
