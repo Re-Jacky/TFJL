@@ -30,7 +30,7 @@ const ImageBrowser: React.FC<ImageBrowserProps> = ({
 
   return (
     <div className={styles.imageBrowser}>
-      <Space direction='vertical' size='small' style={{ width: '100%' }}>
+      <div className={styles.selectWrapper}>
         <Select
           value={files[selectedIndex]}
           onChange={handleDropdownChange}
@@ -43,30 +43,30 @@ const ImageBrowser: React.FC<ImageBrowserProps> = ({
           }
           options={files.map((file) => ({ label: file, value: file }))}
         />
-        <Space>
-          <Button
-            icon={<LeftOutlined />}
-            onClick={onPrevious}
-            disabled={disabled || selectedIndex === 0}
-            size='small'
-          >
-            上一张
-          </Button>
-          <span className={styles.counter}>
-            {files.length > 0
-              ? `${selectedIndex + 1} / ${files.length}`
-              : '0 / 0'}
-          </span>
-          <Button
-            icon={<RightOutlined />}
-            onClick={onNext}
-            disabled={disabled || selectedIndex >= files.length - 1}
-            size='small'
-          >
-            下一张
-          </Button>
-        </Space>
-      </Space>
+      </div>
+      <div className={styles.navigationWrapper}>
+        <Button
+          icon={<LeftOutlined />}
+          onClick={onPrevious}
+          disabled={disabled || selectedIndex === 0}
+          size='small'
+        >
+          上一张
+        </Button>
+        <span className={styles.counter}>
+          {files.length > 0
+            ? `${selectedIndex + 1} / ${files.length}`
+            : '0 / 0'}
+        </span>
+        <Button
+          icon={<RightOutlined />}
+          onClick={onNext}
+          disabled={disabled || selectedIndex >= files.length - 1}
+          size='small'
+        >
+          下一张
+        </Button>
+      </div>
     </div>
   );
 };

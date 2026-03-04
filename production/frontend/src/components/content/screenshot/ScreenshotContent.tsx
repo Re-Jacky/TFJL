@@ -561,11 +561,7 @@ const ScreenshotContent: React.FC = () => {
                   <Image
                     src={currentImageUrl}
                     alt='Screenshot'
-                    style={{
-                      maxWidth: '100%',
-                      maxHeight: '600px',
-                      objectFit: 'contain',
-                    }}
+                    preview={false}
                   />
                 )}
               </>

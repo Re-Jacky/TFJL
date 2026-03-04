@@ -1,5 +1,19 @@
 .imageBrowser {
-  padding: 12px 0;
+  padding: 8px 0;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  
+  .selectWrapper {
+    min-width: 280px;
+    max-width: 320px;
+  }
+  
+  .navigationWrapper {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
   
   .counter {
     display: inline-block;
