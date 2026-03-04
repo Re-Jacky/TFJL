@@ -7,12 +7,15 @@ interface LoadingMaskProps {
   tip?: string;
 }
 
-const LoadingMask: React.FC<LoadingMaskProps> = ({ visible, tip = ' 初始化...' }) => {
+const LoadingMask: React.FC<LoadingMaskProps> = ({
+  visible,
+  tip = ' 初始化...',
+}) => {
   if (!visible) return null;
 
   return (
     <div className={styles.container}>
-      <Spin size="large" tip={tip} />
+      <Spin size='large' tip={tip} />
     </div>
   );
 };

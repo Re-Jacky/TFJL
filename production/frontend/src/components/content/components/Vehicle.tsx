@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Input } from 'antd';
 import styles from './Vehicle.module.scss';
-import {CloseCircleFilled} from '@ant-design/icons';
+import { CloseCircleFilled } from '@ant-design/icons';
 
 export type CellValues = {
   [idx: number]: string;
@@ -15,13 +15,11 @@ interface VehicleProps {
   onClick?: () => void;
 }
 
-export const produceEmptyCellValues = () => Array.from({ length: 7 }).reduce(
-  (acc: CellValues, _, index) => {
+export const produceEmptyCellValues = () =>
+  Array.from({ length: 7 }).reduce((acc: CellValues, _, index) => {
     acc[index] = '';
     return acc;
-  },
-  {}
-) as CellValues;
+  }, {}) as CellValues;
 
 const Vehicle: React.FC<VehicleProps> = (props) => {
   const { defaultCellValues, active, onChange, label, onClick, value } = props;
@@ -57,11 +55,11 @@ const Vehicle: React.FC<VehicleProps> = (props) => {
 
   const handleClear = (index: number) => {
     // only handle the clear event
-    const newCellValues = {...displayValues };
+    const newCellValues = { ...displayValues };
     newCellValues[index] = '';
     setCellValues(newCellValues);
     onChange?.(newCellValues);
-  }
+  };
 
   return (
     <div className={styles.vehicle} onClick={onClick}>
@@ -83,7 +81,11 @@ const Vehicle: React.FC<VehicleProps> = (props) => {
                   status={errorCellIdxs.includes(key) ? 'error' : undefined}
                   value={displayValues[parseInt(key)]}
                   onBlur={(e) => handleBlur(parseInt(key), e.target.value)}
-                  allowClear={{clearIcon: <CloseCircleFilled className={styles.inputClearIcon}/>}}
+                  allowClear={{
+                    clearIcon: (
+                      <CloseCircleFilled className={styles.inputClearIcon} />
+                    ),
+                  }}
                   onClear={() => {
                     handleClear(parseInt(key));
                   }}

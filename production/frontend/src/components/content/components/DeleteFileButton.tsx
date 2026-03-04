@@ -6,7 +6,7 @@ export interface DeleteFileButtonProps {
   disabled?: boolean;
   onDelete?: () => void;
 }
-const DeleteFileButton: React.FC <DeleteFileButtonProps> = (props) => {
+const DeleteFileButton: React.FC<DeleteFileButtonProps> = (props) => {
   const { disabled, onDelete } = props;
   return (
     <Popconfirm

@@ -3,7 +3,11 @@ import { Select, Button, Checkbox } from 'antd';
 import { WindowsFilled, AimOutlined, ReloadOutlined } from '@ant-design/icons';
 import styles from './WindowController.module.scss';
 import { useSelector } from 'react-redux';
-import { selectActiveWindow, selectInitializing, selectGameWindows } from '@src/store/selectors';
+import {
+  selectActiveWindow,
+  selectInitializing,
+  selectGameWindows,
+} from '@src/store/selectors';
 import { setActiveWindow } from '@src/store/actions';
 import { useAppDispatch } from '@src/store/store';
 import { getGameWindows } from '@src/store/thunks';
@@ -59,7 +63,13 @@ const WindowController: React.FC = () => {
         onChange={(value) => dispatch(setActiveWindow(value))}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        suffixIcon={isHovered ? <ReloadOutlined onClick={onRefresh} style={{color: '#4096ff'}}/> : <WindowsFilled />}
+        suffixIcon={
+          isHovered ? (
+            <ReloadOutlined onClick={onRefresh} style={{ color: '#4096ff' }} />
+          ) : (
+            <WindowsFilled />
+          )
+        }
       />
       <Button
         type='primary'

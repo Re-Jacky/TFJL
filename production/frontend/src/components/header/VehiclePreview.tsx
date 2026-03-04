@@ -27,16 +27,18 @@ const VehiclePreview: React.FC = () => {
 
   const handleBlur = (index: number, value: string) => {
     const match = value.match(/(.+?)\s*(\d+)/);
-    dispatch(setVehicle({
-      ...vehicleInfo,
-      info: {
-        ...vehicleInfo.info,
-        [index]: {
-          card: match? match[1] : '',
-          level: match? parseInt(match[2]) : 0,
+    dispatch(
+      setVehicle({
+        ...vehicleInfo,
+        info: {
+          ...vehicleInfo.info,
+          [index]: {
+            card: match ? match[1] : '',
+            level: match ? parseInt(match[2]) : 0,
+          },
         },
-      },
-    }));
+      })
+    );
     setActiveCell(null);
   };
   const getCellDisplayName = (cell: VehicleCell) => {

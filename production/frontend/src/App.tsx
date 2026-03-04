@@ -11,19 +11,22 @@ import { useAppSelector, useAppDispatch } from './store/store';
 
 const App: React.FC = () => {
   const initializing = useAppSelector(selectInitializing);
-  const activeWindow = useAppSelector(selectActiveWindow)
+  const activeWindow = useAppSelector(selectActiveWindow);
   const dispatch = useAppDispatch();
   const { connect, disconnect } = useSSE();
 
   useEffect(() => {
     // Check if the API is healthy every 1 second until it is healthy
     const intervalId = setInterval(() => {
-      api.healthCheck().then(() => {
-        dispatch(setInitializing(false));
-        clearInterval(intervalId);
-      }).catch(() => {
-        dispatch(setInitializing(true));
-      });
+      api
+        .healthCheck()
+        .then(() => {
+          dispatch(setInitializing(false));
+          clearInterval(intervalId);
+        })
+        .catch(() => {
+          dispatch(setInitializing(true));
+        });
     }, 1000);
     // Clean up the interval when the component unmounts
     return () => clearInterval(intervalId);
@@ -45,7 +48,6 @@ const App: React.FC = () => {
     };
   }, [initializing, activeWindow]);
 
-
   /**
    * Set the active window to localStorage when the active window changes
    */
@@ -58,7 +60,6 @@ const App: React.FC = () => {
       window.localStorage.removeItem('pid');
     };
   }, [activeWindow]);
-  
 
   return (
     <Layout

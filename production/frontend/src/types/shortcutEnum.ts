@@ -3,7 +3,7 @@ export enum ShortcutMode {
   SINGLE_PLAYER_SAILING,
   TWO_PLAYER,
   TWO_PLAYER_SKY,
-  AUCTION
+  AUCTION,
 }
 
 export enum GameMode {
@@ -41,8 +41,8 @@ export enum BattleShortcut {
 }
 
 export enum AuctionShortcut {
-  CARD_0 = 'auctionCard0', 
+  CARD_0 = 'auctionCard0',
   CARD_1 = 'auctionCard1',
   CARD_2 = 'auctionCard2',
-  CARD_3 = 'auctionCard3'
+  CARD_3 = 'auctionCard3',
 }

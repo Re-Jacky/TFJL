@@ -1,4 +1,4 @@
 export type Wnd = {
-    title: string;
-    pid: number;
-}
+  title: string;
+  pid: number;
+};

@@ -26,7 +26,7 @@ const defaultOptions: monaco.editor.IStandaloneEditorConstructionOptions = {
   quickSuggestions: {
     other: true,
     comments: true,
-    strings: true
+    strings: true,
   },
   renderFinalNewline: 'off',
   renderLineHighlight: 'none',
@@ -44,7 +44,7 @@ const defaultOptions: monaco.editor.IStandaloneEditorConstructionOptions = {
     localityBonus: false,
     filterGraceful: false,
     showWords: true,
-    insertMode: 'insert'
+    insertMode: 'insert',
   },
   minimap: {
     enabled: false,
@@ -115,7 +115,7 @@ const CodeEditor: React.ForwardRefRenderFunction<
         ],
       },
       includeLF: true, // Include line feeds in tokenization
-      unicode: true    // Enable Unicode support
+      unicode: true, // Enable Unicode support
     });
 
     // Register auto-completion provider for Chinese text
@@ -125,7 +125,7 @@ const CodeEditor: React.ForwardRefRenderFunction<
       triggerCharacters: ['[', '\u4e00-\u9fa5'],
       provideCompletionItems: (model, position) => {
         const wordInfo = model.getWordUntilPosition(position);
-        
+
         // Define the range for replacing the current word with suggestion
         const range = new monaco.Range(
           position.lineNumber,
@@ -147,7 +147,7 @@ const CodeEditor: React.ForwardRefRenderFunction<
     // This affects word-based operations like double-click selection
     monaco.languages.setLanguageConfiguration('plaintext', {
       // Match either continuous Chinese characters or Latin letters
-      wordPattern: /[\u4e00-\u9fa5]+|[a-zA-Z]+/g
+      wordPattern: /[\u4e00-\u9fa5]+|[a-zA-Z]+/g,
     });
   }, []);
 

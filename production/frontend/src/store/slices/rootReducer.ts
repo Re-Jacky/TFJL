@@ -10,6 +10,6 @@ export interface RootState {
 const rootReducer = combineReducers({
   [uiSlice.name]: uiSlice.reducer,
   [sseSlice.name]: sseSlice.reducer,
-})
+});
 
 export default rootReducer;

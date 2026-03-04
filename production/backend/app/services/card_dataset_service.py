@@ -121,9 +121,10 @@ class CardDatasetService:
                 cv2.imwrite(str(new_path), crop_img)
                 logger.info(f"Applied crop margins to {crop_id}: top={top}, bottom={bottom}, left={left}, right={right}")
             
-            # Preprocess for feature extraction (resize to 64x64)
-            crop_eq = cv2.equalizeHist(crop_img)
-            crop_resized = cv2.resize(crop_eq, (64, 64), interpolation=cv2.INTER_AREA)
+            # Preprocess for feature extraction (CLAHE + resize to 64x64)
+            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+            crop_clahe = clahe.apply(crop_img)
+            crop_resized = cv2.resize(crop_clahe, (64, 64), interpolation=cv2.INTER_AREA)
             
             # Extract features
             features = CardRecognitionService.extract_features(crop_resized)
@@ -385,9 +386,10 @@ class CardDatasetService:
                         if crop.shape[1] % 2 != 0:
                             crop = crop[:, :-1]  # Remove last column
                         
-                        # Preprocess
-                        crop_eq = cv2.equalizeHist(crop)
-                        crop_resized = cv2.resize(crop_eq, (64, 64), interpolation=cv2.INTER_AREA)
+                        # Preprocess (CLAHE)
+                        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+                        crop_clahe = clahe.apply(crop)
+                        crop_resized = cv2.resize(crop_clahe, (64, 64), interpolation=cv2.INTER_AREA)
                         
                         # Extract features
                         features = CardRecognitionService.extract_features(crop_resized)

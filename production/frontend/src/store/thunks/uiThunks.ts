@@ -6,22 +6,22 @@ export const getGameWindows = createAsyncThunk(
   'ui/getGameWindows',
   async (_, thunkAPI) => {
     const { dispatch } = thunkAPI;
-    const {windows} = await api.getGameWindows();
-    dispatch(setGameWindows(windows))
+    const { windows } = await api.getGameWindows();
+    dispatch(setGameWindows(windows));
     if (windows.length > 0) {
-      dispatch(setActiveWindow(windows[0].pid.toString()))
+      dispatch(setActiveWindow(windows[0].pid.toString()));
     }
 
     return windows;
   }
-)
+);
 
 export const getToolWindows = createAsyncThunk(
   'ui/getToolWindows',
   async (_, thunkAPI) => {
     const { dispatch } = thunkAPI;
-    const {windows} = await api.getToolWindows();
-    dispatch(setToolWindows(windows))
+    const { windows } = await api.getToolWindows();
+    dispatch(setToolWindows(windows));
     return windows;
   }
-)
+);

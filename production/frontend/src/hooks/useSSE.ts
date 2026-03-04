@@ -1,6 +1,12 @@
 import { useRef } from 'react';
 import { useAppDispatch } from '../store/store';
-import { setSSEConnected, setSSELastEvent, setVehicle, updateLogRecords, setSseSessionId } from '@src/store/actions';
+import {
+  setSSEConnected,
+  setSSELastEvent,
+  setVehicle,
+  updateLogRecords,
+  setSseSessionId,
+} from '@src/store/actions';
 import { API_BASE_URL } from '@src/services/proxy';
 
 export const useSSE = () => {

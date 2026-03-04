@@ -63,17 +63,24 @@ const Role: React.ForwardRefRenderFunction<RoleHandler, RoleProps> = (
   };
 
   useImperativeHandle(ref, () => ({
-    getSelectedWindow: () => ({ game: parseInt(selectedWindow.game), tool: parseInt(selectedWindow.tool) }),
+    getSelectedWindow: () => ({
+      game: parseInt(selectedWindow.game),
+      tool: parseInt(selectedWindow.tool),
+    }),
   }));
 
   useEffect(() => {
-    if (gameWindows.length > 1 && toolWindows.length > 1 && defaultSelectedIndex !== undefined) {
+    if (
+      gameWindows.length > 1 &&
+      toolWindows.length > 1 &&
+      defaultSelectedIndex !== undefined
+    ) {
       setSelectedWindow({
         game: gameWindows[defaultSelectedIndex].pid.toString(),
         tool: toolWindows[defaultSelectedIndex].pid.toString(),
-      })
+      });
     }
-  }, [defaultSelectedIndex, gameWindows, toolWindows])
+  }, [defaultSelectedIndex, gameWindows, toolWindows]);
 
   return (
     <div className={styles.automatorRole}>

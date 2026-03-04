@@ -1,14 +1,14 @@
 import proxy from './proxy';
-import type { 
-  GameMode, 
-  ShortcutMode, 
+import type {
+  GameMode,
+  ShortcutMode,
   Wnd,
   ScriptExecutionStatus,
   ScriptExecutionRequest,
   ScriptExecutionResponse,
   ParseScriptResponse,
   ValidateScriptResponse,
-  TestScriptResponse
+  TestScriptResponse,
 } from '../types';
 import { type ShortcutModel } from '@src/components/content/shortcut/Content';
 
@@ -21,7 +21,7 @@ export interface ListScreenshotsResponse {
 
 export interface GetScreenshotFileResponse {
   success: boolean;
-  image: string;  // Base64 data URL
+  image: string; // Base64 data URL
   filename: string;
   size: { width: number; height: number };
 }
@@ -35,7 +35,7 @@ export interface CropBox {
 
 export interface ExtractCropsResponse {
   success: boolean;
-  crops: string[];  // Array of base64 data URLs
+  crops: string[]; // Array of base64 data URLs
 }
 
 export interface SaveLabeledCropsRequest {
@@ -95,30 +95,118 @@ export interface API {
     main: number;
     sub: number;
   }) => Promise<{ status: boolean }>;
-  locateAutoWindow: (config: {game: number; tool: number; idx: 0 | 1}) => Promise<{ status: string }>;
+  locateAutoWindow: (config: {
+    game: number;
+    tool: number;
+    idx: 0 | 1;
+  }) => Promise<{ status: string }>;
   turnOffPC: () => Promise<{ status: string }>;
-  captureScreenshot: (pid: number) => Promise<{ success: boolean; image: string; file_path: string; filename: string; message: string }>;
+  captureScreenshot: (pid: number) => Promise<{
+    success: boolean;
+    image: string;
+    file_path: string;
+    filename: string;
+    message: string;
+  }>;
   test: () => Promise<{ status: string }>;
-  parseScript: (content: string, name?: string, scriptType?: ScriptType) => Promise<ParseScriptResponse>;
+  parseScript: (
+    content: string,
+    name?: string,
+    scriptType?: ScriptType
+  ) => Promise<ParseScriptResponse>;
   validateScript: (content: string) => Promise<ValidateScriptResponse>;
-  testScript: (content: string, name?: string, scriptType?: ScriptType, dryRunOptions?: { dryRun?: boolean; sessionId?: string; actionDelayMs?: number; levelDelayMs?: number }) => Promise<TestScriptResponse>;
-  executeScript: (request: ScriptExecutionRequest) => Promise<ScriptExecutionResponse>;
-  getScriptStatus: (windowPid: number) => Promise<{ success: boolean; status: ScriptExecutionStatus }>;
-  getModelStatus: () => Promise<{ model_version: string | null; trained_cards: string[]; total_samples: number; last_updated?: string }>;
-  trainModel: () => Promise<{ success: boolean; model_version: string; train_samples: number }>;
-  labelCrop: (cropId: string, cardName: string, cropMargins?: { top: number; bottom: number; left: number; right: number }) => Promise<{ success: boolean; message: string; new_model_version: string; dataset_stats: { labeled_count: number; unlabeled_count: number; per_card_counts: Record<string, number> } }>;
-  getUnlabeledCrops: (limit?: number) => Promise<{ crops: Array<{ crop_id: string; image_base64: string; slot_idx: number; top_guesses: string[] }>; total_unlabeled: number }>;
-  detectCards: (pid: number) => Promise<{ success: boolean; slots: Array<{ slot_idx: number; card: string; confidence: number; bbox: [number, number, number, number]; crop_id?: string; top_k_guesses?: string[] }>; model_version: string | null }>;
-  batchTrainFromScreenshots: () => Promise<{ processed_count: number; cards_extracted: number; new_model_version: string; message: string }>;
-  exportModel: (exportPath: string) => Promise<{ success: boolean; export_path: string; model_version: string }>;
-  importModel: (importPath: string) => Promise<{ success: boolean; model_version: string; trained_cards: string[]; total_samples: number }>;
+  testScript: (
+    content: string,
+    name?: string,
+    scriptType?: ScriptType,
+    dryRunOptions?: {
+      dryRun?: boolean;
+      sessionId?: string;
+      actionDelayMs?: number;
+      levelDelayMs?: number;
+    }
+  ) => Promise<TestScriptResponse>;
+  executeScript: (
+    request: ScriptExecutionRequest
+  ) => Promise<ScriptExecutionResponse>;
+  getScriptStatus: (
+    windowPid: number
+  ) => Promise<{ success: boolean; status: ScriptExecutionStatus }>;
+  getModelStatus: () => Promise<{
+    model_version: string | null;
+    trained_cards: string[];
+    total_samples: number;
+    last_updated?: string;
+  }>;
+  trainModel: () => Promise<{
+    success: boolean;
+    model_version: string;
+    train_samples: number;
+  }>;
+  labelCrop: (
+    cropId: string,
+    cardName: string,
+    cropMargins?: { top: number; bottom: number; left: number; right: number }
+  ) => Promise<{
+    success: boolean;
+    message: string;
+    new_model_version: string;
+    dataset_stats: {
+      labeled_count: number;
+      unlabeled_count: number;
+      per_card_counts: Record<string, number>;
+    };
+  }>;
+  getUnlabeledCrops: (limit?: number) => Promise<{
+    crops: Array<{
+      crop_id: string;
+      image_base64: string;
+      slot_idx: number;
+      top_guesses: string[];
+    }>;
+    total_unlabeled: number;
+  }>;
+  detectCards: (pid: number) => Promise<{
+    success: boolean;
+    slots: Array<{
+      slot_idx: number;
+      card: string;
+      confidence: number;
+      bbox: [number, number, number, number];
+      crop_id?: string;
+      top_k_guesses?: string[];
+    }>;
+    model_version: string | null;
+  }>;
+  batchTrainFromScreenshots: () => Promise<{
+    processed_count: number;
+    cards_extracted: number;
+    new_model_version: string;
+    message: string;
+  }>;
+  exportModel: (exportPath: string) => Promise<{
+    success: boolean;
+    export_path: string;
+    model_version: string;
+  }>;
+  importModel: (importPath: string) => Promise<{
+    success: boolean;
+    model_version: string;
+    trained_cards: string[];
+    total_samples: number;
+  }>;
   getCardNames: () => Promise<{ cards: string[]; count: number }>;
 
   // Screenshot folder methods
   listScreenshots: () => Promise<ListScreenshotsResponse>;
   getScreenshotFile: (filename: string) => Promise<GetScreenshotFileResponse>;
-  extractCrops: (filename: string, crops: CropBox[]) => Promise<ExtractCropsResponse>;
-  saveLabeledCrops: (request: SaveLabeledCropsRequest) => Promise<SaveLabeledCropsResponse>;
+  extractCrops: (
+    filename: string,
+    crops: CropBox[]
+  ) => Promise<ExtractCropsResponse>;
+  saveLabeledCrops: (
+    request: SaveLabeledCropsRequest
+  ) => Promise<SaveLabeledCropsResponse>;
 }
 
 export const api: API = {
@@ -187,13 +275,31 @@ export const api: API = {
   test: async () => {
     return await proxy.get('test-api');
   },
-  parseScript: async (content: string, name?: string, scriptType?: ScriptType) => {
-    return await proxy.post('script/parse', { content, name, script_type: scriptType });
+  parseScript: async (
+    content: string,
+    name?: string,
+    scriptType?: ScriptType
+  ) => {
+    return await proxy.post('script/parse', {
+      content,
+      name,
+      script_type: scriptType,
+    });
   },
   validateScript: async (content: string) => {
     return await proxy.post('script/validate', { content });
   },
-  testScript: async (content: string, name?: string, scriptType?: ScriptType, dryRunOptions?: { dryRun?: boolean; sessionId?: string; actionDelayMs?: number; levelDelayMs?: number }) => {
+  testScript: async (
+    content: string,
+    name?: string,
+    scriptType?: ScriptType,
+    dryRunOptions?: {
+      dryRun?: boolean;
+      sessionId?: string;
+      actionDelayMs?: number;
+      levelDelayMs?: number;
+    }
+  ) => {
     return await proxy.post('script/test', {
       content,
       name,
@@ -201,7 +307,7 @@ export const api: API = {
       dry_run: dryRunOptions?.dryRun ?? false,
       session_id: dryRunOptions?.sessionId ?? 'dry-run',
       action_delay_ms: dryRunOptions?.actionDelayMs ?? 300,
-      level_delay_ms: dryRunOptions?.levelDelayMs ?? 500
+      level_delay_ms: dryRunOptions?.levelDelayMs ?? 500,
     });
   },
   executeScript: async (request: ScriptExecutionRequest) => {
@@ -216,8 +322,16 @@ export const api: API = {
   getUnlabeledCrops: async (limit: number = 10) => {
     return await proxy.get(`cards/unlabeled?limit=${limit}`);
   },
-  labelCrop: async (cropId: string, cardName: string, cropMargins?: { top: number; bottom: number; left: number; right: number }) => {
-    return await proxy.post('cards/label', { crop_id: cropId, card_name: cardName, crop_margins: cropMargins });
+  labelCrop: async (
+    cropId: string,
+    cardName: string,
+    cropMargins?: { top: number; bottom: number; left: number; right: number }
+  ) => {
+    return await proxy.post('cards/label', {
+      crop_id: cropId,
+      card_name: cardName,
+      crop_margins: cropMargins,
+    });
   },
   trainModel: async () => {
     return await proxy.post('cards/train');
@@ -242,15 +356,15 @@ export const api: API = {
   listScreenshots: async () => {
     return await proxy.get('screenshots/list');
   },
-  
+
   getScreenshotFile: async (filename: string) => {
     return await proxy.get(`screenshots/file/${encodeURIComponent(filename)}`);
   },
-  
+
   extractCrops: async (filename: string, crops: CropBox[]) => {
     return await proxy.post('screenshots/extract-crops', { filename, crops });
   },
-  
+
   saveLabeledCrops: async (request: SaveLabeledCropsRequest) => {
     return await proxy.post('screenshots/save-labeled-crops', request);
   },

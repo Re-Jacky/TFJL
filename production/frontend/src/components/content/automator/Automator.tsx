@@ -91,7 +91,7 @@ const Automator: React.FC = () => {
       });
     }, 10000);
     intervalRef.current = interval;
-  }
+  };
   const startGame = async () => {
     const start = !active;
 

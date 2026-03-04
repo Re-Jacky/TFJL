@@ -58,7 +58,7 @@ export interface TestScriptSummary {
 export interface TestScriptResponse {
   success: boolean;
   action_log: SimulatedActionLog[];
-  vehicle_history: VehicleHistoryEntry[];  // For dry-run mode
+  vehicle_history: VehicleHistoryEntry[]; // For dry-run mode
   errors: string[];
   warnings: string[];
   summary: TestScriptSummary | null;

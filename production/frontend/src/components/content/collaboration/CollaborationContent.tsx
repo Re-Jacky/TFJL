@@ -130,8 +130,11 @@ const CollaborationContent: React.FC = () => {
             options={options}
             style={{ width: 200 }}
           />
-          <CreateFileButton onSave={onCreateNewFile} validator={validateDuplicateFiles}/>
-          <DeleteFileButton onDelete={onDeleteFile}/>
+          <CreateFileButton
+            onSave={onCreateNewFile}
+            validator={validateDuplicateFiles}
+          />
+          <DeleteFileButton onDelete={onDeleteFile} />
         </div>
         <div className={styles.btnGroup}>
           <Button

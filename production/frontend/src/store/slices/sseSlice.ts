@@ -1,7 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { build } from 'vite';
 
-
 interface SSEEvent {
   type: 'log' | 'error' | 'action' | 'vehicle';
   payload: unknown;

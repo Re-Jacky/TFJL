@@ -8,7 +8,6 @@ import {
   ScreenshotContent,
 } from '../content';
 
-
 const items: TabsProps['items'] = [
   {
     key: 'shortcut',

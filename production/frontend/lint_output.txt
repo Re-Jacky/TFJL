@@ -1,0 +1,154 @@
+
+> tfjl-ui@0.1.0 lint
+> eslint src/**/*.{ts,tsx}
+
+(node:16577) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/zyao/Desktop/workspace/TFJL/production/frontend/eslint.config.js?mtime=1772597080899 is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/zyao/Desktop/workspace/TFJL/production/frontend/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+/Users/zyao/Desktop/workspace/TFJL/production/frontend/src/components/content/automator/Automator.tsx
+  42:30  error  'NodeJS' is not defined  no-undef
+
+/Users/zyao/Desktop/workspace/TFJL/production/frontend/src/components/content/automator/Role.tsx
+  15:20  error  'valid' is defined but never used  no-unused-vars
+
+/Users/zyao/Desktop/workspace/TFJL/production/frontend/src/components/content/components/CreateFileButton.tsx
+  1:17  error  'ChangeEvent' is defined but never used         no-unused-vars
+  1:30  error  'ChangeEventHandler' is defined but never used  no-unused-vars
+  7:16  error  'value' is defined but never used               no-unused-vars
+  8:13  error  'fileName' is defined but never used            no-unused-vars
+
+/Users/zyao/Desktop/workspace/TFJL/production/frontend/src/components/content/components/Vehicle.tsx
+   1:17  error  'useEffect' is defined but never used   no-unused-vars
+  13:15  error  'cellValues' is defined but never used  no-unused-vars
+
+/Users/zyao/Desktop/workspace/TFJL/production/frontend/src/components/content/screenshot/ScreenshotContent.tsx
+   7:8   error  'ImageBrowser' is defined but never used                                                   no-unused-vars
+   8:8   error  'CropEditor' is defined but never used                                                     no-unused-vars
+   9:8   error  'CropLabeler' is defined but never used                                                    no-unused-vars
+  32:10  error  'screenshotFiles' is assigned a value but never used                                       no-unused-vars
+  33:10  error  'selectedFileIndex' is assigned a value but never used                                     no-unused-vars
+  34:10  error  'currentImageUrl' is assigned a value but never used                                       no-unused-vars
+  35:10  error  'imageSize' is assigned a value but never used                                             no-unused-vars
+  35:47  error  Replace `·width:·number;·height:·number` with `⏎····width:·number;⏎····height:·number;⏎·`  prettier/prettier
+  38:10  error  'cropMode' is assigned a value but never used                                              no-unused-vars
+  38:20  error  'setCropMode' is assigned a value but never used                                           no-unused-vars
+  38:80  error  Replace `'browse'` with `⏎····'browse'⏎··`                                                 prettier/prettier
+  39:10  error  'cropBoxes' is assigned a value but never used                                             no-unused-vars
+  39:21  error  'setCropBoxes' is assigned a value but never used                                          no-unused-vars
+  42:37  error  Insert `,`                                                                                 prettier/prettier
+  44:10  error  'extractedCrops' is assigned a value but never used                                        no-unused-vars
+  44:26  error  'setExtractedCrops' is assigned a value but never used                                     no-unused-vars
+  45:10  error  'cropLabels' is assigned a value but never used                                            no-unused-vars
+  45:22  error  'setCropLabels' is assigned a value but never used                                         no-unused-vars
+  46:10  error  'savingLabels' is assigned a value but never used                                          no-unused-vars
+  46:24  error  'setSavingLabels' is assigned a value but never used                                       no-unused-vars
+  68:16  error  'error' is defined but never used                                                          no-unused-vars
+
+/Users/zyao/Desktop/workspace/TFJL/production/frontend/src/components/content/script-editor/ScriptEditorContent.tsx
+  64:34  error  'NodeJS' is not defined  no-undef
+
+/Users/zyao/Desktop/workspace/TFJL/production/frontend/src/components/content/shortcut/Content.tsx
+   6:3   error  'InfoCircleFilled' is defined but never used  no-unused-vars
+  32:17  error  'shortcut' is defined but never used          no-unused-vars
+  35:19  error  'side' is defined but never used              no-unused-vars
+
+/Users/zyao/Desktop/workspace/TFJL/production/frontend/src/components/content/shortcut/LabelInput.tsx
+  10:15  error  'value' is defined but never used  no-unused-vars
+
+/Users/zyao/Desktop/workspace/TFJL/production/frontend/src/components/content/shortcut/ShortcutContent.tsx
+  80:25  error  'side' is defined but never used  no-unused-vars
+
+/Users/zyao/Desktop/workspace/TFJL/production/frontend/src/components/editor/CodeEditor.tsx
+   8:15  error  'value' is defined but never used  no-unused-vars
+  40:46  error  Unnecessary escape character: \"   no-useless-escape
+
+/Users/zyao/Desktop/workspace/TFJL/production/frontend/src/components/header/ActionButtonGroup.tsx
+  12:9  error  'handleTest' is assigned a value but never used  no-unused-vars
+
+/Users/zyao/Desktop/workspace/TFJL/production/frontend/src/services/api.ts
+   60:17  error  'type' is defined but never used           no-unused-vars
+   61:14  error  'file' is defined but never used           no-unused-vars
+   61:28  error  'type' is defined but never used           no-unused-vars
+   65:17  error  'config' is defined but never used         no-unused-vars
+   70:5   error  'file' is defined but never used           no-unused-vars
+   71:5   error  'content' is defined but never used        no-unused-vars
+   72:5   error  'type' is defined but never used           no-unused-vars
+   74:16  error  'file' is defined but never used           no-unused-vars
+   74:30  error  'type' is defined but never used           no-unused-vars
+   75:18  error  'pid' is defined but never used            no-unused-vars
+   77:18  error  'shortcut' is defined but never used       no-unused-vars
+   78:23  error  'config' is defined but never used         no-unused-vars
+   79:21  error  'value' is defined but never used          no-unused-vars
+   80:16  error  'config' is defined but never used         no-unused-vars
+   84:19  error  'config' is defined but never used         no-unused-vars
+   90:21  error  'config' is defined but never used         no-unused-vars
+   94:14  error  'config' is defined but never used         no-unused-vars
+   98:22  error  'config' is defined but never used         no-unused-vars
+  104:23  error  'pid' is defined but never used            no-unused-vars
+  113:5   error  'content' is defined but never used        no-unused-vars
+  114:5   error  'name' is defined but never used           no-unused-vars
+  115:5   error  'scriptType' is defined but never used     no-unused-vars
+  117:20  error  'content' is defined but never used        no-unused-vars
+  119:5   error  'content' is defined but never used        no-unused-vars
+  120:5   error  'name' is defined but never used           no-unused-vars
+  121:5   error  'scriptType' is defined but never used     no-unused-vars
+  122:5   error  'dryRunOptions' is defined but never used  no-unused-vars
+  130:5   error  'request' is defined but never used        no-unused-vars
+  133:5   error  'windowPid' is defined but never used      no-unused-vars
+  147:5   error  'cropId' is defined but never used         no-unused-vars
+  148:5   error  'cardName' is defined but never used       no-unused-vars
+  149:5   error  'cropMargins' is defined but never used    no-unused-vars
+  160:23  error  'limit' is defined but never used          no-unused-vars
+  169:17  error  'pid' is defined but never used            no-unused-vars
+  187:17  error  'exportPath' is defined but never used     no-unused-vars
+  192:17  error  'importPath' is defined but never used     no-unused-vars
+  202:23  error  'filename' is defined but never used       no-unused-vars
+  204:5   error  'filename' is defined but never used       no-unused-vars
+  205:5   error  'crops' is defined but never used          no-unused-vars
+  208:5   error  'request' is defined but never used        no-unused-vars
+
+/Users/zyao/Desktop/workspace/TFJL/production/frontend/src/services/proxy.ts
+   4:18  error  'endpoint' is defined but never used  no-unused-vars
+   5:19  error  'endpoint' is defined but never used  no-unused-vars
+   5:37  error  'data' is defined but never used      no-unused-vars
+  36:16  error  'e' is defined but never used         no-unused-vars
+  36:19  error  Empty block statement                 no-empty
+
+/Users/zyao/Desktop/workspace/TFJL/production/frontend/src/types/shortcutEnum.ts
+   2:3  error  'SINGLE_PLAYER' is defined but never used             no-unused-vars
+   3:3  error  'SINGLE_PLAYER_SAILING' is defined but never used     no-unused-vars
+   4:3  error  'TWO_PLAYER' is defined but never used                no-unused-vars
+   5:3  error  'TWO_PLAYER_SKY' is defined but never used            no-unused-vars
+   6:3  error  'AUCTION' is defined but never used                   no-unused-vars
+  10:3  error  'Collab' is defined but never used                    no-unused-vars
+  11:3  error  'IceCastle' is defined but never used                 no-unused-vars
+  12:3  error  'MoonIsland' is defined but never used                no-unused-vars
+  16:3  error  'LEFT' is defined but never used                      no-unused-vars
+  17:3  error  'RIGHT' is defined but never used                     no-unused-vars
+  21:3  error  'FIRST_CARD' is defined but never used                no-unused-vars
+  22:3  error  'SECOND_CARD' is defined but never used               no-unused-vars
+  23:3  error  'THIRD_CARD' is defined but never used                no-unused-vars
+  24:3  error  'UPGRADE_VEHICLE' is defined but never used           no-unused-vars
+  25:3  error  'REFRESH' is defined but never used                   no-unused-vars
+  26:3  error  'SELL_CARD' is defined but never used                 no-unused-vars
+  27:3  error  'QUICK_SELL' is defined but never used                no-unused-vars
+  28:3  error  'QUICK_SELL_DELAY' is defined but never used          no-unused-vars
+  29:3  error  'QUICK_REFRESH' is defined but never used             no-unused-vars
+  30:3  error  'ENHANCED_BTN_PRESS' is defined but never used        no-unused-vars
+  31:3  error  'ENHANCED_BTN_PRESS_DELAY' is defined but never used  no-unused-vars
+  35:3  error  'SURRENDER' is defined but never used                 no-unused-vars
+  36:3  error  'CONFIRM' is defined but never used                   no-unused-vars
+  37:3  error  'BATTLE' is defined but never used                    no-unused-vars
+  38:3  error  'AUTO_QUICK_MATCH' is defined but never used          no-unused-vars
+  39:3  error  'VIEW_OPPONENT_HALO' is defined but never used        no-unused-vars
+  40:3  error  'CLOSE_CARD' is defined but never used                no-unused-vars
+  44:3  error  'CARD_0' is defined but never used                    no-unused-vars
+  45:3  error  'CARD_1' is defined but never used                    no-unused-vars
+  46:3  error  'CARD_2' is defined but never used                    no-unused-vars
+  47:3  error  'CARD_3' is defined but never used                    no-unused-vars
+
+✖ 114 problems (114 errors, 0 warnings)
+  3 errors and 0 warnings potentially fixable with the `--fix` option.
+

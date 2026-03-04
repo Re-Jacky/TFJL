@@ -1,14 +1,14 @@
-import win32api
-import win32con
-import win32gui
+# import win32api
+# import win32con
+# import win32gui
 import pygetwindow
 import numpy as np
 import pyautogui
 import cv2
 from app.utils.logger import logger
 from fastapi import HTTPException
-import win32ui
-from ctypes import windll
+# import win32ui
+# from ctypes import windll
 from PIL import Image
 from typing import Optional, Tuple
 import time

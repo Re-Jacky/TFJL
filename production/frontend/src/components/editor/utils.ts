@@ -2,9 +2,9 @@ import { languages, Range } from 'monaco-editor';
 import { pinyin } from 'pinyin-pro';
 
 const cards = ['小野', '绿弓', '咕咕'];
-const actions = ['上', '下']
+const actions = ['上', '下'];
 
-const allChinese = [...cards,...actions]
+const allChinese = [...cards, ...actions];
 
 const allPinyin = allChinese.map((card) =>
   pinyin(card, { toneType: 'none', type: 'string' })
@@ -12,7 +12,7 @@ const allPinyin = allChinese.map((card) =>
 
 export const getEditorSuggestions = (
   type: languages.CompletionItemKind,
-  range: Range,
+  range: Range
 ): languages.CompletionItem[] => {
   const chineseList = allChinese.map((card) => ({
     label: card,

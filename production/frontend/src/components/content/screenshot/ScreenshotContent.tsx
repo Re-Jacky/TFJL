@@ -12,7 +12,6 @@ import type { CropBox } from '@src/services/api';
 const ScreenshotContent: React.FC = () => {
   const activeWindow = useAppSelector(selectActiveWindow);
   const [loading, setLoading] = useState(false);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [detectionResult, setDetectionResult] = useState<any>(null);
   const [detectingCards, setDetectingCards] = useState(false);
   const [modelStatus, setModelStatus] = useState<any>(null);
@@ -38,7 +37,9 @@ const ScreenshotContent: React.FC = () => {
   } | null>(null);
 
   // Cropping workflow
-  const [cropMode, setCropMode] = useState<'browse' | 'cropping' | 'labeling'>('browse');
+  const [cropMode, setCropMode] = useState<'browse' | 'cropping' | 'labeling'>(
+    'browse'
+  );
   const [cropBoxes, setCropBoxes] = useState<CropBox[]>([
     { x: 440, y: 560, w: 70, h: 90 },
     { x: 525, y: 560, w: 70, h: 90 },
@@ -113,7 +114,11 @@ const ScreenshotContent: React.FC = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Only handle if in browse mode and not typing in input
       if (cropMode !== 'browse') return;
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      )
+        return;
 
       if (e.key === 'ArrowLeft') {
         e.preventDefault();
@@ -167,7 +172,10 @@ const ScreenshotContent: React.FC = () => {
 
     try {
       setLoading(true);
-      const result = await api.extractCrops(screenshotFiles[selectedFileIndex], cropBoxes);
+      const result = await api.extractCrops(
+        screenshotFiles[selectedFileIndex],
+        cropBoxes
+      );
       setExtractedCrops(result.crops);
       setCropLabels(['', '', '']);
       setCropMode('labeling');
@@ -225,11 +233,6 @@ const ScreenshotContent: React.FC = () => {
     setCropMode('browse');
     setExtractedCrops([]);
     setCropLabels(['', '', '']);
-  };
-
-  const handleRecrop = () => {
-    setCropMode('cropping');
-    setExtractedCrops([]);
   };
 
   const handleCapture = async () => {
@@ -558,7 +561,11 @@ const ScreenshotContent: React.FC = () => {
                   <Image
                     src={currentImageUrl}
                     alt='Screenshot'
-                    style={{ maxWidth: '100%', maxHeight: '600px', objectFit: 'contain' }}
+                    style={{
+                      maxWidth: '100%',
+                      maxHeight: '600px',
+                      objectFit: 'contain',
+                    }}
                   />
                 )}
               </>
@@ -577,7 +584,11 @@ const ScreenshotContent: React.FC = () => {
           )}
           {cropMode === 'cropping' && (
             <div style={{ marginTop: '12px', textAlign: 'center' }}>
-              <Button type='primary' onClick={handleFinishCropping} loading={loading}>
+              <Button
+                type='primary'
+                onClick={handleFinishCropping}
+                loading={loading}
+              >
                 完成裁切
               </Button>
             </div>
