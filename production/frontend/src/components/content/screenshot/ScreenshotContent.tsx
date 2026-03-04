@@ -9,6 +9,12 @@ import CropEditor from './components/CropEditor';
 import CropLabeler from './components/CropLabeler';
 import type { CropBox } from '@src/services/api';
 
+const defaultCropBox = [
+  { x: 410, y: 518, w: 66, h: 90 },
+  { x: 495, y: 518, w: 66, h: 90 },
+  { x: 580, y: 518, w: 66, h: 90 },
+];
+
 const ScreenshotContent: React.FC = () => {
   const activeWindow = useAppSelector(selectActiveWindow);
   const [loading, setLoading] = useState(false);
@@ -40,11 +46,7 @@ const ScreenshotContent: React.FC = () => {
   const [cropMode, setCropMode] = useState<'browse' | 'cropping' | 'labeling'>(
     'browse'
   );
-  const [cropBoxes, setCropBoxes] = useState<CropBox[]>([
-    { x: 440, y: 560, w: 70, h: 90 },
-    { x: 525, y: 560, w: 70, h: 90 },
-    { x: 610, y: 560, w: 70, h: 90 },
-  ]);
+  const [cropBoxes, setCropBoxes] = useState<CropBox[]>(defaultCropBox);
   const [extractedCrops, setExtractedCrops] = useState<string[]>([]);
   const [cropLabels, setCropLabels] = useState<string[]>(['', '', '']);
   const [savingLabels, setSavingLabels] = useState(false);
@@ -157,11 +159,7 @@ const ScreenshotContent: React.FC = () => {
   const handleStartLabeling = () => {
     setCropMode('cropping');
     // Reset boxes to default positions
-    setCropBoxes([
-      { x: 440, y: 560, w: 70, h: 90 },
-      { x: 525, y: 560, w: 70, h: 90 },
-      { x: 610, y: 560, w: 70, h: 90 },
-    ]);
+    setCropBoxes(defaultCropBox);
   };
 
   const handleFinishCropping = async () => {

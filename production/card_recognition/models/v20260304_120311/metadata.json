@@ -1,9 +1,0 @@
-{
-  "train_samples": {
-    "龙王": 1,
-    "火灵蛇女": 2
-  },
-  "last_updated": "2026-03-04T12:03:11.148143",
-  "training_method": "full_rebuild",
-  "total_samples": 1
-}
