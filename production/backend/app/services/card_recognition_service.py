@@ -6,6 +6,7 @@ from app.utils.logger import logger
 from app.services.window_control_services import WindowControlService
 from app.services.card_model_service import CardModelService
 from app.services.card_dataset_service import CardDatasetService
+from app.services.utility_services import UtilityService
 
 
 class CardRecognitionService:
@@ -13,9 +14,9 @@ class CardRecognitionService:
     
     # Fixed card slot positions (relative to 1056x637 window)
     CARD_SLOTS = [
-        {"x": 440, "y": 560, "w": 70, "h": 90, "idx": 0},
-        {"x": 525, "y": 560, "w": 70, "h": 90, "idx": 1},
-        {"x": 610, "y": 560, "w": 70, "h": 90, "idx": 2},
+        {"x": 410, "y": 518, "w": 66, "h": 90, "idx": 0},
+        {"x": 495, "y": 518, "w": 66, "h": 90, "idx": 1},
+        {"x": 580, "y": 518, "w": 66, "h": 90, "idx": 2},
     ]
     
     # Configuration: Feature extraction method
@@ -28,7 +29,7 @@ class CardRecognitionService:
     KNN_K = 5
     
     # Configuration: Classification threshold
-    THRESHOLD = 0.3
+    THRESHOLD = 10.0  # Adjusted for low training data (1 sample/card). Lower to 0.3-0.5 as you add more samples.
     
     @staticmethod
     def detect_cards(window_pid: int) -> Dict:
@@ -62,7 +63,7 @@ class CardRecognitionService:
             for slot_config in CardRecognitionService.CARD_SLOTS:
                 slot_idx = slot_config["idx"]
                 x = slot_config["x"]
-                y = slot_config["y"] - 500  # Adjust y coordinate since we captured from y=500
+                y = slot_config["y"] # Adjust y coordinate since we captured from y=500
                 w = slot_config["w"]
                 h = slot_config["h"]
                 
@@ -174,7 +175,7 @@ class CardRecognitionService:
             from pathlib import Path
             
             # Construct file path
-            screenshot_dir = Path(__file__).parent.parent.parent / "screenshot"
+            screenshot_dir = UtilityService().get_public_path().parent / "screenshot"
             file_path = screenshot_dir / filename
             
             if not file_path.exists():
@@ -238,20 +239,22 @@ class CardRecognitionService:
                         threshold=CardRecognitionService.THRESHOLD
                     )
                 else:  # centroid (default)
+                    logger.info(f"Slot {slot_idx}: Classifying with centroid method (feature_dim={features.shape})")
                     classification = CardRecognitionService.classify_patch(
                         features, 
                         model_data["centroids"], 
                         model_data["card_names"],
                         threshold=CardRecognitionService.THRESHOLD
                     )
+                    logger.info(f"Slot {slot_idx}: Classification result - card={classification['card']}, confidence={classification['confidence']:.4f}")
                 
-                # If confidence < threshold, save as unlabeled
-                if classification["confidence"] < CardRecognitionService.THRESHOLD:
+                # If card is unrecognized, save as unlabeled
+                if classification["card"] == "unknown":
                     crop_id = CardDatasetService.save_unlabeled_crop(
                         patch, 
                         filename, 
                         slot_idx,
-                        top_guesses=classification.get("top_k", [])
+                        top_guesses=classification.get("top_k_guesses", [])
                     )
                     slots.append({
                         "slot_idx": slot_idx,
@@ -259,7 +262,7 @@ class CardRecognitionService:
                         "confidence": classification["confidence"],
                         "bbox": [x, y, w, h],
                         "crop_id": crop_id,
-                        "top_k_guesses": classification.get("top_k", [])
+                        "top_k_guesses": classification.get("top_k_guesses", [])
                     })
                 else:
                     slots.append({
@@ -391,8 +394,12 @@ class CardRecognitionService:
         - Else: return {card: "unknown", confidence: 0, top_k_guesses: top-5 card names}
         """
         try:
+            logger.info(f"classify_patch called: features.shape={features.shape}, centroids.shape={centroids.shape}, threshold={threshold}")
+            logger.info(f"Available card names: {card_names}")
+            
             # Compute L2 distances to all centroids
             distances = np.linalg.norm(centroids - features, axis=1)
+            logger.info(f"L2 distances to centroids: {distances}")
             
             # Get indices sorted by distance (closest first)
             sorted_indices = np.argsort(distances)
@@ -402,17 +409,22 @@ class CardRecognitionService:
             top_k_distances = distances[top_k_indices]
             top_k_names = [card_names[i] for i in top_k_indices]
             
+            logger.info(f"Top 5 nearest matches: {list(zip(top_k_names, top_k_distances))}")
+            
             # Check if closest distance is below threshold
-            closest_distance = top_k_distances[0]
+            closest_distance = float(top_k_distances[0])  # Convert numpy.float32 to Python float
+            logger.info(f"Closest match: '{top_k_names[0]}' at distance {closest_distance:.4f} (threshold={threshold})")
             
             if closest_distance < threshold:
-                confidence = 1.0 / (1.0 + closest_distance)
+                confidence = float(1.0 / (1.0 + closest_distance))
+                logger.info(f"✓ RECOGNIZED as '{top_k_names[0]}' with confidence {confidence:.4f}")
                 return {
                     "card": top_k_names[0],
                     "confidence": confidence,
                     "top_k": top_k_names
                 }
             else:
+                logger.warning(f"✗ UNRECOGNIZED - closest distance {closest_distance:.4f} exceeds threshold {threshold}")
                 return {
                     "card": "unknown",
                     "confidence": 0,
