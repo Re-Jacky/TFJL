@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 import time
+from datetime import datetime
 from pathlib import Path
 import base64
 from io import BytesIO
@@ -564,6 +565,85 @@ def extract_crops_from_screenshot(request: dict):
         raise
     except Exception as e:
         logger.error(f"Error extracting crops: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/screenshots/save-labeled-crops")
+def save_labeled_crops_from_screenshot(request: dict):
+    """Save labeled crops from screenshot to dataset and trigger training"""
+    try:
+        filename = request.get("filename")
+        crops = request.get("crops")  # List of {x, y, w, h, label}
+        
+        if not filename or not crops:
+            raise HTTPException(status_code=400, detail="Missing filename or crops")
+        
+        screenshot_dir = Path("../screenshot")
+        file_path = screenshot_dir / filename
+        
+        # Security check
+        if not file_path.resolve().is_relative_to(screenshot_dir.resolve()):
+            raise HTTPException(status_code=400, detail="Invalid filename")
+        
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail=f"File not found: {filename}")
+        
+        # Load image as grayscale
+        img = cv2.imread(str(file_path), cv2.IMREAD_GRAYSCALE)
+        if img is None:
+            raise HTTPException(status_code=500, detail="Failed to load image")
+        
+        # Initialize dataset service
+        CardDatasetService.initialize()
+        
+        saved_cards = []
+        for idx, crop_data in enumerate(crops):
+            x = int(crop_data.get("x", 0))
+            y = int(crop_data.get("y", 0))
+            w = int(crop_data.get("w", 70))
+            h = int(crop_data.get("h", 90))
+            label = crop_data.get("label", "").strip()
+            
+            if not label:
+                raise HTTPException(status_code=400, detail=f"Crop {idx} missing label")
+            
+            # Validate bounds
+            if x < 0 or y < 0 or x + w > img.shape[1] or y + h > img.shape[0]:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Crop {idx} out of bounds"
+                )
+            
+            # Extract crop
+            crop_array = img[y:y+h, x:x+w]
+            
+            # Generate unique crop_id
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+            crop_id = f"crop_{timestamp}_{idx}_screenshot"
+            
+            # Save to unlabeled first (mimicking detection workflow)
+            unlabeled_dir = CardDatasetService.BASE_DIR / "dataset" / "unlabeled"
+            crop_path = unlabeled_dir / f"{crop_id}.png"
+            cv2.imwrite(str(crop_path), crop_array)
+            
+            # Apply label (moves to labeled/ and trains)
+            result = CardDatasetService.apply_label(crop_id, label, crop_margins=None)
+            saved_cards.append(label)
+        
+        # Get final model status
+        model_status = CardModelService.get_model_info()
+        
+        return {
+            "success": True,
+            "message": f"已保存{len(saved_cards)}个标注样本",
+            "trained_cards": saved_cards,
+            "total_samples": model_status.get("total_samples", 0)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error saving labeled crops: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
