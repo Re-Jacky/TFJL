@@ -3,6 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 import time
 from pathlib import Path
+import base64
+from io import BytesIO
+from PIL import Image
 from app.services.utility_services import UtilityService
 from app.services.event_services import EventService
 from app.services.image_services import ImageService
@@ -472,6 +475,38 @@ def list_screenshots():
         return {"success": True, "files": files, "count": len(files)}
     except Exception as e:
         logger.error(f"Error listing screenshots: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/screenshots/file/{filename}")
+def get_screenshot_file(filename: str):
+    """Return base64-encoded image for a specific screenshot file"""
+    try:
+        screenshot_dir = Path("../screenshot")
+        file_path = screenshot_dir / filename
+        
+        # Security: prevent directory traversal
+        if not file_path.resolve().is_relative_to(screenshot_dir.resolve()):
+            raise HTTPException(status_code=400, detail="Invalid filename")
+        
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail=f"File not found: {filename}")
+        
+        # Load image and encode to base64
+        img = Image.open(file_path)
+        buffered = BytesIO()
+        img.save(buffered, format="PNG")
+        img_str = base64.b64encode(buffered.getvalue()).decode('utf-8')
+        
+        return {
+            "success": True,
+            "image": f"data:image/png;base64,{img_str}",
+            "filename": filename,
+            "size": {"width": img.width, "height": img.height}
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error loading screenshot file: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
