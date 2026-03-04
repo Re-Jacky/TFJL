@@ -271,14 +271,25 @@ const ScreenshotContent: React.FC = () => {
   };
 
   const handleDetectCards = async () => {
-    if (!activeWindow) {
-      message.error('请先选择活动窗口');
+    // Prefer current screenshot file over active window
+    const currentFile =
+      screenshotFiles.length > 0 ? screenshotFiles[selectedFileIndex] : null;
+
+    if (!currentFile && !activeWindow) {
+      message.error('请先捕获截图或选择活动窗口');
       return;
     }
 
     setDetectingCards(true);
     try {
-      const result = await api.detectCards(parseInt(activeWindow));
+      let result;
+      if (currentFile) {
+        // Detect from current screenshot file
+        result = await api.detectCards(undefined, currentFile);
+      } else {
+        // Fallback to active window
+        result = await api.detectCards(parseInt(activeWindow!));
+      }
       setDetectionResult(result);
       message.success('卡牌识别完成');
     } catch (error) {
@@ -657,7 +668,7 @@ const ScreenshotContent: React.FC = () => {
                 type='primary'
                 onClick={handleDetectCards}
                 loading={detectingCards}
-                disabled={!activeWindow}
+                disabled={!currentImageUrl && !activeWindow}
                 size='small'
               >
                 识别

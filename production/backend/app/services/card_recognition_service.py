@@ -159,6 +159,131 @@ class CardRecognitionService:
             raise HTTPException(status_code=500, detail=str(e))
     
     @staticmethod
+    def detect_cards_from_file(filename: str) -> Dict:
+        """
+        Detect cards from a saved screenshot file instead of active window.
+        
+        Args:
+            filename: Screenshot filename in production/screenshot/ folder
+        
+        Returns:
+            Same format as detect_cards() - {success, slots, model_version}
+        """
+        try:
+            import os
+            from pathlib import Path
+            
+            # Construct file path
+            screenshot_dir = Path(__file__).parent.parent.parent / "screenshot"
+            file_path = screenshot_dir / filename
+            
+            if not file_path.exists():
+                raise HTTPException(status_code=404, detail=f"Screenshot file not found: {filename}")
+            
+            # Read screenshot as grayscale
+            screenshot = cv2.imread(str(file_path), cv2.IMREAD_GRAYSCALE)
+            if screenshot is None:
+                raise HTTPException(status_code=500, detail=f"Failed to read screenshot: {filename}")
+            
+            # Load model
+            model_data = CardModelService.load_model()
+            
+            slots = []
+            for slot_config in CardRecognitionService.CARD_SLOTS:
+                slot_idx = slot_config["idx"]
+                x = slot_config["x"]
+                y = slot_config["y"]
+                w = slot_config["w"]
+                h = slot_config["h"]
+                
+                # Crop patch from screenshot
+                if y < 0 or y + h > screenshot.shape[0] or x + w > screenshot.shape[1]:
+                    logger.warning(f"Slot {slot_idx} out of bounds, skipping")
+                    slots.append({
+                        "slot_idx": slot_idx,
+                        "card": "unknown",
+                        "confidence": 0,
+                        "bbox": [x, y, w, h],
+                        "top_k_guesses": []
+                    })
+                    continue
+                
+                patch = screenshot[y:y+h, x:x+w]
+                
+                # Preprocess: CLAHE + resize to 64x64
+                clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+                patch_clahe = clahe.apply(patch)
+                patch_resized = cv2.resize(patch_clahe, (64, 64))
+                
+                # Extract features based on configuration
+                feature_type = CardRecognitionService.FEATURE_TYPE
+                if feature_type == "hog":
+                    features = CardRecognitionService.extract_hog_features(patch_resized)
+                elif feature_type == "hybrid":
+                    patch_rgb = cv2.cvtColor(patch, cv2.COLOR_GRAY2BGR)
+                    patch_rgb_resized = cv2.resize(patch_rgb, (64, 64))
+                    features = CardRecognitionService.extract_hybrid_features(patch_rgb_resized, patch_resized)
+                else:  # dct (default)
+                    features = CardRecognitionService.extract_features(patch_resized)
+                
+                # Classify based on configuration
+                classifier_type = CardRecognitionService.CLASSIFIER_TYPE
+                
+                if classifier_type == "knn":
+                    logger.warning("k-NN classifier requires model with training_features/training_labels. Falling back to centroid.")
+                    classification = CardRecognitionService.classify_patch(
+                        features, 
+                        model_data["centroids"], 
+                        model_data["card_names"],
+                        threshold=CardRecognitionService.THRESHOLD
+                    )
+                else:  # centroid (default)
+                    classification = CardRecognitionService.classify_patch(
+                        features, 
+                        model_data["centroids"], 
+                        model_data["card_names"],
+                        threshold=CardRecognitionService.THRESHOLD
+                    )
+                
+                # If confidence < threshold, save as unlabeled
+                if classification["confidence"] < CardRecognitionService.THRESHOLD:
+                    crop_id = CardDatasetService.save_unlabeled_crop(
+                        patch, 
+                        filename, 
+                        slot_idx,
+                        top_guesses=classification.get("top_k", [])
+                    )
+                    slots.append({
+                        "slot_idx": slot_idx,
+                        "card": "unknown",
+                        "confidence": classification["confidence"],
+                        "bbox": [x, y, w, h],
+                        "crop_id": crop_id,
+                        "top_k_guesses": classification.get("top_k", [])
+                    })
+                else:
+                    slots.append({
+                        "slot_idx": slot_idx,
+                        "card": classification["card"],
+                        "confidence": classification["confidence"],
+                        "bbox": [x, y, w, h],
+                        "top_k": classification.get("top_k", [])
+                    })
+            
+            model_version = model_data["version"] if model_data else None
+            
+            return {
+                "success": True,
+                "slots": slots,
+                "model_version": model_version
+            }
+            
+        except HTTPException as he:
+            raise he
+        except Exception as e:
+            logger.error(f"Error detecting cards from file: {str(e)}")
+            raise HTTPException(status_code=500, detail=str(e))
+    @staticmethod
     def extract_features(patch: np.ndarray) -> np.ndarray:
         """
         Convert 64x64 grayscale patch to feature vector.

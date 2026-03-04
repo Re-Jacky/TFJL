@@ -166,7 +166,10 @@ export interface API {
     }>;
     total_unlabeled: number;
   }>;
-  detectCards: (pid: number) => Promise<{
+  detectCards: (
+    pid?: number,
+    filename?: string
+  ) => Promise<{
     success: boolean;
     slots: Array<{
       slot_idx: number;
@@ -316,8 +319,16 @@ export const api: API = {
   getScriptStatus: async (windowPid: number) => {
     return await proxy.get(`script/status/${windowPid}`);
   },
-  detectCards: async (pid: number) => {
-    return await proxy.post('cards/detect', { window_pid: pid });
+  detectCards: async (pid?: number, filename?: string) => {
+    const body: { window_pid?: number; filename?: string } = {};
+    if (filename) {
+      body.filename = filename;
+    } else if (pid) {
+      body.window_pid = pid;
+    } else {
+      throw new Error('Either pid or filename must be provided');
+    }
+    return await proxy.post('cards/detect', body);
   },
   getUnlabeledCrops: async (limit: number = 10) => {
     return await proxy.get(`cards/unlabeled?limit=${limit}`);

@@ -869,15 +869,20 @@ async def get_script_status(window_pid: int):
 
 @app.post("/cards/detect")
 async def detect_cards(request: Request):
-    """Detect cards in 3 slots from active window"""
-    pid = request.headers.get("x-pid")
-    if not pid:
-        body = await request.json()
-        pid = body.get("window_pid")
-    if not pid:
-        raise HTTPException(status_code=400, detail="Missing window_pid")
+    """Detect cards in 3 slots from active window or screenshot file"""
+    body = await request.json()
+    pid = body.get("window_pid")
+    filename = body.get("filename")
     
-    result = CardRecognitionService.detect_cards(int(pid))
+    if filename:
+        # Detect from screenshot file
+        result = CardRecognitionService.detect_cards_from_file(filename)
+    elif pid:
+        # Detect from active window
+        result = CardRecognitionService.detect_cards(int(pid))
+    else:
+        raise HTTPException(status_code=400, detail="Missing window_pid or filename")
+    
     return result
 
 
