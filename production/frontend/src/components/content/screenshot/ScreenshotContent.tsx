@@ -511,20 +511,69 @@ const ScreenshotContent: React.FC = () => {
 
       <div className={styles.content}>
         <div className={styles.imagePreview}>
-          {loading ? (
-            <Spin tip='正在捕获...' />
-          ) : imageUrl ? (
-            <Image
-              src={imageUrl}
-              alt='Window Screenshot'
-              style={{
-                maxWidth: '100%',
-                maxHeight: '100%',
-                objectFit: 'contain',
-              }}
+          {/* Screenshot file browser */}
+          <ImageBrowser
+            files={screenshotFiles}
+            selectedIndex={selectedFileIndex}
+            onSelectFile={handleSelectFile}
+            onPrevious={handlePrevious}
+            onNext={handleNext}
+            disabled={loading || cropMode !== 'browse'}
+          />
+
+          {/* Image preview with optional crop editor */}
+          <div className={styles.previewContainer}>
+            {loading ? (
+              <Spin tip='正在加载...' />
+            ) : currentImageUrl && imageSize ? (
+              <>
+                {cropMode === 'cropping' ? (
+                  <CropEditor
+                    imageUrl={currentImageUrl}
+                    imageSize={imageSize}
+                    boxes={cropBoxes}
+                    onBoxesChange={setCropBoxes}
+                  />
+                ) : (
+                  <Image
+                    src={currentImageUrl}
+                    alt='Screenshot'
+                    style={{ maxWidth: '100%', maxHeight: '600px', objectFit: 'contain' }}
+                  />
+                )}
+              </>
+            ) : (
+              <Empty description='暂无截图，请先捕获截图' />
+            )}
+          </div>
+
+          {/* Crop mode actions */}
+          {currentImageUrl && cropMode === 'browse' && (
+            <div style={{ marginTop: '12px', textAlign: 'center' }}>
+              <Button type='primary' onClick={handleStartLabeling}>
+                开始标注
+              </Button>
+            </div>
+          )}
+          {cropMode === 'cropping' && (
+            <div style={{ marginTop: '12px', textAlign: 'center' }}>
+              <Button type='primary' onClick={handleFinishCropping} loading={loading}>
+                完成裁切
+              </Button>
+            </div>
+          )}
+
+          {/* Crop labeling section */}
+          {cropMode === 'labeling' && extractedCrops.length > 0 && (
+            <CropLabeler
+              crops={extractedCrops}
+              labels={cropLabels}
+              cardNames={cardNames}
+              onLabelsChange={setCropLabels}
+              onSave={handleSaveLabels}
+              onCancel={handleCancelLabeling}
+              saving={savingLabels}
             />
-          ) : (
-            <Empty description='暂无截图' />
           )}
         </div>
 

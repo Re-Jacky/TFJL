@@ -39,6 +39,16 @@
     }
   }
 
+  .previewContainer {
+    margin: 12px 0;
+    text-align: center;
+    min-height: 400px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+
   .cardDetection {
     margin-top: 10px;
 
