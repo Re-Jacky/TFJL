@@ -12,6 +12,44 @@ import type {
 } from '../types';
 import { type ShortcutModel } from '@src/components/content/shortcut/Content';
 
+// Screenshot folder types
+export interface ListScreenshotsResponse {
+  success: boolean;
+  files: string[];
+  count: number;
+}
+
+export interface GetScreenshotFileResponse {
+  success: boolean;
+  image: string;  // Base64 data URL
+  filename: string;
+  size: { width: number; height: number };
+}
+
+export interface CropBox {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+export interface ExtractCropsResponse {
+  success: boolean;
+  crops: string[];  // Array of base64 data URLs
+}
+
+export interface SaveLabeledCropsRequest {
+  filename: string;
+  crops: Array<CropBox & { label: string }>;
+}
+
+export interface SaveLabeledCropsResponse {
+  success: boolean;
+  message: string;
+  trained_cards: string[];
+  total_samples: number;
+}
+
 type ScriptType = 'collab' | 'activity';
 type ShortcutConfig = {
   mode?: ShortcutMode;
@@ -75,6 +113,12 @@ export interface API {
   exportModel: (exportPath: string) => Promise<{ success: boolean; export_path: string; model_version: string }>;
   importModel: (importPath: string) => Promise<{ success: boolean; model_version: string; trained_cards: string[]; total_samples: number }>;
   getCardNames: () => Promise<{ cards: string[]; count: number }>;
+
+  // Screenshot folder methods
+  listScreenshots: () => Promise<ListScreenshotsResponse>;
+  getScreenshotFile: (filename: string) => Promise<GetScreenshotFileResponse>;
+  extractCrops: (filename: string, crops: CropBox[]) => Promise<ExtractCropsResponse>;
+  saveLabeledCrops: (request: SaveLabeledCropsRequest) => Promise<SaveLabeledCropsResponse>;
 }
 
 export const api: API = {
@@ -192,5 +236,22 @@ export const api: API = {
   },
   getCardNames: async () => {
     return await proxy.get('cards/names');
+  },
+
+  // Screenshot folder methods
+  listScreenshots: async () => {
+    return await proxy.get('screenshots/list');
+  },
+  
+  getScreenshotFile: async (filename: string) => {
+    return await proxy.get(`screenshots/file/${encodeURIComponent(filename)}`);
+  },
+  
+  extractCrops: async (filename: string, crops: CropBox[]) => {
+    return await proxy.post('screenshots/extract-crops', { filename, crops });
+  },
+  
+  saveLabeledCrops: async (request: SaveLabeledCropsRequest) => {
+    return await proxy.post('screenshots/save-labeled-crops', request);
   },
 };
