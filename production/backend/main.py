@@ -6,6 +6,7 @@ from pathlib import Path
 import base64
 from io import BytesIO
 from PIL import Image
+import cv2
 from app.services.utility_services import UtilityService
 from app.services.event_services import EventService
 from app.services.image_services import ImageService
@@ -31,6 +32,7 @@ import pygetwindow
 from app.services.card_recognition_service import CardRecognitionService
 from app.services.card_dataset_service import CardDatasetService
 from app.services.card_model_service import CardModelService
+import numpy as np
 
 app = FastAPI()
 
@@ -508,6 +510,62 @@ def get_screenshot_file(filename: str):
     except Exception as e:
         logger.error(f"Error loading screenshot file: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/screenshots/extract-crops")
+def extract_crops_from_screenshot(request: dict):
+    """Extract 3 crop regions from screenshot based on box positions"""
+    try:
+        filename = request.get("filename")
+        crops = request.get("crops")  # List of {x, y, w, h}
+        
+        if not filename or not crops:
+            raise HTTPException(status_code=400, detail="Missing filename or crops")
+        
+        screenshot_dir = Path("../screenshot")
+        file_path = screenshot_dir / filename
+        
+        # Security check
+        if not file_path.resolve().is_relative_to(screenshot_dir.resolve()):
+            raise HTTPException(status_code=400, detail="Invalid filename")
+        
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail=f"File not found: {filename}")
+        
+        # Load image as grayscale (matching card recognition workflow)
+        img = cv2.imread(str(file_path), cv2.IMREAD_GRAYSCALE)
+        if img is None:
+            raise HTTPException(status_code=500, detail="Failed to load image")
+        
+        crop_images = []
+        for idx, crop in enumerate(crops):
+            x = int(crop.get("x", 0))
+            y = int(crop.get("y", 0))
+            w = int(crop.get("w", 70))
+            h = int(crop.get("h", 90))
+            
+            # Validate bounds
+            if x < 0 or y < 0 or x + w > img.shape[1] or y + h > img.shape[0]:
+                raise HTTPException(
+                    status_code=400, 
+                    detail=f"Crop {idx} out of bounds: x={x}, y={y}, w={w}, h={h}, image_size={img.shape}"
+                )
+            
+            # Extract crop
+            crop_array = img[y:y+h, x:x+w]
+            
+            # Encode to PNG base64
+            _, buffer = cv2.imencode('.png', crop_array)
+            crop_base64 = base64.b64encode(buffer).decode('utf-8')
+            crop_images.append(f"data:image/png;base64,{crop_base64}")
+        
+        return {"success": True, "crops": crop_images}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error extracting crops: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 
 # ============================================================================
