@@ -90,7 +90,8 @@ async def test(data: dict):
     id = data.get('id')
     logger.info(f"Testing with id: {id}")
     # return True
-    return game_service.is_home(int(id))
+    result = WindowControlService.type_text_native(id, '6767')
+    return result
 
 
 @app.post("/read-file")
@@ -157,6 +158,7 @@ async def get_game_windows():
             if window.title == '塔防精灵' or window.title == '入门' or window.title == '萌新':
                 title = window.title +( "(已锁定)" if window._hWnd in window_service.locked_windows else "")
                 windows.append({"title": title, "pid": window._hWnd})
+    config.game_windows = windows
     return {"windows": windows}
 
 @app.get("/tool-windows")

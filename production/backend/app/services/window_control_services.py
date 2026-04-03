@@ -12,6 +12,7 @@ from ctypes import windll
 from PIL import Image
 from typing import Optional, Tuple
 import time
+from app.config import config
 
 class WindowControlService:
     def __init__(self):
@@ -284,6 +285,15 @@ class WindowControlService:
             win32clipboard.CloseClipboard()
             
             time.sleep(0.5)
+           
+            # activate another window that's not this pid
+            if config.game_windows:
+                for window in config.game_windows:
+                    if window["pid"] != window_pid:
+                        WindowControlService.bring_window_to_foreground(window["pid"])
+                        time.sleep(1)
+                        break
+            
             
             # Bring the window to the foreground AFTER clipboard is set
             WindowControlService.bring_window_to_foreground(window_pid)
