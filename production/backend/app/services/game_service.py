@@ -3,6 +3,7 @@ from app.services.image_services import ImageService
 from app.enums.game_positions import GamePositions
 from app.enums.tool_positions import ToolPositions
 from app.utils.logger import logger
+from app.config import config
 import time
 import cv2
 
@@ -11,7 +12,10 @@ image_service = ImageService()
 class GameService:
     @staticmethod
     def click_in_window(pid, position):
-        WindowControlService.click_at(pid, position[0], position[1])
+        if config.is_thunder_player:
+            WindowControlService.click_at_native(pid, position[0], position[1])
+        else:
+            WindowControlService.click_at(pid, position[0], position[1])
         time.sleep(0.5)  # 等待点击动作完成 (可以根据实际情况调整时间)
         return True  # 假设点击成功返回True (根据实际情况修改返回值)
     
@@ -28,11 +32,10 @@ class GameService:
         import re
         
         # Define room number region (x, y, width, height)
-        room_number_region = (490, 345, 80, 30)  # Adjust coordinates if needed
+        room_number_region = (490, 335, 80, 30) if config.is_thunder_player else (490, 345, 80, 30)  # Adjust coordinates if needed
         
         # Capture grayscale screenshot of the region
         screenshot_gray = WindowControlService.capture_region(pid, room_number_region)
-        
         # Preprocess image for better OCR results (thresholding)
         _, thresholded = cv2.threshold(screenshot_gray, 127, 255, cv2.THRESH_BINARY)
         
@@ -51,10 +54,10 @@ class GameService:
 
     @staticmethod
     def is_home(pid):
-        battle_region = (790, 515, 230, 100)  # 对战区域
+        battle_region = (770, 510, 220, 90) if config.is_thunder_player else (790, 515, 230, 100)# 对战区域
         window = WindowControlService.find_window(pid)
         screenshot_gray = WindowControlService.capture_region(window, battle_region)
-        template_gray = image_service.load_template('对战')
+        template_gray = image_service.load_template('对战_thunder') if config.is_thunder_player else image_service.load_template('对战')
         result = cv2.matchTemplate(screenshot_gray, template_gray, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, _ = cv2.minMaxLoc(result)
         return max_val > 0.95

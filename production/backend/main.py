@@ -11,6 +11,7 @@ from app.services.shortcut_service import ShortcutService
 from urllib.parse import unquote
 from app.utils.logger import logger
 from app.schema.schemas import FileModel, WithContentFileModel
+from app.config import config
 import pygetwindow
 
 app = FastAPI()
@@ -84,10 +85,12 @@ async def parse_file(file_data: FileModel):
     content = utility_service.read_file(decoded_file_name, file_data.type)
     return utility_service.parse_actions(content)
 ## testing purpose
-@app.get("/test-api")
-async def test():
+@app.post("/test-api")
+async def test(data: dict):
+    id = data.get('id')
+    logger.info(f"Testing with id: {id}")
     # return True
-    return game_service.start_moon_island({"game":1836896, "tool":1836896},{"game":1836896, "tool":1836896})
+    return game_service.is_home(int(id))
 
 
 @app.post("/read-file")
@@ -150,9 +153,10 @@ async def delete_file(request: Request, file_data: FileModel):
 async def get_game_windows():
     windows = []
     for window in pygetwindow.getAllWindows():
-        if window.title and window.title == '塔防精灵':
-            title = window.title +( "(已锁定)" if window._hWnd in window_service.locked_windows else "")
-            windows.append({"title": title, "pid": window._hWnd})
+        if window.title:
+            if window.title == '塔防精灵' or window.title == '入门' or window.title == '萌新':
+                title = window.title +( "(已锁定)" if window._hWnd in window_service.locked_windows else "")
+                windows.append({"title": title, "pid": window._hWnd})
     return {"windows": windows}
 
 @app.get("/tool-windows")
@@ -163,24 +167,22 @@ async def get_tool_windows():
             windows.append({"title": "老马", "pid": window._hWnd})
     return {"windows": windows}
 
-@app.post("/lock-window")
-async def lock_window(request: Request, config: dict):
-    lock_wnd = config.get("lock")
-    pid = config.get("pid")
-    if not pid:
-        pid = get_req_pid(request)
-    if not pid:
+@app.post("/set-thunder-player")
+async def set_thunder_player(data: dict):
+    try:
+        # set a global variable to store the isThunderPlayer
+        isThunderPlayer = data['isThunderPlayer']
+        config.is_thunder_player = isThunderPlayer
+
+        return {"isThunderPlayer": isThunderPlayer}
+    except Exception as e:
+        logger.error(f"Error setting thunder player: {str(e)}")
         return JSONResponse(
-            status_code=422,
-            content={"detail": "missing pid in the request header"}
+            status_code=500,
+            content={"detail": f"Error setting thunder player: {str(e)}"}
         )
-    if lock_wnd and pid in window_service.locked_windows:
-        event_service.broadcast_log("error", "窗口已被其他进程锁定.", [pid])
-        return JSONResponse(
-            status_code=400,
-            content={"detail": "窗口已被其他进程锁定."}
-        )
-    return window_service.lock_window(pid, lock_wnd)
+
+
 
 
 @app.post("/locate-window")
@@ -188,11 +190,11 @@ async def locate_window(window_data: dict):
     """
     Move and resize the specified window to top-left corner of screen.
     Args:
-        window_data: dict containing 'pid' of window to locate
+        window_data: dict containing 'pid' and 'isThunderPlayer' of window to locate
     """
     try:
         pid = int(window_data['pid'])
-        result = window_service.locate_game_window(pid, 0, 0)
+        result = window_service.locate_game_window(pid, 0, 0, not config.is_thunder_player)
         if result["status"] == "error":
             return JSONResponse(
                 status_code=404 if "not found" in result["message"] else 500,
@@ -215,8 +217,9 @@ async def locate_auto_window(window_data: dict):
         gameWnd = window_data['game']
         toolWnd = window_data['tool']
         index = int(window_data['idx'])
+        
         x_pos = 1056 * index
-        window_service.locate_game_window(gameWnd, x_pos, 0)
+        window_service.locate_game_window(gameWnd, x_pos, 0, not config.is_thunder_player)
         window_service.locate_tool_window(toolWnd, x_pos, 600)
     except Exception as e:
         logger.error(f"check the game and tool windows in automator: {str(e)}")

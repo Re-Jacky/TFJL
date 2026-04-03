@@ -28,6 +28,7 @@ export interface UIState {
   toolWindows: Array<Wnd>;
   logRecords: Array<LogRecord>;
   vehicle: Vehicle;
+  isThunderPlayer: boolean;
 }
 
 const generateVehicleInfo = () => {
@@ -47,6 +48,7 @@ const initialState: UIState = {
   gameWindows: [],
   toolWindows: [],
   logRecords: [],
+  isThunderPlayer: false,
   vehicle: {
     side: undefined,
     level: undefined,
@@ -66,6 +68,7 @@ const uiSlice = createSlice({
     selectGameWindows: (state) => state.gameWindows,
     selectToolWIndows: (state) => state.toolWindows,
     selectInitializing: (state) => state.isInitializing,
+    selectIsThunderPlayer: (state) => state.isThunderPlayer,
   },
   reducers: {
     setInitializing: (state, action: PayloadAction<boolean>) => {
@@ -91,6 +94,9 @@ const uiSlice = createSlice({
     },
     setToolWindows: (state, action: PayloadAction<Array<Wnd>>) => {
       state.toolWindows = action.payload;
+    },
+    setIsThunderPlayer: (state, action: PayloadAction<boolean>) => {
+      state.isThunderPlayer = action.payload;
     },
   },
 });

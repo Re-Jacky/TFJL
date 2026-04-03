@@ -70,7 +70,7 @@ class WindowControlService:
         return {"success": True, "message": f"PyAutoGUI click at ({x}, {y}) in window {window_pid}"}
         
     @staticmethod
-    def locate_game_window(pid: int, x, y) -> dict:
+    def locate_game_window(pid: int, x, y, resize: bool = True) -> dict:
         """
         Move and resize the specified window to top-left corner of screen.
         Args:
@@ -83,7 +83,8 @@ class WindowControlService:
                 if window._hWnd == pid:
                     # Move to top-left corner (0,0) and resize to 800x600
                     window.moveTo(x, y)
-                    window.resizeTo(1056, 637)
+                    if resize:
+                        window.resizeTo(1056, 637)
                     return {"status": "success", "message": f"Window {pid} moved and resized"}
             
             return {"status": "error", "message": f"Window with pid {pid} not found"}
