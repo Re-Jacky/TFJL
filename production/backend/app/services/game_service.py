@@ -22,8 +22,11 @@ class GameService:
     @staticmethod
     def type_room_number(pid, room_number):
         GameService.click_in_window(pid, GamePositions.TEXT_AREA.value)
-        WindowControlService.type_text(pid, room_number)
-        GameService.click_in_window(pid, GamePositions.TEXT_AREA_CONFIRM.value)
+        if config.is_thunder_player:
+            WindowControlService.type_text_native(pid, room_number)
+        else :
+            WindowControlService.type_text(pid, room_number)
+            GameService.click_in_window(pid, GamePositions.TEXT_AREA_CONFIRM.value)
         return True  # 假设输入成功返回True (根据实际情况修改返回值)
     
     @staticmethod
@@ -64,10 +67,10 @@ class GameService:
 
     @staticmethod
     def need_ads(pid):
-        ads_region = (413, 394, 230, 85)  # 广告区域，用于检测广告是否出现
+        ads_region = (410, 390, 230, 80) if config.is_thunder_player else (413, 394, 230, 85)  # 广告区域，用于检测广告是否出现
         window = WindowControlService.find_window(pid)
         screenshot_gray = WindowControlService.capture_region(window, ads_region)
-        template_gray = image_service.load_template('广告')
+        template_gray = image_service.load_template('广告_thunder') if config.is_thunder_player else image_service.load_template('广告')
         result = cv2.matchTemplate(screenshot_gray, template_gray, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, _ = cv2.minMaxLoc(result)
         return max_val > 0.9
@@ -326,5 +329,9 @@ class GameService:
         GameService.click_in_window(pid, GamePositions.JOIN_ROOM.value)
         time.sleep(0.5)  # 等待输入框出现
         GameService.type_room_number(pid, room)
+        if config.is_thunder_player:
+            # click first to finish the input
+            GameService.click_in_window(pid, GamePositions.ROOM_INPUT_CONFIRM.value)
+            time.sleep(0.5)
         GameService.click_in_window(pid, GamePositions.ROOM_INPUT_CONFIRM.value)
         time.sleep(1)  # 等待进入房间
