@@ -201,10 +201,10 @@ class GameService:
 
     @staticmethod
     def is_in_moon_island(pid):
-        region = (475, 71, 124, 54)  # 暗月标题区域
+        region = (468, 63, 124, 53) if config.is_thunder_player else (475, 71, 124, 54)  # 暗月标题区域
         window = WindowControlService.find_window(pid)
         screenshot_gray = WindowControlService.capture_region(window, region)
-        template_gray = image_service.load_template('暗月岛')
+        template_gray = image_service.load_template('暗月岛_thunder') if config.is_thunder_player else image_service.load_template('暗月岛')
         result = cv2.matchTemplate(screenshot_gray, template_gray, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, _ = cv2.minMaxLoc(result)
         logger.info(f"[GameService] is in moon island confidence: {max_val}")
