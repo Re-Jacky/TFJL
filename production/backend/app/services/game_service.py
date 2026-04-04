@@ -77,10 +77,10 @@ class GameService:
 
     @staticmethod
     def ice_need_buy_round(pid):
-        round_region = (320, 440, 155, 50)  # 回合区域，用于检测回合是否结束
+        round_region = (313, 430, 155, 50) if config.is_thunder_player else (320, 440, 155, 50) # 回合区域，用于检测回合是否结束
         window = WindowControlService.find_window(pid)
         screenshot_gray = WindowControlService.capture_region(window, round_region)
-        template_gray = image_service.load_template('寒冰助战')
+        template_gray = image_service.load_template('寒冰助战_thunder') if config.is_thunder_player else image_service.load_template('寒冰助战')
         result = cv2.matchTemplate(screenshot_gray, template_gray, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, _ = cv2.minMaxLoc(result)
         return max_val > 0.9
@@ -154,10 +154,10 @@ class GameService:
     
     @staticmethod
     def is_in_ice_castle(pid):
-        region = (461, 72, 133, 61)  # 寒冰标题区域
+        region = (455, 65, 133, 55) if config.is_thunder_player else (461, 72, 133, 61) # 寒冰标题区域
         window = WindowControlService.find_window(pid)
         screenshot_gray = WindowControlService.capture_region(window, region)
-        template_gray = image_service.load_template('寒冰堡')
+        template_gray = image_service.load_template('寒冰堡_thunder') if config.is_thunder_player else image_service.load_template('寒冰堡')
         result = cv2.matchTemplate(screenshot_gray, template_gray, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, _ = cv2.minMaxLoc(result)
         logger.info(f"[GameService] is in ice castle confidence: {max_val}")
