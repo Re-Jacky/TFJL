@@ -34,7 +34,10 @@ class ImageService:
         if not image_path.exists():
             raise HTTPException(status_code=404, detail=f"Image file {image_file_name} not found: {image_path}")
         template = np.array(Image.open(image_path))
-        return cv2.cvtColor(template, cv2.COLOR_RGB2GRAY)
+        try:
+            return cv2.cvtColor(template, cv2.COLOR_RGB2GRAY)
+        except:
+            return template
 
     def find_image(self, window_pid: int, image_file_name: str, confidence: float = 0.8):
         """

@@ -3,6 +3,7 @@ from app.services.image_services import ImageService
 from app.enums.game_positions import GamePositions
 from app.enums.tool_positions import ToolPositions
 from app.utils.logger import logger
+from app.config import config
 import time
 import cv2
 
@@ -11,15 +12,21 @@ image_service = ImageService()
 class GameService:
     @staticmethod
     def click_in_window(pid, position):
-        WindowControlService.click_at(pid, position[0], position[1])
+        if config.is_thunder_player:
+            WindowControlService.click_at_native(pid, position[0], position[1])
+        else:
+            WindowControlService.click_at(pid, position[0], position[1])
         time.sleep(0.5)  # 等待点击动作完成 (可以根据实际情况调整时间)
         return True  # 假设点击成功返回True (根据实际情况修改返回值)
     
     @staticmethod
     def type_room_number(pid, room_number):
         GameService.click_in_window(pid, GamePositions.TEXT_AREA.value)
-        WindowControlService.type_text(pid, room_number)
-        GameService.click_in_window(pid, GamePositions.TEXT_AREA_CONFIRM.value)
+        if config.is_thunder_player:
+            WindowControlService.type_text_native(pid, room_number)
+        else :
+            WindowControlService.type_text(pid, room_number)
+            GameService.click_in_window(pid, GamePositions.TEXT_AREA_CONFIRM.value)
         return True  # 假设输入成功返回True (根据实际情况修改返回值)
     
     @staticmethod
@@ -28,11 +35,10 @@ class GameService:
         import re
         
         # Define room number region (x, y, width, height)
-        room_number_region = (490, 345, 80, 30)  # Adjust coordinates if needed
+        room_number_region = (490, 335, 80, 30) if config.is_thunder_player else (490, 345, 80, 30)  # Adjust coordinates if needed
         
         # Capture grayscale screenshot of the region
         screenshot_gray = WindowControlService.capture_region(pid, room_number_region)
-        
         # Preprocess image for better OCR results (thresholding)
         _, thresholded = cv2.threshold(screenshot_gray, 127, 255, cv2.THRESH_BINARY)
         
@@ -51,30 +57,30 @@ class GameService:
 
     @staticmethod
     def is_home(pid):
-        battle_region = (790, 515, 230, 100)  # 对战区域
+        battle_region = (770, 510, 220, 90) if config.is_thunder_player else (790, 515, 230, 100)# 对战区域
         window = WindowControlService.find_window(pid)
         screenshot_gray = WindowControlService.capture_region(window, battle_region)
-        template_gray = image_service.load_template('对战')
+        template_gray = image_service.load_template('对战_thunder') if config.is_thunder_player else image_service.load_template('对战')
         result = cv2.matchTemplate(screenshot_gray, template_gray, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, _ = cv2.minMaxLoc(result)
         return max_val > 0.95
 
     @staticmethod
     def need_ads(pid):
-        ads_region = (413, 394, 230, 85)  # 广告区域，用于检测广告是否出现
+        ads_region = (410, 390, 230, 80) if config.is_thunder_player else (413, 394, 230, 85)  # 广告区域，用于检测广告是否出现
         window = WindowControlService.find_window(pid)
         screenshot_gray = WindowControlService.capture_region(window, ads_region)
-        template_gray = image_service.load_template('广告')
+        template_gray = image_service.load_template('广告_thunder') if config.is_thunder_player else image_service.load_template('广告')
         result = cv2.matchTemplate(screenshot_gray, template_gray, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, _ = cv2.minMaxLoc(result)
         return max_val > 0.9
 
     @staticmethod
     def ice_need_buy_round(pid):
-        round_region = (320, 440, 155, 50)  # 回合区域，用于检测回合是否结束
+        round_region = (313, 430, 155, 50) if config.is_thunder_player else (320, 440, 155, 50) # 回合区域，用于检测回合是否结束
         window = WindowControlService.find_window(pid)
         screenshot_gray = WindowControlService.capture_region(window, round_region)
-        template_gray = image_service.load_template('寒冰助战')
+        template_gray = image_service.load_template('寒冰助战_thunder') if config.is_thunder_player else image_service.load_template('寒冰助战')
         result = cv2.matchTemplate(screenshot_gray, template_gray, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, _ = cv2.minMaxLoc(result)
         return max_val > 0.9
@@ -148,10 +154,10 @@ class GameService:
     
     @staticmethod
     def is_in_ice_castle(pid):
-        region = (461, 72, 133, 61)  # 寒冰标题区域
+        region = (455, 65, 133, 55) if config.is_thunder_player else (461, 72, 133, 61) # 寒冰标题区域
         window = WindowControlService.find_window(pid)
         screenshot_gray = WindowControlService.capture_region(window, region)
-        template_gray = image_service.load_template('寒冰堡')
+        template_gray = image_service.load_template('寒冰堡_thunder') if config.is_thunder_player else image_service.load_template('寒冰堡')
         result = cv2.matchTemplate(screenshot_gray, template_gray, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, _ = cv2.minMaxLoc(result)
         logger.info(f"[GameService] is in ice castle confidence: {max_val}")
@@ -195,14 +201,27 @@ class GameService:
 
     @staticmethod
     def is_in_moon_island(pid):
-        region = (475, 71, 124, 54)  # 暗月标题区域
+        region = (468, 63, 124, 53) if config.is_thunder_player else (475, 71, 124, 54)  # 暗月标题区域
         window = WindowControlService.find_window(pid)
         screenshot_gray = WindowControlService.capture_region(window, region)
-        template_gray = image_service.load_template('暗月岛')
+        template_gray = image_service.load_template('暗月岛_thunder') if config.is_thunder_player else image_service.load_template('暗月岛')
         result = cv2.matchTemplate(screenshot_gray, template_gray, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, _ = cv2.minMaxLoc(result)
         logger.info(f"[GameService] is in moon island confidence: {max_val}")
         return max_val > 0.95
+    
+    @staticmethod
+    def is_in_whirlpool(pid):
+        # only thunder player has whirlpool now
+        if config.is_thunder_player:
+            region = (460, 63, 124, 53)
+            window = WindowControlService.find_window(pid)
+            screenshot_gray = WindowControlService.capture_region(window, region)
+            template_gray = image_service.load_template('大漩涡_thunder')
+            result = cv2.matchTemplate(screenshot_gray, template_gray, cv2.TM_CCOEFF_NORMED)
+            _, max_val, _, _ = cv2.minMaxLoc(result)
+            logger.info(f"[GameService] is in whirlpool confidence: {max_val}")
+            return max_val > 0.95
 
     @staticmethod
     def start_moon_island(main, sub):
@@ -241,6 +260,43 @@ class GameService:
             logger.error(f"[GameService] start moon island error: {e}")
             return False
 
+    @staticmethod
+    def start_whirlpool(main, sub):
+        try:
+            mainWndPid = main['game']
+            subWndPid = sub['game']
+            retry = 3
+            while retry > 0 and (not GameService.is_in_whirlpool(mainWndPid) or not GameService.is_in_whirlpool(subWndPid)):
+                retry -= 1
+                time.sleep(8)
+                logger.error(f"Detect whirlpool page, retry: {3-retry}...")
+            if (not GameService.is_in_whirlpool(mainWndPid) or not GameService.is_in_whirlpool(subWndPid)):
+                logger.error("Failed to start whirlpool due to maximum retry waiting for the whirlpool page")
+                return False
+            # close support first
+            GameService.click_in_window(mainWndPid, GamePositions.CLOSE_SUPPORT.value)
+            time.sleep(1)
+            # main game window starts
+            GameService.click_whirlpool(mainWndPid)
+            # start room
+            GameService.start_room(mainWndPid)
+            ## capture room number in pic
+            room = GameService.recognize_room_number_with_retry(mainWndPid)
+
+            # close support first
+            GameService.click_in_window(subWndPid, GamePositions.CLOSE_SUPPORT.value)
+            time.sleep(1)
+            # sub game window starts
+            GameService.click_whirlpool(subWndPid)
+            GameService.join_room(subWndPid, room)
+            GameService.switch_tool_page(main['tool'], sub['tool'], ToolPositions.COLLAB_PAGE.value)
+            GameService.stop_tool(main['tool'], sub['tool'])
+            GameService.start_tool(main['tool'], sub['tool'])
+            return True
+        except Exception as e:
+            logger.error(f"[GameService] start moon island error: {e}")
+            return False
+    
     @staticmethod
     def start_tool(main: str, sub: str):
         x, y = ToolPositions.GAME_START.value
@@ -295,6 +351,11 @@ class GameService:
     def click_moon_island(pid):
         GameService.click_in_window(pid, GamePositions.MOON_ISLAND.value)
         return True
+
+    @staticmethod
+    def click_whirlpool(pid):
+        GameService.click_in_window(pid, GamePositions.WHIRLPOOL.value)
+        return True
     
     @staticmethod
     def recognize_room_number_with_retry(pid):
@@ -323,5 +384,9 @@ class GameService:
         GameService.click_in_window(pid, GamePositions.JOIN_ROOM.value)
         time.sleep(0.5)  # 等待输入框出现
         GameService.type_room_number(pid, room)
+        if config.is_thunder_player:
+            # click first to finish the input
+            GameService.click_in_window(pid, GamePositions.ROOM_INPUT_CONFIRM.value)
+            time.sleep(0.5)
         GameService.click_in_window(pid, GamePositions.ROOM_INPUT_CONFIRM.value)
         time.sleep(1)  # 等待进入房间

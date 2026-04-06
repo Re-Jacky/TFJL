@@ -37,7 +37,7 @@ const Role: React.ForwardRefRenderFunction<RoleHandler, RoleProps> = (
   const gameOptions = useMemo(
     () =>
       gameWindows.map((item, index) => ({
-        label: `游戏-${index}`,
+        label: `游戏${index}-${item.title}`,
         value: item.pid.toString(),
       })),
     [gameWindows]

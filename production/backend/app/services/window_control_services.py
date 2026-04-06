@@ -12,6 +12,7 @@ from ctypes import windll
 from PIL import Image
 from typing import Optional, Tuple
 import time
+from app.config import config
 
 class WindowControlService:
     def __init__(self):
@@ -70,7 +71,7 @@ class WindowControlService:
         return {"success": True, "message": f"PyAutoGUI click at ({x}, {y}) in window {window_pid}"}
         
     @staticmethod
-    def locate_game_window(pid: int, x, y) -> dict:
+    def locate_game_window(pid: int, x, y, resize: bool = True) -> dict:
         """
         Move and resize the specified window to top-left corner of screen.
         Args:
@@ -83,7 +84,8 @@ class WindowControlService:
                 if window._hWnd == pid:
                     # Move to top-left corner (0,0) and resize to 800x600
                     window.moveTo(x, y)
-                    window.resizeTo(1056, 637)
+                    if resize:
+                        window.resizeTo(1056, 637)
                     return {"status": "success", "message": f"Window {pid} moved and resized"}
             
             return {"status": "error", "message": f"Window with pid {pid} not found"}
@@ -252,5 +254,59 @@ class WindowControlService:
                 time.sleep(delay)  # Add small delay between characters
                 
             return {"success": True, "message": f"Typed '{text}' into window {hwnd}"}
+        except Exception as e:
+            return {"status": "error", "message": f"Error typing text: {str(e)}"}
+            
+    @staticmethod
+    def type_text_native(window_pid: int, text: str, delay: float = 0.1) -> dict:
+        """
+        Simulate typing text into a target window using clipboard paste.
+        Works for native windows like Thunder Player that don't respond to keyboard simulation.
+        
+        Args:
+            window_pid: Window handle of the target window
+            text: Text string to type into the window
+            delay: Delay in seconds (not used, kept for compatibility)
+            
+        Returns:
+            dict: Success status and message
+        """
+        if not win32gui.IsWindow(window_pid):
+            raise HTTPException(status_code=404, detail=f"Window with handle {window_pid} not found")
+        
+        try:
+            import win32clipboard
+            
+            # Set clipboard content FIRST while window is NOT in focus
+            # This prevents the window from caching old clipboard data
+            win32clipboard.OpenClipboard()
+            win32clipboard.EmptyClipboard()
+            win32clipboard.SetClipboardText(text, win32clipboard.CF_TEXT)
+            win32clipboard.CloseClipboard()
+            
+            time.sleep(0.5)
+           
+            # activate another window that's not this pid
+            if config.game_windows:
+                for window in config.game_windows:
+                    if window["pid"] != window_pid:
+                        WindowControlService.bring_window_to_foreground(window["pid"])
+                        time.sleep(1)
+                        break
+            
+            
+            # Bring the window to the foreground AFTER clipboard is set
+            WindowControlService.bring_window_to_foreground(window_pid)
+            time.sleep(0.5)
+            
+            # Click to ensure focus
+            WindowControlService.click_at_native(window_pid, 50, 50)
+            time.sleep(0.5)
+            
+            # Use pyautogui to send Ctrl+V
+            pyautogui.hotkey('ctrl', 'v')
+            time.sleep(0.5)
+            
+            return {"success": True, "message": f"Typed '{text}' into window {window_pid} using clipboard paste"}
         except Exception as e:
             return {"status": "error", "message": f"Error typing text: {str(e)}"}

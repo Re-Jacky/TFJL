@@ -29,10 +29,7 @@ export interface API {
   saveShortcut: (shortcut: ShortcutModel) => Promise<{ status: string }>;
   setShortcutConfig: (config: ShortcutConfig) => Promise<{ status: string }>;
   monitorShortcut: (value: boolean) => Promise<{ status: string }>;
-  lockWindow: (config: {
-    lock: boolean;
-    pid?: number;
-  }) => Promise<{ status: string }>;
+  setThunderPlayer: (isThunderPlayer: boolean) => Promise<{ isThunderPlayer: boolean }>;
   startAutoGame: (config: {
     main: { game: number; tool: number };
     sub: { game: number; tool: number };
@@ -49,7 +46,7 @@ export interface API {
   }) => Promise<{ status: boolean }>;
   locateAutoWindow: (config: {game: number; tool: number; idx: 0 | 1}) => Promise<{ status: string }>;
   turnOffPC: () => Promise<{ status: string }>;
-  test: () => Promise<{ status: string }>;
+  test: (id: string) => Promise<{ status: string }>;
 }
 
 export const api: API = {
@@ -94,8 +91,8 @@ export const api: API = {
   monitorShortcut: async (status: boolean) => {
     return await proxy.post('monitor-shortcut', { status });
   },
-  lockWindow: async (config) => {
-    return await proxy.post('lock-window', config);
+  setThunderPlayer: async (isThunderPlayer: boolean) => {
+    return await proxy.post('set-thunder-player',  {isThunderPlayer} );
   },
   startAutoGame: async (config) => {
     return await proxy.post('start-auto-game', config);
@@ -112,7 +109,7 @@ export const api: API = {
   turnOffPC: async () => {
     return await proxy.post('turn-off-pc');
   },
-  test: async () => {
-    return await proxy.get('test-api');
+  test: async (id: string) => {
+    return await proxy.post(`test-api`, { id });
   }
 };

@@ -3,17 +3,17 @@ import { Select, Button, Checkbox } from 'antd';
 import { WindowsFilled, AimOutlined, ReloadOutlined } from '@ant-design/icons';
 import styles from './WindowController.module.scss';
 import { useSelector } from 'react-redux';
-import { selectActiveWindow, selectInitializing, selectGameWindows } from '@src/store/selectors';
-import { setActiveWindow } from '@src/store/actions';
+import { selectActiveWindow, selectInitializing, selectGameWindows, selectIsThunderPlayer } from '@src/store/selectors';
+import { setActiveWindow  } from '@src/store/actions';
 import { useAppDispatch } from '@src/store/store';
-import { getGameWindows } from '@src/store/thunks';
+import { getGameWindows,setIsThunderPlayer } from '@src/store/thunks';
 import { api } from '@src/services/api';
 
 const WindowController: React.FC = () => {
   const activeWindow = useSelector(selectActiveWindow);
   const initializing = useSelector(selectInitializing);
+  const isThunderPlayer = useSelector(selectIsThunderPlayer);
   const dispatch = useAppDispatch();
-  const [isWindowLocked, setIsWindowLocked] = useState<boolean>(false);
   const windows = useSelector(selectGameWindows);
   const options = useMemo(
     () =>
@@ -30,17 +30,21 @@ const WindowController: React.FC = () => {
     }
   };
 
-  const handleCheckWindow = (e: any) => {
-    if (activeWindow) {
-      api.lockWindow({ lock: e.target.checked }).then(() => {
-        setIsWindowLocked(!isWindowLocked);
-      });
-    }
+  const setThunderPlayer = (e: any) => {
+    dispatch(setIsThunderPlayer(e.target.checked));
   };
 
   const onRefresh = useCallback(() => {
     dispatch(getGameWindows());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (windows.length > 0 && activeWindow) {
+      const wnd = windows.find((item) => item.pid === parseInt(activeWindow))
+      const isThunder = wnd?.title !== '塔防精灵'
+      dispatch(setIsThunderPlayer(isThunder))
+    }
+  }, [activeWindow, windows]);
 
   useEffect(() => {
     if (!initializing) {
@@ -51,7 +55,6 @@ const WindowController: React.FC = () => {
   return (
     <div className={styles.container}>
       <Select
-        disabled={isWindowLocked}
         className={styles.select}
         placeholder='Select a window'
         options={options}
@@ -71,11 +74,12 @@ const WindowController: React.FC = () => {
         窗口定位
       </Button>
       <Checkbox
-        onChange={handleCheckWindow}
+        onChange={setThunderPlayer}
         disabled={!activeWindow}
         className={styles.checkbox}
+        checked={isThunderPlayer}
       >
-        {isWindowLocked ? '解锁窗口' : '锁定窗口'}
+        {isThunderPlayer ? '关闭雷电' : '开启雷电'}
       </Checkbox>
     </div>
   );
