@@ -90,7 +90,7 @@ async def test(data: dict):
     id = data.get('id')
     logger.info(f"Testing with id: {id}")
     # return True
-    result = WindowControlService.type_text_native(id, '6767')
+    result = game_service.is_in_whirlpool(id)
     return result
 
 
@@ -155,7 +155,7 @@ async def get_game_windows():
     windows = []
     for window in pygetwindow.getAllWindows():
         if window.title:
-            if window.title == '塔防精灵' or window.title == '入门' or window.title == '萌新':
+            if window.title == '塔防精灵' or window.title == '入门' or window.title == '萌新' or window.title == '雷电':
                 title = window.title +( "(已锁定)" if window._hWnd in window_service.locked_windows else "")
                 windows.append({"title": title, "pid": window._hWnd})
     config.game_windows = windows
@@ -253,6 +253,9 @@ async def start_auto_game(request: Request, config: dict):
         elif mode == 2:
             game_service.start_moon_island(main, sub)
             info = "暗月"
+        elif mode == 3:
+            game_service.start_whirlpool(main, sub)
+            info = "漩涡"
         await event_service.broadcast_log("info", f"开始{info}")
         return {"status": "success"}
 

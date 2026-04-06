@@ -209,6 +209,19 @@ class GameService:
         _, max_val, _, _ = cv2.minMaxLoc(result)
         logger.info(f"[GameService] is in moon island confidence: {max_val}")
         return max_val > 0.95
+    
+    @staticmethod
+    def is_in_whirlpool(pid):
+        # only thunder player has whirlpool now
+        if config.is_thunder_player:
+            region = (460, 63, 124, 53)
+            window = WindowControlService.find_window(pid)
+            screenshot_gray = WindowControlService.capture_region(window, region)
+            template_gray = image_service.load_template('大漩涡_thunder')
+            result = cv2.matchTemplate(screenshot_gray, template_gray, cv2.TM_CCOEFF_NORMED)
+            _, max_val, _, _ = cv2.minMaxLoc(result)
+            logger.info(f"[GameService] is in whirlpool confidence: {max_val}")
+            return max_val > 0.95
 
     @staticmethod
     def start_moon_island(main, sub):
@@ -247,6 +260,43 @@ class GameService:
             logger.error(f"[GameService] start moon island error: {e}")
             return False
 
+    @staticmethod
+    def start_whirlpool(main, sub):
+        try:
+            mainWndPid = main['game']
+            subWndPid = sub['game']
+            retry = 3
+            while retry > 0 and (not GameService.is_in_whirlpool(mainWndPid) or not GameService.is_in_whirlpool(subWndPid)):
+                retry -= 1
+                time.sleep(8)
+                logger.error(f"Detect whirlpool page, retry: {3-retry}...")
+            if (not GameService.is_in_whirlpool(mainWndPid) or not GameService.is_in_whirlpool(subWndPid)):
+                logger.error("Failed to start whirlpool due to maximum retry waiting for the whirlpool page")
+                return False
+            # close support first
+            GameService.click_in_window(mainWndPid, GamePositions.CLOSE_SUPPORT.value)
+            time.sleep(1)
+            # main game window starts
+            GameService.click_whirlpool(mainWndPid)
+            # start room
+            GameService.start_room(mainWndPid)
+            ## capture room number in pic
+            room = GameService.recognize_room_number_with_retry(mainWndPid)
+
+            # close support first
+            GameService.click_in_window(subWndPid, GamePositions.CLOSE_SUPPORT.value)
+            time.sleep(1)
+            # sub game window starts
+            GameService.click_whirlpool(subWndPid)
+            GameService.join_room(subWndPid, room)
+            GameService.switch_tool_page(main['tool'], sub['tool'], ToolPositions.COLLAB_PAGE.value)
+            GameService.stop_tool(main['tool'], sub['tool'])
+            GameService.start_tool(main['tool'], sub['tool'])
+            return True
+        except Exception as e:
+            logger.error(f"[GameService] start moon island error: {e}")
+            return False
+    
     @staticmethod
     def start_tool(main: str, sub: str):
         x, y = ToolPositions.GAME_START.value
@@ -300,6 +350,11 @@ class GameService:
     @staticmethod
     def click_moon_island(pid):
         GameService.click_in_window(pid, GamePositions.MOON_ISLAND.value)
+        return True
+
+    @staticmethod
+    def click_whirlpool(pid):
+        GameService.click_in_window(pid, GamePositions.WHIRLPOOL.value)
         return True
     
     @staticmethod

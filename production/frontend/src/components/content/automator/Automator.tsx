@@ -18,6 +18,8 @@ const getDefaultGameRounds = (gameMode: GameMode) => {
       return 6;
     case GameMode.MoonIsland:
       return 4;
+    case GameMode.Whirlpool:
+      return 4;
     default:
       return 0;
   }
@@ -179,6 +181,7 @@ const Automator: React.FC = () => {
                 { label: '合作', value: GameMode.Collab },
                 { label: '寒冰', value: GameMode.IceCastle },
                 { label: '暗月', value: GameMode.MoonIsland },
+                { label: '漩涡', value: GameMode.Whirlpool },
               ]}
             />
             <Input
@@ -289,6 +292,9 @@ const Automator: React.FC = () => {
           }}
         />
         轮
+        <Button onClick={() => setCurrentRound(0)} style={{ marginLeft: 10 }}>
+          重置
+        </Button>
       </h2>
     </div>
   );

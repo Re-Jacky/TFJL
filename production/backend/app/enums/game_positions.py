@@ -56,4 +56,7 @@ class GamePositions(Enum):
 
     ## moon island
     MOON_ISLAND = (845, 570)
+
+    ## whirlpool
+    WHIRLPOOL = (845, 570)
   

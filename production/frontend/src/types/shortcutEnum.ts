@@ -10,6 +10,7 @@ export enum GameMode {
   Collab,
   IceCastle,
   MoonIsland,
+  Whirlpool,
 }
 
 export enum VehicleSide {
